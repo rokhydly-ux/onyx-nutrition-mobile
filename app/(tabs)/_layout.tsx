@@ -1,33 +1,73 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BlurView } from 'expo-blur';
+import { StyleSheet, View } from 'react-native';
+import { Home, Calendar, Utensils, Users, User } from 'lucide-react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
+        tabBarActiveTintColor: '#39FF14',
+        tabBarInactiveTintColor: '#FFFFFF',
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: 24,
+          left: 20,
+          right: 20,
+          elevation: 0,
+          backgroundColor: 'transparent',
+          borderRadius: 32,
+          height: 70,
+          borderTopWidth: 0,
+          overflow: 'hidden',
+        },
+        tabBarBackground: () => (
+          <BlurView
+            tint="dark"
+            intensity={80}
+            style={StyleSheet.absoluteFill}
+          />
+        ),
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Accueil',
+          tabBarIcon: ({ color }) => <Home color={color} size={24} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="menu"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Menu',
+          tabBarIcon: ({ color }) => <Utensils color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="my-day"
+        options={{
+          title: 'Mon Jour',
+          tabBarIcon: ({ color }) => (
+            <View className="bg-neon h-14 w-14 rounded-full flex items-center justify-center -mt-8 shadow-lg shadow-neon/50">
+              <Calendar color="black" size={28} />
+            </View>
+          ),
+          tabBarLabel: () => null, // Hide label for central button
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: 'Social',
+          tabBarIcon: ({ color }) => <Users color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profil',
+          tabBarIcon: ({ color }) => <User color={color} size={24} />,
         }}
       />
     </Tabs>
