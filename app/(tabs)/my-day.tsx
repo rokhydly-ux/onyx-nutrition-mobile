@@ -1,9 +1,9 @@
 import { View, Text } from 'react-native';
 
-export default function HomeScreen() {
+export default function MyDayScreen() {
   return (
     <View className="flex-1 items-center justify-center bg-black">
-      <Text className="text-white text-lg font-bold">Accueil</Text>
+      <Text className="text-white text-lg font-bold">Mon Jour</Text>
     </View>
   );
 }
