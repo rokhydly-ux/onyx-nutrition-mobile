@@ -48,6 +48,7 @@
   "devDependencies": {
     "@babel/plugin-transform-class-properties": "^8.0.1",
     "@babel/plugin-transform-private-methods": "^8.0.1",
+    "@babel/plugin-transform-typescript": "^8.0.1",
     "@types/react": "~19.1.0",
     "babel-preset-expo": "^57.0.2",
     "eslint": "^9.25.0",
