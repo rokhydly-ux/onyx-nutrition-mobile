@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
 import { supabase } from '../../lib/supabase';
@@ -7,7 +7,7 @@ import {
   Droplets,
   MoreHorizontal,
   Heart,
-  MessageCircle,
+
   ArrowUpRight,
   Coffee,
 } from 'lucide-react-native';
@@ -31,6 +31,27 @@ type CommunityPost = {
   comments: number;
 };
 
+type UserProfile = {
+  first_name: string;
+  xp: number;
+  subscription_days_left: number;
+  weight: number | null;
+  calories_goal: number;
+  protein_goal: number;
+  carbs_goal: number;
+  fats_goal: number;
+};
+
+type DailyStats = {
+  steps: number;
+  sleep_hours: number;
+  water_glasses: number;
+  calories_consumed: number;
+  protein_consumed: number;
+  carbs_consumed: number;
+  fats_consumed: number;
+};
+
 // --- Dummy components / Icons for visual match ---
 const WeightIcon = ({ color }: { color: string }) => (
   <View className={`w-6 h-6 rounded-md items-center justify-center bg-gray-100 dark:bg-white/10`}>
@@ -40,7 +61,6 @@ const WeightIcon = ({ color }: { color: string }) => (
 
 const ActivityIcon = ({ color }: { color: string }) => (
   <View className={`w-6 h-6 rounded-md items-center justify-center bg-gray-100 dark:bg-white/10`}>
-    {/* Mini bar chart icon mock */}
     <View className="flex-row items-end h-3 space-x-[2px]">
       <View style={{ backgroundColor: color }} className="w-[3px] h-[6px] rounded-t-sm" />
       <View style={{ backgroundColor: color }} className="w-[3px] h-[10px] rounded-t-sm" />
@@ -62,12 +82,12 @@ const HydrationIcon = ({ color }: { color: string }) => (
 );
 
 const ProgressBar = ({ label, current, max, color }: { label: string, current: number, max: number, color: string }) => {
-  const percentage = Math.min((current / max) * 100, 100);
+  const percentage = max > 0 ? Math.min((current / max) * 100, 100) : 0;
   return (
     <View className="mb-3">
       <View className="flex-row justify-between mb-1">
         <Text className="text-gray-800 dark:text-gray-200 text-xs font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>{label}</Text>
-        <Text className="text-gray-500 dark:text-gray-400 text-xs" style={{ fontFamily: 'Poppins_400Regular' }}>{current}/{max}g</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-xs" style={{ fontFamily: 'Poppins_400Regular' }}>{Math.round(current)}/{Math.round(max)}g</Text>
       </View>
       <View className="h-2 w-full bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
         <View style={{ width: `${percentage}%`, backgroundColor: color }} className="h-full rounded-full" />
@@ -80,53 +100,146 @@ export default function HomeScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [profile, setProfile] = useState<UserProfile>({
+    first_name: 'Utilisateur',
+    xp: 0,
+    subscription_days_left: 0,
+    weight: null,
+    calories_goal: 2000,
+    protein_goal: 90,
+    carbs_goal: 150,
+    fats_goal: 50
+  });
+
+  const [dailyStats, setDailyStats] = useState<DailyStats>({
+    steps: 0,
+    sleep_hours: 0,
+    water_glasses: 0,
+    calories_consumed: 0,
+    protein_consumed: 0,
+    carbs_consumed: 0,
+    fats_consumed: 0
+  });
+
   const [meals, setMeals] = useState<DailyLog[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
 
-  // We will fetch from supabase in a real app, for now let's show empty state or handle it gracefully
-  // Since we must connect to Supabase and not mock, we'll implement the fetch logic.
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
-    // 1. Fetch meals (assuming a table like `nutrition_daily_logs` or `meals`)
-    // If the table doesn't exist, this will just return an error which we catch, leaving meals empty.
+    setIsLoading(true);
     try {
-      const { data: mealData, error: mealError } = await supabase
-        .from('nutrition_daily_logs') // Adjust table name if needed
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(2);
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
 
-      if (!mealError && mealData) {
-        setMeals(mealData as any);
+      if (userId) {
+        // Fetch Profile
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (profileData) {
+          setProfile(prev => ({
+            ...prev,
+            first_name: profileData.first_name || prev.first_name,
+            xp: profileData.xp || prev.xp,
+            subscription_days_left: profileData.subscription_days_left || prev.subscription_days_left,
+            weight: profileData.weight || prev.weight,
+            calories_goal: profileData.calories_goal || prev.calories_goal,
+            protein_goal: profileData.protein_goal || prev.protein_goal,
+            carbs_goal: profileData.carbs_goal || prev.carbs_goal,
+            fats_goal: profileData.fats_goal || prev.fats_goal,
+          }));
+        }
+
+        // Fetch Daily Logs (Steps, Sleep, Water)
+        const todayStr = new Date().toISOString().split('T')[0];
+        const { data: logData } = await supabase
+          .from('daily_logs')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('date', todayStr)
+          .single();
+
+        if (logData) {
+          setDailyStats(prev => ({
+            ...prev,
+            steps: logData.steps || 0,
+            sleep_hours: logData.sleep_hours || 0,
+            water_glasses: logData.water_glasses || 0,
+          }));
+        }
+
+        // Fetch Meals & sum up macros
+        const { data: mealData } = await supabase
+          .from('nutrition_daily_logs')
+          .select('*')
+          .eq('user_id', userId)
+          // Ideally filter by today's date if schema supports it
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (mealData) {
+          setMeals(mealData as any);
+
+          let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
+          mealData.forEach((m: any) => {
+            totalCal += m.calories || 0;
+            totalP += m.protein || 0;
+            totalC += m.carbs || 0;
+            totalF += m.fats || 0;
+          });
+
+          setDailyStats(prev => ({
+            ...prev,
+            calories_consumed: totalCal,
+            protein_consumed: totalP,
+            carbs_consumed: totalC,
+            fats_consumed: totalF,
+          }));
+        }
       }
-    } catch (e) { console.log('Error fetching meals', e); }
 
-    // 2. Fetch community posts (assuming `community_posts`)
-    try {
-      const { data: postData, error: postError } = await supabase
-        .from('community_posts') // Adjust table name if needed
+      // Fetch Community Posts
+      const { data: postData } = await supabase
+        .from('community_posts')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(2);
 
-      if (!postError && postData) {
+      if (postData) {
         setPosts(postData as any);
       }
-    } catch (e) { console.log('Error fetching posts', e); }
+
+    } catch (e) {
+      console.log('Error fetching dashboard data:', e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logoLight = "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781198743/Modify_the_logo_from_the_202606111717_kftori.jpg";
   const logoDark = "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781198743/Modify_the_logo_from_the_202606111719_ozvobf.jpg";
 
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A] justify-center items-center">
+        <ActivityIndicator size="large" color="#39FF14" />
+      </SafeAreaView>
+    );
+  }
+
+  const caloriesProgress = profile.calories_goal > 0 ? (dailyStats.calories_consumed / profile.calories_goal) : 0;
+
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]" edges={['top']}>
       <ScrollView className="flex-1 px-5 pt-4 pb-32" showsVerticalScrollIndicator={false}>
-
-        {/* Top Bar (Time & Icons placeholder based on standard iOS status bar usually handled by OS,
-            but the design shows it as part of the screenshot. We'll skip drawing OS status bar.) */}
 
         {/* Header - Logo */}
         <View className="flex-row items-center justify-between mb-6">
@@ -135,7 +248,6 @@ export default function HomeScreen() {
             className="w-32 h-10"
             resizeMode="contain"
           />
-          {/* We can put a settings or profile icon here if needed, but design has it below */}
         </View>
 
         {/* User Greeting & XP */}
@@ -145,7 +257,7 @@ export default function HomeScreen() {
               BONJOUR,
             </Text>
             <Text className="text-[#39FF14] text-3xl uppercase tracking-tight" style={{ fontFamily: 'Poppins_900Black' }}>
-              LUCIOLE !
+              {profile.first_name} !
             </Text>
             <Text className="text-gray-500 dark:text-gray-400 text-sm mt-1" style={{ fontFamily: 'Poppins_400Regular' }}>
               En pleine forme pour cet après-midi
@@ -154,9 +266,13 @@ export default function HomeScreen() {
 
           <View className="items-end">
             <View className="flex-row items-center mb-1">
-              <Text className="text-gray-800 dark:text-white text-xs font-bold mr-1" style={{ fontFamily: 'Poppins_700Bold' }}>NOVICE</Text>
+              <Text className="text-gray-800 dark:text-white text-xs font-bold mr-1 uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
+                {profile.xp < 500 ? 'NOVICE' : 'EXPERT'}
+              </Text>
               <Text className="text-gray-400 text-xs">|</Text>
-              <Text className="text-[#39FF14] text-xs font-bold ml-1" style={{ fontFamily: 'Poppins_700Bold' }}>110 XP</Text>
+              <Text className="text-[#39FF14] text-xs font-bold ml-1 uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
+                {profile.xp} XP
+              </Text>
             </View>
             <View className="flex-row items-center bg-white dark:bg-white/5 px-2 py-1.5 rounded-full border border-gray-200 dark:border-white/10 shadow-sm">
               <View className="w-6 h-6 rounded-full bg-[#39FF14] items-center justify-center mr-2 shadow-[0_0_10px_rgba(57,255,20,0.5)]">
@@ -164,7 +280,9 @@ export default function HomeScreen() {
               </View>
               <View>
                 <Text className="text-gray-400 text-[9px] uppercase tracking-wider font-bold">Abonnement</Text>
-                <Text className="text-black dark:text-white text-[10px] font-bold">8 Jours restants</Text>
+                <Text className="text-black dark:text-white text-[10px] font-bold">
+                  {profile.subscription_days_left} Jours restants
+                </Text>
               </View>
             </View>
           </View>
@@ -179,7 +297,9 @@ export default function HomeScreen() {
               <WeightIcon color={isDark ? '#FFF' : '#39FF14'} />
             </View>
             <View className="flex-row items-end">
-              <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>81.1</Text>
+              <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                {profile.weight ? profile.weight : '--'}
+              </Text>
               <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1 ml-1">kg</Text>
             </View>
           </View>
@@ -191,7 +311,9 @@ export default function HomeScreen() {
               <ActivityIcon color={isDark ? '#FFF' : '#6366F1'} />
             </View>
             <View className="flex-row items-end mb-1">
-              <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>5 240</Text>
+              <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                {dailyStats.steps}
+              </Text>
               <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1 ml-1">pas</Text>
             </View>
             <View className="flex-row space-x-1 items-end h-4 mt-auto">
@@ -199,8 +321,8 @@ export default function HomeScreen() {
                <View className="w-1.5 h-3/4 bg-[#39FF14] rounded-sm" />
                <View className="w-1.5 h-1/2 bg-[#39FF14] rounded-sm" />
                <View className="w-1.5 h-full bg-[#39FF14] rounded-sm" />
-               <View className="w-1.5 h-1/4 bg-gray-200 dark:bg-gray-700 rounded-sm" />
-               <View className="w-1.5 h-full bg-[#39FF14] rounded-sm" />
+               <View className="w-1.5 h-1/4 bg-[#39FF14] rounded-sm" />
+               <View className="w-1.5 h-full bg-gray-200 dark:bg-gray-700 rounded-sm" />
             </View>
           </View>
 
@@ -210,8 +332,10 @@ export default function HomeScreen() {
               <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>SOMME</Text>
               <SleepIcon color={isDark ? '#FFF' : '#6366F1'} />
             </View>
-            <Text className="text-black dark:text-white text-sm font-bold leading-tight" style={{ fontFamily: 'Poppins_700Bold' }}>Less</Text>
-            <Text className="text-black dark:text-white text-sm font-bold leading-tight" style={{ fontFamily: 'Poppins_700Bold' }}>than 5h</Text>
+            <Text className="text-black dark:text-white text-sm font-bold leading-tight" style={{ fontFamily: 'Poppins_700Bold' }}>
+              {dailyStats.sleep_hours}h
+            </Text>
+            <Text className="text-gray-400 text-[10px]">Aujourd&apos;hui</Text>
           </View>
 
           {/* Hydration */}
@@ -221,13 +345,15 @@ export default function HomeScreen() {
               <HydrationIcon color="#3B82F6" />
             </View>
             <View className="flex-row items-end mb-2">
-              <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>8<Text className="text-gray-400 text-sm">/8</Text></Text>
+              <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                {dailyStats.water_glasses}<Text className="text-gray-400 text-sm">/8</Text>
+              </Text>
               <Text className="text-gray-500 dark:text-gray-400 text-[10px] mb-1 ml-1">glasses</Text>
             </View>
             <View className="flex-row space-x-[2px] flex-wrap mt-auto">
                {[1,2,3,4,5,6,7,8].map(i => (
                  <View key={i} className="mb-[2px]">
-                   <Droplets size={10} color="#3B82F6" fill={i <= 6 ? "#3B82F6" : "transparent"} />
+                   <Droplets size={10} color="#3B82F6" fill={i <= dailyStats.water_glasses ? "#3B82F6" : "transparent"} />
                  </View>
                ))}
             </View>
@@ -242,8 +368,8 @@ export default function HomeScreen() {
               <Text className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-2" style={{ fontFamily: 'Poppins_700Bold' }}>OBJECTIF DU JOUR</Text>
               <View className="flex-row space-x-1">
                 {['C', 'J', 'V', 'S', 'D', 'L', 'M'].map((day, idx) => {
-                  const isActive = idx < 3; // Mocking first 3 days as active
-                  const isCurrent = idx === 3; // Mocking current day
+                  const isActive = idx < 3;
+                  const isCurrent = idx === 3;
                   return (
                     <View
                       key={idx}
@@ -268,21 +394,25 @@ export default function HomeScreen() {
               <CircularProgress
                 size={100}
                 strokeWidth={8}
-                progress={1240 / 1910}
+                progress={caloriesProgress}
                 color="#39FF14"
                 backgroundColor={isDark ? 'rgba(255,255,255,0.1)' : '#E5E7EB'}
               >
                 <View className="items-center justify-center">
-                  <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>1240</Text>
-                  <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>/ 1910 KCAL</Text>
+                  <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    {Math.round(dailyStats.calories_consumed)}
+                  </Text>
+                  <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    / {profile.calories_goal} KCAL
+                  </Text>
                 </View>
               </CircularProgress>
             </View>
 
             <View className="flex-1 justify-center">
-              <ProgressBar label="Protein" current={45} max={90} color="#3B82F6" />
-              <ProgressBar label="Carbs" current={120} max={150} color="#EAB308" />
-              <ProgressBar label="Fats" current={10} max={50} color="#EF4444" />
+              <ProgressBar label="Protein" current={dailyStats.protein_consumed} max={profile.protein_goal} color="#3B82F6" />
+              <ProgressBar label="Carbs" current={dailyStats.carbs_consumed} max={profile.carbs_goal} color="#EAB308" />
+              <ProgressBar label="Fats" current={dailyStats.fats_consumed} max={profile.fats_goal} color="#EF4444" />
             </View>
           </View>
 
@@ -307,33 +437,17 @@ export default function HomeScreen() {
 
             {meals.length > 0 ? meals.map((meal) => (
                <View key={meal.id} className="flex-row items-center mb-3">
-                 <View className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-lg mr-3" />
+                 <View className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-lg mr-3 items-center justify-center">
+                   <Coffee size={16} color="#A3A3A3" />
+                 </View>
                  <View className="flex-1">
-                   <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>PETIT DÉJ • 13:30</Text>
+                   <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{meal.meal_type} • {meal.time}</Text>
                    <Text className="text-black dark:text-white text-xs font-bold" numberOfLines={1}>{meal.name}</Text>
                  </View>
                </View>
             )) : (
-              <View>
-                {/* Fallback mock UI to match design visually while real DB is empty */}
-                <View className="flex-row items-center mb-4">
-                  <View className="w-12 h-12 bg-gray-200 dark:bg-white/10 rounded-xl mr-3 overflow-hidden">
-                    <Image source={{uri: 'https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=150&auto=format&fit=crop'}} className="w-full h-full" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>PETIT DEJEUNER • 13:30</Text>
-                    <Text className="text-black dark:text-white text-xs font-bold mt-0.5" style={{ fontFamily: 'Poppins_700Bold' }}>Fondé & Lait caillé</Text>
-                  </View>
-                </View>
-                <View className="flex-row items-center">
-                  <View className="w-12 h-12 bg-gray-200 dark:bg-white/10 rounded-xl mr-3 overflow-hidden">
-                    <Image source={{uri: 'https://images.unsplash.com/photo-1604329760661-e71c0c14486d?q=80&w=150&auto=format&fit=crop'}} className="w-full h-full" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>DEJEUNER • 12:30</Text>
-                    <Text className="text-black dark:text-white text-xs font-bold mt-0.5" style={{ fontFamily: 'Poppins_700Bold', lineHeight: 14 }}>Thiébou dienne rouge Penda Mbaye</Text>
-                  </View>
-                </View>
+              <View className="py-4 items-center">
+                <Text className="text-gray-400 text-xs text-center">Aucun repas logué aujourd&apos;hui.</Text>
               </View>
             )}
           </View>
@@ -344,60 +458,26 @@ export default function HomeScreen() {
 
             {posts.length > 0 ? posts.map((post) => (
                <View key={post.id} className="mb-3">
-                 <Text className="text-black dark:text-white text-xs">{post.content}</Text>
+                 <View className="flex-row items-center justify-between mb-2">
+                    <View className="flex-row items-center">
+                      <View className="w-6 h-6 bg-blue-200 rounded-full items-center justify-center mr-2 overflow-hidden">
+                        {post.author_avatar ? (
+                          <Image source={{uri: post.author_avatar}} className="w-full h-full" />
+                        ) : (
+                          <Text className="text-blue-600 text-[10px] font-bold">{post.author_name?.substring(0,2) || 'An'}</Text>
+                        )}
+                      </View>
+                      <Text className="text-black dark:text-white text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{post.author_name}</Text>
+                    </View>
+                    <MoreHorizontal size={14} color={isDark ? '#A3A3A3' : '#6B7280'} />
+                  </View>
+                  <Text className="text-gray-600 dark:text-gray-300 text-[10px] leading-tight mb-2" numberOfLines={2} style={{ fontFamily: 'Poppins_400Regular' }}>
+                    {post.content}
+                  </Text>
                </View>
             )) : (
-              <View>
-                <View className="mb-4">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center">
-                      <View className="w-6 h-6 bg-pink-200 rounded-full items-center justify-center mr-2">
-                        <Text className="text-pink-600 text-[10px] font-bold">An</Text>
-                      </View>
-                      <Text className="text-black dark:text-white text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Amina Fall</Text>
-                    </View>
-                    <MoreHorizontal size={14} color={isDark ? '#A3A3A3' : '#6B7280'} />
-                  </View>
-                  <Text className="text-gray-600 dark:text-gray-300 text-[10px] leading-tight mb-2" style={{ fontFamily: 'Poppins_400Regular' }}>
-                    Galetti Tak txum tanga de non posse a pana, petit sefit wuut im ure Selloce.
-                  </Text>
-                  <View className="flex-row items-center space-x-3">
-                    <View className="flex-row items-center space-x-1">
-                      <Heart size={10} color="#9CA3AF" />
-                      <Text className="text-gray-400 text-[10px]">19</Text>
-                    </View>
-                    <View className="flex-row items-center space-x-1">
-                      <MessageCircle size={10} color="#9CA3AF" />
-                      <Text className="text-gray-400 text-[10px]">0</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View>
-                  <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center">
-                      <View className="w-6 h-6 bg-blue-200 rounded-full items-center justify-center mr-2">
-                        <Text className="text-blue-600 text-[10px] font-bold">So</Text>
-                      </View>
-                      <Text className="text-black dark:text-white text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Sophie Diop</Text>
-                    </View>
-                    <MoreHorizontal size={14} color={isDark ? '#A3A3A3' : '#6B7280'} />
-                  </View>
-                  <Text className="text-gray-600 dark:text-gray-300 text-[10px] leading-tight mb-2" numberOfLines={1} style={{ fontFamily: 'Poppins_400Regular' }}>
-                    Non issombe alogé di cemanin...
-                  </Text>
-                  <View className="flex-row space-x-1">
-                     <View className="w-6 h-8 bg-gray-200 rounded overflow-hidden">
-                       <Image source={{uri: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=100&auto=format&fit=crop'}} className="w-full h-full" />
-                     </View>
-                     <View className="w-6 h-8 bg-gray-200 rounded overflow-hidden">
-                       <Image source={{uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop'}} className="w-full h-full" />
-                     </View>
-                     <View className="w-6 h-8 bg-gray-200 rounded overflow-hidden">
-                       <Image source={{uri: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=100&auto=format&fit=crop'}} className="w-full h-full" />
-                     </View>
-                  </View>
-                </View>
+              <View className="py-4 items-center">
+                <Text className="text-gray-400 text-xs text-center">Rien de nouveau dans la communauté.</Text>
               </View>
             )}
           </View>
