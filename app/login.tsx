@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
+import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Alert, ImageBackground, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 
 export default function LoginScreen() {
@@ -77,16 +77,15 @@ export default function LoginScreen() {
               </View>
 
               <View className="mb-6">
-                <Text className="text-gray-500 font-medium mb-2" style={{ fontFamily: 'Poppins_500Medium' }}>Code PIN secret</Text>
+                <Text className="text-gray-500 font-medium mb-2" style={{ fontFamily: 'Poppins_500Medium' }}>Mot de passe</Text>
                 <View className="border-b border-gray-300 pb-2">
                   <TextInput
                     value={pin}
                     onChangeText={setPin}
                     placeholder="••••"
                     placeholderTextColor="#9CA3AF"
-                    secureTextEntry
-                    keyboardType="number-pad"
-                    maxLength={4}
+                    secureTextEntry={true}
+                    keyboardType="default"
                     className="text-black text-lg p-0 m-0 tracking-[1em]"
                   />
                 </View>
