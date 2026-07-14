@@ -2,6 +2,8 @@
 > onyx-nutrition-mobile@1.0.0 web
 > expo start --web
 
+env: load .env
+env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY
 Starting project at /app
 React Compiler enabled
 Starting Metro Bundler
@@ -11,50 +13,39 @@ Your project may not work correctly until you install the expected versions of t
 Waiting on http://localhost:8081
 Logs for your project will appear below.
 Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓░░░░░░░░░░░ 31.6% (13/29)
-λ node_modules/expo-router/node/render.js ▓░░░░░░░░░░░░░░░  8.7% ( 68/231)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓░░░░░░░░░░░ 31.6% ( 95/191)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓░░░░░░░░░░ 38.8% (298/479)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.3% (236/362)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 62.2% (486/616)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.3% (308/439)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 62.2% ( 568/2451)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 55.9% (359/480)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 62.2% (1313/2493)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 55.9% (390/535)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.8% (2400/2519)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 60.5% ( 549/2445)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.0% (2545/2653)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 60.5% (1133/2560)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.1% (2620/2718)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.3% (2323/2561)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.1% (2620/2718)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.0% (2618/2721)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.3% (2744/2810)
-λ Bundled 38725ms node_modules/expo-router/node/render.js (2947 modules)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.7% (2965/2984)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2947/2947)
-⚠️ Missing Supabase environment variables. Please check your .env file.
-(node:2091436) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Web node_modules/expo-router/entry.js ▓▓▓▓░░░░░░░░░░░░ 25.0% ( 46/144)
+λ node_modules/expo-router/node/render.js ░░░░░░░░░░░░░░░░  3.1% ( 13/109)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 48.9% (184/263)
+λ node_modules/expo-router/node/render.js ▓▓▓░░░░░░░░░░░░░ 21.9% (141/336)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 52.0% (262/381)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓░░░░░░░░░ 45.2% (332/494)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 52.1% (295/426)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 66.0% (489/621)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 61.5% (436/556)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 66.0% ( 645/2497)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 61.5% (436/556)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 66.0% (1834/2497)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 70.4% (564/709)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 91.5% (2488/2621)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 70.4% ( 675/2561)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.2% (2622/2711)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 70.4% (1873/2576)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.2% (2642/2731)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.0% (2622/2744)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.8% (2770/2830)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.1% (2931/2976)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.8% (2925/2944)
+λ Bundled 39029ms node_modules/expo-router/node/render.js (2947 modules)
+(node:39048) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.1% (2978/2993)
-Web Bundled 43116ms node_modules/expo-router/entry.js (2997 modules)
-Error: Premature close
-    at onclose (node:internal/streams/end-of-stream:171:30)
-    at processTicksAndRejections (node:internal/process/task_queues:84:11)
+Web Bundled 41248ms node_modules/expo-router/entry.js (2998 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓░░░░░░░░░░░░ 28.7% ( 59/229)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓░░░░░░░░░░ 39.9% ( 378/2338)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓░░░░░░░░░░ 39.9% (1312/2467)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 89.5% (2515/2668)
+Web Bundled 14725ms node_modules/expo-router/entry.js (3000 modules)
 Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-λ Bundled 104ms node_modules/expo-router/node/render.js (1 module)
-⚠️ Missing Supabase environment variables. Please check your .env file.
+λ Bundled 107ms node_modules/expo-router/node/render.js (1 module)
 Web Bundled 743ms node_modules/expo-router/entry.js (1 module)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓░░░░░░░░░░░ 31.9% (221/401)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 47.8% ( 512/2440)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 47.8% (1729/2525)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.6% (2613/2749)
-Web Bundled 16491ms node_modules/expo-router/entry.js (2999 modules)
- LOG  [web] Logs will appear in the browser console
-Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-λ Bundled 99ms node_modules/expo-router/node/render.js (1 module)
-⚠️ Missing Supabase environment variables. Please check your .env file.
-Web Bundled 721ms node_modules/expo-router/entry.js (1 module)
-Web Bundled 134ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 103ms node_modules/expo-router/entry.js (1 module)
  LOG  [web] Logs will appear in the browser console
