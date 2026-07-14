@@ -20,13 +20,13 @@ export default function TabLayout() {
           borderRadius: 32,
           height: 70,
           borderTopWidth: 0,
-          overflow: 'hidden',
+          // Removed overflow: 'hidden' to allow the central button to float above
         },
         tabBarBackground: () => (
           <BlurView
             tint="dark"
             intensity={80}
-            style={StyleSheet.absoluteFill}
+            style={[StyleSheet.absoluteFill, { borderRadius: 32, overflow: 'hidden' }]}
           />
         ),
       }}>
@@ -49,7 +49,7 @@ export default function TabLayout() {
         options={{
           title: 'Mon Jour',
           tabBarIcon: ({ color }) => (
-            <View className="bg-neon h-14 w-14 rounded-full flex items-center justify-center -mt-8 shadow-lg shadow-neon/50">
+            <View className="bg-[#39FF14] h-14 w-14 rounded-full flex items-center justify-center -mt-8 shadow-[0_0_15px_rgba(57,255,20,0.5)]">
               <Calendar color="black" size={28} />
             </View>
           ),

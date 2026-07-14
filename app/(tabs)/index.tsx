@@ -7,7 +7,6 @@ import {
   Droplets,
   MoreHorizontal,
   Heart,
-
   ArrowUpRight,
   Coffee,
 } from 'lucide-react-native';
@@ -103,7 +102,7 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [profile, setProfile] = useState<UserProfile>({
-    first_name: 'Utilisateur',
+    first_name: 'UTILISATEUR', // This should be replaced, fallback only if completely failed.
     xp: 0,
     subscription_days_left: 0,
     weight: null,
@@ -133,18 +132,26 @@ export default function HomeScreen() {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      if (userId) {
+      if (sessionError) {
+         console.error("Erreur lors de la récupération de la session :", sessionError);
+      }
+
+      if (session && session.user) {
+        const userId = session.user.id;
+        console.log("Session active pour l'utilisateur ID :", userId);
+
         // Fetch Profile
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', userId)
           .single();
 
-        if (profileData) {
+        if (profileError) {
+           console.error("RLS Error reading profiles :", profileError);
+        } else if (profileData) {
           setProfile(prev => ({
             ...prev,
             first_name: profileData.first_name || prev.first_name,
@@ -160,14 +167,16 @@ export default function HomeScreen() {
 
         // Fetch Daily Logs (Steps, Sleep, Water)
         const todayStr = new Date().toISOString().split('T')[0];
-        const { data: logData } = await supabase
+        const { data: logData, error: logError } = await supabase
           .from('daily_logs')
           .select('*')
           .eq('user_id', userId)
           .eq('date', todayStr)
           .single();
 
-        if (logData) {
+        if (logError && logError.code !== 'PGRST116') { // Ignore "no rows returned" error for new days
+           console.error("RLS Error reading daily_logs :", logError);
+        } else if (logData) {
           setDailyStats(prev => ({
             ...prev,
             steps: logData.steps || 0,
@@ -177,15 +186,16 @@ export default function HomeScreen() {
         }
 
         // Fetch Meals & sum up macros
-        const { data: mealData } = await supabase
+        const { data: mealData, error: mealError } = await supabase
           .from('nutrition_daily_logs')
           .select('*')
           .eq('user_id', userId)
-          // Ideally filter by today's date if schema supports it
           .order('created_at', { ascending: false })
           .limit(5);
 
-        if (mealData) {
+        if (mealError) {
+           console.error("RLS Error reading nutrition_daily_logs :", mealError);
+        } else if (mealData) {
           setMeals(mealData as any);
 
           let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
@@ -204,21 +214,25 @@ export default function HomeScreen() {
             fats_consumed: totalF,
           }));
         }
+      } else {
+        console.error("Aucune session active trouvée sur le Dashboard !");
       }
 
       // Fetch Community Posts
-      const { data: postData } = await supabase
+      const { data: postData, error: postError } = await supabase
         .from('community_posts')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(2);
 
-      if (postData) {
+      if (postError) {
+         console.error("RLS Error reading community_posts :", postError);
+      } else if (postData) {
         setPosts(postData as any);
       }
 
     } catch (e) {
-      console.log('Error fetching dashboard data:', e);
+      console.error('Unexpected error fetching dashboard data:', e);
     } finally {
       setIsLoading(false);
     }

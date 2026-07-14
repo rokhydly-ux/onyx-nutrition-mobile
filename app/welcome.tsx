@@ -70,6 +70,14 @@ export default function WelcomeScreen() {
           showsHorizontalScrollIndicator={false}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
+          onScrollToIndexFailed={(info) => {
+            const wait = new Promise(resolve => setTimeout(resolve, 500));
+            wait.then(() => {
+              if (flatListRef.current) {
+                flatListRef.current.scrollToIndex({ index: info.index, animated: true });
+              }
+            });
+          }}
           renderItem={({ item }) => (
             <View style={{ width, height }}>
               <Image
@@ -83,7 +91,7 @@ export default function WelcomeScreen() {
         />
       </View>
 
-      <SafeAreaView className="flex-1 justify-end p-6 pb-12" edges={['top', 'bottom']}>
+      <SafeAreaView className="flex-1 justify-end p-6" edges={['top', 'bottom']}>
         {/* Pagination Dots */}
         <View className="flex-row justify-center mb-8">
           {SLIDES.map((_, index) => (
@@ -97,7 +105,7 @@ export default function WelcomeScreen() {
         </View>
 
         {/* Content & Actions */}
-        <BlurView intensity={30} tint="dark" className="p-6 rounded-[2rem] overflow-hidden border border-white/10">
+        <BlurView intensity={30} tint="dark" className="p-6 rounded-[2rem] overflow-hidden border border-white/10 mb-4">
 
           {/* Dynamic Text */}
           <View className="h-32 justify-center mb-4">
@@ -124,6 +132,7 @@ export default function WelcomeScreen() {
             <Text className="text-white font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>SE CONNECTER</Text>
           </TouchableOpacity>
         </BlurView>
+        <Text className="text-center text-gray-400 text-xs mb-2">nutriafro.app</Text>
       </SafeAreaView>
     </View>
   );
