@@ -16,10 +16,22 @@ export default function LoginScreen() {
     if (!phone || !pin) return;
     setLoading(true);
 
-    // As per master brief, authentication by phone.
-    // Usually mapping phone to a fake email or real email.
-    const cleanPhone = phone.replace(/\s+/g, '');
-    const authEmail = `${cleanPhone}@clients.onyxcrm.com`; // Based on previous project structure
+    // 1. Clean all non-digit and non-plus characters
+    let cleanPhone = phone.replace(/[^0-9+]/g, '');
+
+    // 2. BACKEND LOGIC: Automatic detection of Senegalese format
+    // If it's a 9-digit number starting with 70, 75, 76, 77 or 78 (without country code), add +221
+    if (/^(70|75|76|77|78)\d{7}$/.test(cleanPhone)) {
+      cleanPhone = `+221${cleanPhone}`;
+    }
+    // Otherwise, if the number doesn't start with "+", add "+" at the beginning
+    else if (!cleanPhone.startsWith('+')) {
+      cleanPhone = `+${cleanPhone}`;
+    }
+
+    // 3. Form the official fictional email
+    const authEmail = `${cleanPhone}@clients.onyxcrm.com`;
+    console.log("Email envoyé à Supabase Auth :", authEmail);
 
     const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: pin });
 
