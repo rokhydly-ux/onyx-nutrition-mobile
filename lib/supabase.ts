@@ -3,8 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn("⚠️ Missing Supabase environment variables. Please check your .env file.");
+}
 
 // Only create a dummy storage if on web and window is not defined (for static rendering)
 const customStorage = Platform.OS === 'web'
@@ -17,11 +21,15 @@ const customStorage = Platform.OS === 'web'
         } as any)
   : AsyncStorage;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: customStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder-url.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      storage: customStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  }
+);
