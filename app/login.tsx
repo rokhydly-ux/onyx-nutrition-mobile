@@ -1,9 +1,9 @@
-import { BlurView } from 'expo-blur';
-import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, ImageBackground, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
 import { supabase } from '../lib/supabase';
 
 export default function LoginScreen() {
@@ -16,33 +16,33 @@ export default function LoginScreen() {
     if (!phone || !pin) return;
     setLoading(true);
 
-    // 1. Clean all non-digit and non-plus characters
-    let cleanPhone = phone.replace(/[^0-9+]/g, '');
+    // 1. On supprime uniquement les espaces vides de l'identifiant saisi
+    const cleanIdentifier = phone.replace(/\s+/g, '');
 
-    // 2. BACKEND LOGIC: Automatic detection of Senegalese format
-    // If it's a 9-digit number starting with 70, 75, 76, 77 or 78 (without country code), add +221
-    if (/^(70|75|76|77|78)\d{7}$/.test(cleanPhone)) {
-      cleanPhone = `+221${cleanPhone}`;
-    }
-    // Otherwise, if the number doesn't start with "+", add "+" at the beginning
-    else if (!cleanPhone.startsWith('+')) {
-      cleanPhone = `+${cleanPhone}`;
-    }
+    // 2. Logique PWA stricte : si ça contient un "@", c'est un email, sinon on accole directement le domaine sans altérer le numéro
+    const authEmail = cleanIdentifier.includes('@')
+      ? cleanIdentifier
+      : `${cleanIdentifier}@clients.onyxcrm.com`;
 
-    // 3. Form the official fictional email
-    const authEmail = `${cleanPhone}@clients.onyxcrm.com`;
-    console.log("Email envoyé à Supabase Auth :", authEmail);
+    console.log("Email synchronisé PWA/Mobile envoyé à Supabase :", authEmail);
 
-    const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: pin });
+    // 3. Lancement de l'authentification
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: authEmail,
+      password: pin, // keyboardType is already "default"
+    });
 
     setLoading(false);
     if (!error) {
+      console.log("Connexion réussie ! Session synchronisée pour le client ID :", data.session.user.id);
       router.replace('/(tabs)');
     } else {
+      console.error("Erreur de connexion :", error.message);
+      const errorMessage = "Identifiants incorrects. Veuillez utiliser les mêmes identifiants que sur l'application Web.";
       if (Platform.OS === 'web') {
-        window.alert(`Erreur de connexion: ${error.message}`);
+        window.alert(errorMessage);
       } else {
-        Alert.alert("Erreur de connexion", error.message);
+        Alert.alert("Erreur de connexion", errorMessage);
       }
     }
   };
@@ -89,15 +89,16 @@ export default function LoginScreen() {
               </View>
 
               <View className="mb-6">
-                <Text className="text-gray-500 font-medium mb-2" style={{ fontFamily: 'Poppins_500Medium' }}>Mot de passe</Text>
+                <Text className="text-gray-500 font-medium mb-2" style={{ fontFamily: 'Poppins_500Medium' }}>Code PIN secret</Text>
                 <View className="border-b border-gray-300 pb-2">
                   <TextInput
                     value={pin}
                     onChangeText={setPin}
                     placeholder="••••"
                     placeholderTextColor="#9CA3AF"
-                    secureTextEntry={true}
-                    keyboardType="default"
+                    secureTextEntry
+                    keyboardType="number-pad"
+                    maxLength={4}
                     className="text-black text-lg p-0 m-0 tracking-[1em]"
                   />
                 </View>
