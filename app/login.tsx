@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
@@ -27,8 +27,11 @@ export default function LoginScreen() {
     if (!error) {
       router.replace('/(tabs)');
     } else {
-      // Allow moving forward to tabs for demonstration if error (or remove in prod)
-      router.replace('/(tabs)');
+      if (Platform.OS === 'web') {
+        window.alert(`Erreur de connexion: ${error.message}`);
+      } else {
+        Alert.alert("Erreur de connexion", error.message);
+      }
     }
   };
 
