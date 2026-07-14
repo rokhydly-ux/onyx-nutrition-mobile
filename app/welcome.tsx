@@ -28,14 +28,14 @@ const SLIDES = [
 ];
 
 export default function WelcomeScreen() {
-router = useRouter();
-[activeIndex, setActiveIndex] = useState(0);
-fadeAnim1 = useRef(new Animated.Value(1)).current;
+  const router = useRouter();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const fadeAnim1 = useRef(new Animated.Value(1)).current;
 
 
   // Auto-playing Carousel Logic with Fade
   useEffect(() => {
-  interval = setInterval(() => {
+  const interval = setInterval(() => {
       // Fade out current
       Animated.timing(fadeAnim1, {
         toValue: 0,
