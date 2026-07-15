@@ -142,84 +142,87 @@ export default function HomeScreen() {
         const userId = session.user.id;
         console.log("Session active pour l'utilisateur ID :", userId);
 
-        // Fetch Profile
+        // 1. RÉCUPÉRATION DE L'IDENTITÉ (Table clients)
         const { data: profileData, error: profileError } = await supabase
-          .from('nutrition_profiles')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle();
-
-        const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select('*')
           .eq('id', userId)
           .maybeSingle();
 
         if (profileError) {
-           console.error("RLS Error reading nutrition_profiles :", profileError);
-        } else if (profileData) {
-          setProfile(prev => ({
-            ...prev,
-            first_name: clientData?.first_name || profileData.first_name || prev.first_name,
-            xp: profileData.xp || prev.xp,
-            subscription_days_left: profileData.subscription_days_left || prev.subscription_days_left,
-            weight: profileData.weight || prev.weight,
-            calories_goal: profileData.target_calories || profileData.calories_goal || prev.calories_goal,
-            protein_goal: profileData.protein_goal || prev.protein_goal,
-            carbs_goal: profileData.carbs_goal || prev.carbs_goal,
-            fats_goal: profileData.fats_goal || prev.fats_goal,
-          }));
+          console.error("RLS Error reading clients :", profileError);
         }
 
-        // Fetch Daily Logs (Steps, Sleep, Water)
-        const todayStr = new Date().toISOString().split('T')[0];
-        const { data: logData, error: logError } = await supabase
-          .from('daily_logs')
+        // 2. RÉCUPÉRATION DU PROFIL NUTRITIONNEL (Table nutrition_profiles)
+        const { data: nutritionData, error: nutritionError } = await supabase
+          .from('nutrition_profiles')
           .select('*')
-          .eq('user_id', userId)
-          .eq('date_log', todayStr)
+          .eq('client_id', userId)
           .maybeSingle();
 
-        if (logError) {
-           console.error("RLS Error reading daily_logs :", logError);
-        } else if (logData) {
-          setDailyStats(prev => ({
-            ...prev,
-            steps: logData.steps || 0,
-            sleep_hours: logData.sleep_hours || 0,
-            water_glasses: logData.water_glasses || 0,
-          }));
+        if (nutritionError) {
+          console.error("RLS Error reading nutrition_profiles :", nutritionError);
         }
 
-        // Fetch Meals & sum up macros
-        const { data: mealData, error: mealError } = await supabase
+        // 3. RÉCUPÉRATION DU JOURNAL DU JOUR (Table nutrition_daily_logs)
+        const todayDateString = new Date().toISOString().split('T')[0];
+        const { data: todayLog, error: todayLogError } = await supabase
           .from('nutrition_daily_logs')
           .select('*')
           .eq('client_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(5);
+          .eq('log_date', todayDateString)
+          .maybeSingle();
 
-        if (mealError) {
-           console.error("RLS Error reading nutrition_daily_logs :", mealError);
-        } else if (mealData) {
-          setMeals(mealData as any);
-
-          let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
-          mealData.forEach((m: any) => {
-            totalCal += m.calories || 0;
-            totalP += m.protein || 0;
-            totalC += m.carbs || 0;
-            totalF += m.fats || 0;
-          });
-
-          setDailyStats(prev => ({
-            ...prev,
-            calories_consumed: totalCal,
-            protein_consumed: totalP,
-            carbs_consumed: totalC,
-            fats_consumed: totalF,
-          }));
+        if (todayLogError) {
+          console.error("RLS Error reading nutrition_daily_logs :", todayLogError);
         }
+
+        // 4. HISTORIQUE DE POIDS (Table nutrition_weight_logs)
+        const { data: weightLogs, error: weightError } = await supabase
+          .from('nutrition_weight_logs')
+          .select('*')
+          .eq('client_id', userId)
+          .order('log_date', { ascending: false })
+          .limit(1);
+
+        if (weightError) {
+          console.error("RLS Error reading nutrition_weight_logs :", weightError);
+        }
+
+        // --- MAJ des États (State Mapping) ---
+
+        const currentWeight = weightLogs?.[0]?.weight || nutritionData?.diagnostic_data?.currentWeight || "--";
+        const firstName = profileData?.full_name || profileData?.name || profileData?.first_name || 'MEMBRE';
+
+        setProfile(prev => ({
+          ...prev,
+          first_name: firstName,
+          xp: nutritionData?.jongoma_xp || 0,
+          subscription_days_left: profileData?.subscription_days || prev.subscription_days_left, // Assuming subscription comes from client or keep prev
+          weight: currentWeight,
+          calories_goal: nutritionData?.daily_calorie_goal || 2000,
+          protein_goal: nutritionData?.protein_goal || 80,
+          carbs_goal: nutritionData?.carbs_goal || 150,
+          fats_goal: nutritionData?.fats_goal || 50,
+        }));
+
+        const activitySteps = todayLog?.report_data?.steps || todayLog?.steps || 0;
+        const sleepHours = todayLog?.report_data?.sleep_hours || todayLog?.sleep_hours || 0;
+
+        setDailyStats(prev => ({
+          ...prev,
+          steps: activitySteps,
+          sleep_hours: sleepHours,
+          water_glasses: todayLog?.water_glasses || 0,
+          calories_consumed: todayLog?.calories_consumed || 0,
+          protein_consumed: todayLog?.protein_consumed || 0,
+          carbs_consumed: todayLog?.carbs_consumed || 0,
+          fats_consumed: todayLog?.fats_consumed || 0,
+        }));
+
+        // Optionnel : Meals list could be extracted from a sub-table or 'meals' property in todayLog.
+        // We set empty list or handle from another place if needed. Currently keeping it as is or fallback to empty:
+        setMeals([]);
       } else {
         console.error("Aucune session active trouvée sur le Dashboard !");
       }
