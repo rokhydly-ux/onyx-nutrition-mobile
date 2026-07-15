@@ -120,7 +120,7 @@ export default function WelcomeScreen() {
 
           <TouchableOpacity
             className="bg-[#39FF14] w-full py-4 rounded-full items-center mb-4 shadow-[0_0_15px_rgba(57,255,20,0.4)]"
-            onPress={() => {}} // Hook to Signup
+            onPress={() => router.push('/diagnostic')}
           >
             <Text className="text-black font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>S&apos;INSCRIRE</Text>
           </TouchableOpacity>

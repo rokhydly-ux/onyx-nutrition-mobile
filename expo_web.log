@@ -13,20 +13,25 @@ Your project may not work correctly until you install the expected versions of t
 Waiting on http://localhost:8081
 Logs for your project will appear below.
 Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.0% (439/627)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 69.7% (611/732)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 74.8% ( 793/2665)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.5% ( 872/2711)
-λ Bundled 10478ms node_modules/expo-router/node/render.js (2947 modules)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2998/2998)
-Web Bundled 11390ms node_modules/expo-router/entry.js (2998 modules)
-(node:92058) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 77.4% (556/632)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 77.3% (673/779)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.2% (1013/2816)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.1% (2768/2824)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.9% (3001/3096)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.9% (3297/3740)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.9% (3313/3787)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.9% (3720/3740)
+λ Bundled 16647ms node_modules/expo-router/node/render.js (3774 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3825/3825)
+Web Bundled 17771ms node_modules/expo-router/entry.js (3825 modules)
+(node:153522) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.8% (1521/2818)
-Web Bundled 4658ms node_modules/expo-router/entry.js (2992 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 71.4% (671/794)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.2% (3376/3793)
+Web Bundled 6766ms node_modules/expo-router/entry.js (3827 modules)
  LOG  [web] Logs will appear in the browser console
 Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-λ Bundled 131ms node_modules/expo-router/node/render.js (1 module)
-Web Bundled 896ms node_modules/expo-router/entry.js (1 module)
-Web Bundled 109ms node_modules/expo-router/entry.js (1 module)
+λ Bundled 398ms node_modules/expo-router/node/render.js (1 module)
+Web Bundled 2173ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 478ms node_modules/expo-router/entry.js (1 module)
  LOG  [web] Logs will appear in the browser console
