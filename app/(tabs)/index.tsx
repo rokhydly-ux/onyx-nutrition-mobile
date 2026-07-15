@@ -144,21 +144,27 @@ export default function HomeScreen() {
 
         // Fetch Profile
         const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
+          .from('nutrition_profiles')
           .select('*')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
+
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
 
         if (profileError) {
-           console.error("RLS Error reading profiles :", profileError);
+           console.error("RLS Error reading nutrition_profiles :", profileError);
         } else if (profileData) {
           setProfile(prev => ({
             ...prev,
-            first_name: profileData.first_name || prev.first_name,
+            first_name: clientData?.first_name || profileData.first_name || prev.first_name,
             xp: profileData.xp || prev.xp,
             subscription_days_left: profileData.subscription_days_left || prev.subscription_days_left,
             weight: profileData.weight || prev.weight,
-            calories_goal: profileData.calories_goal || prev.calories_goal,
+            calories_goal: profileData.target_calories || profileData.calories_goal || prev.calories_goal,
             protein_goal: profileData.protein_goal || prev.protein_goal,
             carbs_goal: profileData.carbs_goal || prev.carbs_goal,
             fats_goal: profileData.fats_goal || prev.fats_goal,
@@ -167,14 +173,18 @@ export default function HomeScreen() {
 
         // Fetch Daily Logs (Steps, Sleep, Water)
         const todayStr = new Date().toISOString().split('T')[0];
+        const nextDay = new Date();
+        nextDay.setDate(nextDay.getDate() + 1);
+        const nextDayStr = nextDay.toISOString().split('T')[0];
         const { data: logData, error: logError } = await supabase
           .from('daily_logs')
           .select('*')
-          .eq('user_id', userId)
-          .eq('date', todayStr)
-          .single();
+          .eq('client_id', userId)
+          .gte('created_at', todayStr)
+          .lt('created_at', nextDayStr)
+          .maybeSingle();
 
-        if (logError && logError.code !== 'PGRST116') { // Ignore "no rows returned" error for new days
+        if (logError) {
            console.error("RLS Error reading daily_logs :", logError);
         } else if (logData) {
           setDailyStats(prev => ({
@@ -189,7 +199,7 @@ export default function HomeScreen() {
         const { data: mealData, error: mealError } = await supabase
           .from('nutrition_daily_logs')
           .select('*')
-          .eq('user_id', userId)
+          .eq('client_id', userId)
           .order('created_at', { ascending: false })
           .limit(5);
 
