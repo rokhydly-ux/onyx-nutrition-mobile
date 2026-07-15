@@ -173,15 +173,11 @@ export default function HomeScreen() {
 
         // Fetch Daily Logs (Steps, Sleep, Water)
         const todayStr = new Date().toISOString().split('T')[0];
-        const nextDay = new Date();
-        nextDay.setDate(nextDay.getDate() + 1);
-        const nextDayStr = nextDay.toISOString().split('T')[0];
         const { data: logData, error: logError } = await supabase
           .from('daily_logs')
           .select('*')
-          .eq('client_id', userId)
-          .gte('created_at', todayStr)
-          .lt('created_at', nextDayStr)
+          .eq('user_id', userId)
+          .eq('date_log', todayStr)
           .maybeSingle();
 
         if (logError) {
@@ -359,7 +355,11 @@ export default function HomeScreen() {
             <Text className="text-black dark:text-white text-sm font-bold leading-tight" style={{ fontFamily: 'Poppins_700Bold' }}>
               {dailyStats.sleep_hours}h
             </Text>
-            <Text className="text-gray-400 text-[10px]">Aujourd&apos;hui</Text>
+            {dailyStats.sleep_hours === 0 && dailyStats.water_glasses === 0 && dailyStats.steps === 0 ? (
+              <Text className="text-gray-400 text-[8px] leading-tight mt-1">Enregistrez votre humeur du jour</Text>
+            ) : (
+              <Text className="text-gray-400 text-[10px]">Aujourd&apos;hui</Text>
+            )}
           </View>
 
           {/* Hydration */}
