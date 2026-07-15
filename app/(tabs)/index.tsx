@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, ImageBackground } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
 import { supabase } from '../../lib/supabase';
@@ -98,6 +99,7 @@ const ProgressBar = ({ label, current, max, color }: { label: string, current: n
 export default function HomeScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -128,6 +130,42 @@ export default function HomeScreen() {
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  const handleUpdateWater = async (glasses: number) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+      const todayDateString = new Date().toISOString().split('T')[0];
+
+      // Check if log exists
+      const { data: existingLog } = await supabase
+        .from('nutrition_daily_logs')
+        .select('id')
+        .eq('client_id', userId)
+        .eq('log_date', todayDateString)
+        .maybeSingle();
+
+      if (existingLog) {
+        await supabase
+          .from('nutrition_daily_logs')
+          .update({ water_glasses: glasses })
+          .eq('id', existingLog.id);
+      } else {
+        await supabase
+          .from('nutrition_daily_logs')
+          .insert({
+            client_id: userId,
+            log_date: todayDateString,
+            water_glasses: glasses
+          });
+      }
+
+      setDailyStats(prev => ({ ...prev, water_glasses: glasses }));
+    } catch (e) {
+      console.error("Error updating water:", e);
+    }
+  };
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -314,21 +352,23 @@ export default function HomeScreen() {
         {/* 4 Stat Cards Row */}
         <View className="flex-row justify-between mb-6 space-x-2">
           {/* Poids */}
-          <View className="flex-1 bg-white dark:bg-[#1A1A1A] p-3 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>POIDS</Text>
-              <WeightIcon color={isDark ? '#FFF' : '#39FF14'} />
-            </View>
-            <View className="flex-row items-end">
-              <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                {profile.weight ? profile.weight : '--'}
-              </Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1 ml-1">kg</Text>
-            </View>
-          </View>
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/weight')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
+            <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783280413/Woman_standing_on_scale_smiling_202607051938_e6h39p.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.25 }}>
+              <View className="flex-row items-center justify-between mb-2">
+                <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>POIDS</Text>
+                <WeightIcon color={isDark ? '#FFF' : '#39FF14'} />
+              </View>
+              <View className="flex-row items-end">
+                <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                  {profile.weight ? profile.weight : '--'}
+                </Text>
+                <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1 ml-1">kg</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
 
           {/* Activity */}
-          <View className="flex-1 bg-white dark:bg-[#1A1A1A] p-3 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
+          <TouchableOpacity activeOpacity={0.8} className="flex-1 bg-white dark:bg-[#1A1A1A] p-3 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>ACTIVITY</Text>
               <ActivityIcon color={isDark ? '#FFF' : '#6366F1'} />
@@ -347,10 +387,10 @@ export default function HomeScreen() {
                <View className="w-1.5 h-1/4 bg-[#39FF14] rounded-sm" />
                <View className="w-1.5 h-full bg-gray-200 dark:bg-gray-700 rounded-sm" />
             </View>
-          </View>
+          </TouchableOpacity>
 
           {/* Somme */}
-          <View className="flex-1 bg-white dark:bg-[#1A1A1A] p-3 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
+          <TouchableOpacity activeOpacity={0.8} className="flex-1 bg-white dark:bg-[#1A1A1A] p-3 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>SOMME</Text>
               <SleepIcon color={isDark ? '#FFF' : '#6366F1'} />
@@ -363,28 +403,39 @@ export default function HomeScreen() {
             ) : (
               <Text className="text-gray-400 text-[10px]">Aujourd&apos;hui</Text>
             )}
-          </View>
+          </TouchableOpacity>
 
           {/* Hydration */}
-          <View className="flex-1 bg-white dark:bg-[#1A1A1A] p-3 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>HYDRATION</Text>
-              <HydrationIcon color="#3B82F6" />
-            </View>
-            <View className="flex-row items-end mb-2">
-              <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                {dailyStats.water_glasses}<Text className="text-gray-400 text-sm">/8</Text>
-              </Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-[10px] mb-1 ml-1">glasses</Text>
-            </View>
-            <View className="flex-row space-x-[2px] flex-wrap mt-auto">
-               {[1,2,3,4,5,6,7,8].map(i => (
-                 <View key={i} className="mb-[2px]">
-                   <Droplets size={10} color="#3B82F6" fill={i <= dailyStats.water_glasses ? "#3B82F6" : "transparent"} />
-                 </View>
-               ))}
-            </View>
-          </View>
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/today')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
+            <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783099524/Woman_drinking_clear_water_2K_202607031724_wuqqco.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.6, tintColor: 'gray' }}>
+              <View className="flex-row items-center justify-between mb-2">
+                <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>HYDRATION</Text>
+                <HydrationIcon color="#3B82F6" />
+              </View>
+              <View className="flex-row items-end mb-2">
+                <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                  {dailyStats.water_glasses}<Text className="text-gray-400 text-sm">/8</Text>
+                </Text>
+                <Text className="text-gray-500 dark:text-gray-400 text-[10px] mb-1 ml-1">glasses</Text>
+              </View>
+              <View className="flex-row flex-wrap mt-auto w-full justify-between pr-2">
+                 {Array(8).fill(0).map((_, idx) => (
+                   <TouchableOpacity
+                     key={idx}
+                     className="mb-1"
+                     hitSlop={{ top: 10, bottom: 10, left: 5, right: 5 }}
+                     onPress={() => handleUpdateWater(idx + 1)}
+                   >
+                     <Image
+                       source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675042/2_maewiy.png' }}
+                       style={{ width: 12, height: 16, opacity: (idx + 1) <= dailyStats.water_glasses ? 1 : 0.3 }}
+                       resizeMode="contain"
+                     />
+                   </TouchableOpacity>
+                 ))}
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
         </View>
 
         {/* Objectif du Jour */}
@@ -445,11 +496,17 @@ export default function HomeScreen() {
 
           {/* Buttons */}
           <View className="flex-row space-x-3">
-            <TouchableOpacity className="flex-1 border border-gray-300 dark:border-white/20 rounded-xl py-3 flex-row items-center justify-center">
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push('/(tabs)/today')}
+              className="flex-1 border border-gray-300 dark:border-white/20 rounded-xl py-3 flex-row items-center justify-center">
               <Coffee size={16} color={isDark ? '#A3A3A3' : '#6B7280'} />
               <Text className="text-gray-700 dark:text-gray-300 text-xs font-bold ml-2 uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>LOGUER REPAS</Text>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-1 bg-[#39FF14] rounded-xl py-3 flex-row items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.3)]">
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push('/(tabs)/today?openReport=true')}
+              className="flex-1 bg-[#39FF14] rounded-xl py-3 flex-row items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.3)]">
               <Heart size={16} color="black" />
               <Text className="text-black text-xs font-bold ml-2 uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>BILAN QUOTIDIEN</Text>
             </TouchableOpacity>
@@ -460,19 +517,37 @@ export default function HomeScreen() {
         <View className="flex-row space-x-3 mb-10">
           {/* Sama Menu du Jour */}
           <View className="flex-1 bg-white dark:bg-[#151515] rounded-3xl p-4 border border-gray-200 dark:border-white/10 shadow-sm">
-            <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>SAMA MENU DU JOUR</Text>
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>SAMA MENU DU JOUR</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/menu')}>
+                <Text className="text-[#39FF14] text-[10px] font-bold uppercase">Voir la semaine</Text>
+              </TouchableOpacity>
+            </View>
 
-            {meals.length > 0 ? meals.map((meal) => (
-               <View key={meal.id} className="flex-row items-center mb-3">
-                 <View className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-lg mr-3 items-center justify-center">
-                   <Coffee size={16} color="#A3A3A3" />
-                 </View>
-                 <View className="flex-1">
-                   <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{meal.meal_type} • {meal.time}</Text>
-                   <Text className="text-black dark:text-white text-xs font-bold" numberOfLines={1}>{meal.name}</Text>
-                 </View>
-               </View>
-            )) : (
+            {meals.length > 0 ? meals.map((meal, index) => {
+               // Assign default images alternatively for demo purposes based on index or meal type
+               const imageUri = index % 2 === 0
+                 ? 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg'
+                 : 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg';
+
+               return (
+                 <TouchableOpacity
+                   key={meal.id}
+                   activeOpacity={0.8}
+                   onPress={() => console.log('Open recipe', meal.id)}
+                   className="flex-row items-center mb-3">
+                   <Image
+                     source={{ uri: imageUri }}
+                     className="w-10 h-10 rounded-lg mr-3"
+                     resizeMode="cover"
+                   />
+                   <View className="flex-1">
+                     <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{meal.meal_type} • {meal.time}</Text>
+                     <Text className="text-black dark:text-white text-xs font-bold" numberOfLines={1}>{meal.name}</Text>
+                   </View>
+                 </TouchableOpacity>
+               );
+            }) : (
               <View className="py-4 items-center">
                 <Text className="text-gray-400 text-xs text-center">Aucun repas logué aujourd&apos;hui.</Text>
               </View>
