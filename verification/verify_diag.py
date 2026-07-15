@@ -13,7 +13,7 @@ def run_cuj(page):
     page.wait_for_timeout(2000)
 
     # Step 1: Gender and Age
-    page.get_by_text("Je suis une femme").click()
+    page.get_by_text("Femme", exact=True).click()
     page.wait_for_timeout(500)
     page.get_by_placeholder("Ex: 30").fill("28")
     page.get_by_text("Continuer").click()

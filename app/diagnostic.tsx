@@ -126,24 +126,45 @@ export default function DiagnosticScreen() {
     );
   };
 
+
+  const SelectableGridCard = ({ label, value, selectedValue, onSelect, imageUri, icon: IconComponent, vertical = false }: any) => {
+    const isSelected = selectedValue === value;
+    return (
+      <TouchableOpacity
+        onPress={() => onSelect(value)}
+        className={`flex-1 rounded-2xl p-3 mb-4 items-center justify-center border-[3px] ${isSelected ? 'border-[#39FF14] bg-[#39FF14]/10' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900'} ${vertical ? 'flex-col' : 'aspect-square'}`}
+      >
+        {imageUri && (
+          <ImageBackground source={{ uri: imageUri }} className={`rounded-xl overflow-hidden mb-2 bg-gray-200 dark:bg-gray-800 ${vertical ? 'w-full h-24' : 'w-16 h-16'}`} />
+        )}
+        <Text className={`text-center ${isSelected ? 'text-[#39FF14] font-bold' : 'text-black dark:text-white'} ${vertical ? 'text-sm' : 'text-xs'}`} style={{ fontFamily: isSelected ? 'Poppins_700Bold' : 'Poppins_500Medium' }}>
+          {label}
+        </Text>
+        {isSelected && <View className="absolute top-2 right-2 bg-white rounded-full"><CheckCircle2 color="#39FF14" size={16} /></View>}
+      </TouchableOpacity>
+    );
+  };
+
   const Step1 = () => (
     <View className="flex-1">
       <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Parle-nous de toi</Text>
 
-      <SelectableCard
-        label="Je suis un homme"
-        value="Homme"
-        selectedValue={data.gender}
-        onSelect={(v: string) => updateData('gender', v)}
-        imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_format_1_1_en_202606111044_rjknkg.jpg"
-      />
-      <SelectableCard
-        label="Je suis une femme"
-        value="Femme"
-        selectedValue={data.gender}
-        onSelect={(v: string) => updateData('gender', v)}
-        imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_1_1_en_gardant_202606111043_unmonc.jpg"
-      />
+      <View className="flex-row gap-3">
+        <SelectableGridCard
+          label="Homme"
+          value="Homme"
+          selectedValue={data.gender}
+          onSelect={(v: string) => updateData('gender', v)}
+          imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_format_1_1_en_202606111044_rjknkg.jpg"
+        />
+        <SelectableGridCard
+          label="Femme"
+          value="Femme"
+          selectedValue={data.gender}
+          onSelect={(v: string) => updateData('gender', v)}
+          imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_1_1_en_gardant_202606111043_unmonc.jpg"
+        />
+      </View>
 
       <View className="mt-8">
         <Text className="text-gray-500 dark:text-gray-400 text-lg mb-2 text-center" style={{ fontFamily: 'Poppins_500Medium' }}>Quel âge as-tu ?</Text>
@@ -159,15 +180,7 @@ export default function DiagnosticScreen() {
         />
       </View>
 
-      <TouchableOpacity
-        className={`mt-auto mb-6 py-4 rounded-full items-center ${data.gender && data.age ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!data.gender || !data.age}
-      >
-        <Text className={`font-bold text-lg uppercase ${data.gender && data.age ? 'text-[#39FF14]' : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: 'Poppins_700Bold', color: data.gender && data.age ? (isDark ? '#39FF14' : 'white') : undefined, backgroundColor: data.gender && data.age ? (isDark ? 'black' : 'black') : undefined, width: '100%', textAlign: 'center', overflow: 'hidden', borderRadius: 999, paddingVertical: Platform.OS === 'ios' ? 12 : 8 }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
+
     </View>
   );
 
@@ -175,9 +188,11 @@ export default function DiagnosticScreen() {
     <View className="flex-1">
       <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Quel est ton objectif ?</Text>
 
-      <SelectableCard label="Perdre du poids" value="Perte de poids" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781190763/An_authentic_photorealistic_full-body_portrait_202606111512_f3zs3t.jpg" />
-      <SelectableCard label="Garder la forme (Maintien)" value="Maintien" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781542708/A_high-end_commercial_photorealistic_portrait_202606151658_noabp9.jpg" />
-      <SelectableCard label="Prendre de la masse" value="Prise de masse" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781544091/rajoute_le_logo_sur_la_202606151721_aayo61.jpg" />
+      <View className="flex-row gap-2">
+        <SelectableGridCard vertical label="Perte de poids" value="Perte de poids" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781190763/An_authentic_photorealistic_full-body_portrait_202606111512_f3zs3t.jpg" />
+        <SelectableGridCard vertical label="Maintien" value="Maintien" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781542708/A_high-end_commercial_photorealistic_portrait_202606151658_noabp9.jpg" />
+        <SelectableGridCard vertical label="Prise de masse" value="Prise de masse" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781544091/rajoute_le_logo_sur_la_202606151721_aayo61.jpg" />
+      </View>
 
       <View className="mt-6 flex-row justify-between">
         <View className="flex-1 mr-2">
@@ -215,15 +230,7 @@ export default function DiagnosticScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        className={`mt-auto mb-6 py-4 rounded-full items-center ${data.objective && data.height && data.currentWeight && data.targetWeight ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.objective && data.height && data.currentWeight && data.targetWeight)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.objective && data.height && data.currentWeight && data.targetWeight ? (isDark ? '#39FF14' : 'white') : undefined }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
+
     </View>
   );
 
@@ -273,14 +280,7 @@ export default function DiagnosticScreen() {
 
           </BlurView>
         </View>
-        <TouchableOpacity
-          className="bg-black py-4 rounded-full items-center mb-6 z-10 shadow-[0_0_15px_rgba(57,255,20,0.5)] border border-[#39FF14]/50"
-          onPress={nextStep}
-        >
-          <Text className="font-bold text-lg uppercase text-[#39FF14]" style={{ fontFamily: 'Poppins_700Bold' }}>
-            Je suis prêt !
-          </Text>
-        </TouchableOpacity>
+
       </ImageBackground>
     );
   };
@@ -306,15 +306,7 @@ export default function DiagnosticScreen() {
       <SelectableCard label="Modérée (Sport 1-3x/semaine)" value="Modérée" selectedValue={data.activityLevel} onSelect={(v: string) => updateData('activityLevel', v)} />
       <SelectableCard label="Intense (Sport 4x+/semaine)" value="Intense" selectedValue={data.activityLevel} onSelect={(v: string) => updateData('activityLevel', v)} />
 
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.sleep && data.activityLevel ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.sleep && data.activityLevel)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.sleep && data.activityLevel ? (isDark ? '#39FF14' : 'white') : undefined }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
+
     </ScrollView>
   );
 
@@ -338,15 +330,7 @@ export default function DiagnosticScreen() {
         </>
       )}
 
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.health && (data.gender === 'Homme' || data.womenCondition) ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.health && (data.gender === 'Homme' || data.womenCondition))}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.health && (data.gender === 'Homme' || data.womenCondition) ? (isDark ? '#39FF14' : 'white') : undefined }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
+
     </ScrollView>
   );
 
@@ -372,15 +356,7 @@ export default function DiagnosticScreen() {
       <SelectableCard label="Je cuisine avec beaucoup d'huile" value="Beaucoup d'huile" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
       <SelectableCard label="Huile d'olive / Modéré" value="Modéré" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
 
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.hydration && data.pastDiets && data.cookingFats ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.hydration && data.pastDiets && data.cookingFats)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.hydration && data.pastDiets && data.cookingFats ? (isDark ? '#39FF14' : 'white') : undefined }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
+
     </ScrollView>
   );
 
@@ -405,15 +381,7 @@ export default function DiagnosticScreen() {
       <SelectableCard label="Léger (Salade, Soupe...)" value="Léger" selectedValue={data.dinnerType} onSelect={(v: string) => updateData('dinnerType', v)} />
       <SelectableCard label="Je grignote" value="Je grignote" selectedValue={data.dinnerType} onSelect={(v: string) => updateData('dinnerType', v)} />
 
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.mainCarb && data.dinnerType ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.mainCarb && data.dinnerType)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.mainCarb && data.dinnerType ? (isDark ? '#39FF14' : 'white') : undefined }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
+
     </ScrollView>
   );
 
@@ -430,19 +398,13 @@ export default function DiagnosticScreen() {
       <SelectableCard label="Pour toute la famille" value="Famille" selectedValue={data.cookingFor} onSelect={(v: string) => updateData('cookingFor', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/Je_cuisine_pour_la_famille_qzlwke.jpg" />
 
       <Text className="text-gray-500 dark:text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Budget Courses (Mensuel estimé)</Text>
-      <SelectableCard label="Budget serré" value="< 50k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/A_cute__highly_detailed_3D_202606161723_odc2jk.jpg" />
-      <SelectableCard label="Budget famille" value="50k-100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631229/A_cute__highly_detailed_3D_202606161723_1_x2pfvp.jpg" />
-      <SelectableCard label="Budget confort" value="> 100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/A_cute__highly_detailed_3D_202606161723_2_ynd0wc.jpg" />
+      <View className="flex-row gap-2">
+        <SelectableGridCard vertical label="Serré" value="< 50k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/A_cute__highly_detailed_3D_202606161723_odc2jk.jpg" />
+        <SelectableGridCard vertical label="Famille" value="50k-100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631229/A_cute__highly_detailed_3D_202606161723_1_x2pfvp.jpg" />
+        <SelectableGridCard vertical label="Confort" value="> 100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/A_cute__highly_detailed_3D_202606161723_2_ynd0wc.jpg" />
+      </View>
 
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.lunchType && data.cookingFor && data.groceryBudget ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.lunchType && data.cookingFor && data.groceryBudget)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.lunchType && data.cookingFor && data.groceryBudget ? (isDark ? '#39FF14' : 'white') : undefined }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
+
     </ScrollView>
   );
 
@@ -476,18 +438,7 @@ export default function DiagnosticScreen() {
         />
       </View>
 
-      <TouchableOpacity
-        className={`mt-auto mb-6 py-4 rounded-full items-center ${data.firstName && data.phone && !isSubmitting ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}
-        onPress={() => {
-           setStep(10);
-           handleSubmit();
-        }}
-        disabled={!(data.firstName && data.phone) || isSubmitting}
-      >
-        <Text className={`font-bold text-lg uppercase ${data.firstName && data.phone ? 'text-black' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
-          Générer mon programme
-        </Text>
-      </TouchableOpacity>
+
     </View>
   );
 
@@ -642,10 +593,13 @@ export default function DiagnosticScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-900" edges={['top', 'bottom']}>
+      <View className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[#39FF14]/10 blur-3xl" pointerEvents="none" />
+      <View className="absolute top-1/2 -left-20 w-72 h-72 rounded-full bg-[#39FF14]/5 blur-3xl" pointerEvents="none" />
+
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
         {/* Header */}
-        <View className="px-6 pt-4 pb-2 bg-white dark:bg-black">
+        <View className="px-6 pt-4 pb-2 bg-white dark:bg-zinc-900">
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center">
               <TouchableOpacity onPress={step > 1 ? prevStep : () => router.replace('/')} className="mr-4 p-2 bg-gray-100 dark:bg-gray-50 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800">
@@ -661,10 +615,41 @@ export default function DiagnosticScreen() {
         </View>
 
         {/* Content */}
-        <View className="flex-1 px-6 pt-4">
+        <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: 120 }}>
           {renderStep()}
-        </View>
+        </ScrollView>
+
+        {/* Sticky Footer */}
+        {step < 10 && (
+          <View className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 border-t border-zinc-100 dark:border-zinc-800" style={{ backdropFilter: 'blur(10px)' }}>
+            {step === 9 ? (
+              <TouchableOpacity
+                className={`w-full py-4 rounded-full items-center ${data.firstName && data.phone && !isSubmitting ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}
+                onPress={() => {
+                   setStep(10);
+                   handleSubmit();
+                }}
+                disabled={!(data.firstName && data.phone) || isSubmitting}
+              >
+                <Text className={`font-bold text-lg uppercase ${data.firstName && data.phone ? 'text-black' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+                  Générer mon programme
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                className={`w-full py-4 rounded-full items-center ${(step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3) || (step === 4 && data.sleep && data.activityLevel) || (step === 5 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 6 && data.hydration && data.pastDiets && data.cookingFats) || (step === 7 && data.mainCarb && data.dinnerType) || (step === 8 && data.lunchType && data.cookingFor && data.groceryBudget) ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
+                onPress={nextStep}
+                disabled={!((step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3) || (step === 4 && data.sleep && data.activityLevel) || (step === 5 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 6 && data.hydration && data.pastDiets && data.cookingFats) || (step === 7 && data.mainCarb && data.dinnerType) || (step === 8 && data.lunchType && data.cookingFor && data.groceryBudget))}
+              >
+                <Text className={`font-bold text-lg uppercase ${((step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3) || (step === 4 && data.sleep && data.activityLevel) || (step === 5 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 6 && data.hydration && data.pastDiets && data.cookingFats) || (step === 7 && data.mainCarb && data.dinnerType) || (step === 8 && data.lunchType && data.cookingFor && data.groceryBudget)) ? (isDark ? 'text-[#39FF14]' : 'text-white') : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+                  Continuer
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </KeyboardAvoidingView>
+
     </SafeAreaView>
   );
 }
