@@ -47,6 +47,7 @@ export default function MyDayScreen() {
   });
 
   const [meals, setMeals] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchMyDayData();
@@ -92,6 +93,15 @@ export default function MyDayScreen() {
           fats_consumed: todayLog.fats_consumed || 0,
           water_glasses: todayLog.water_glasses || 0,
         });
+      }
+
+      // Fetch Boutique Onyx products
+      const { data: prodData } = await supabase
+        .from('nutrition_products')
+        .select('*')
+        .limit(3);
+      if (prodData) {
+        setProducts(prodData);
       }
 
       // Mock meals for now based on mockup structure
@@ -169,15 +179,18 @@ export default function MyDayScreen() {
           </TouchableOpacity>
 
           <View className="flex-row items-start justify-between">
-            <View className="flex-row items-center flex-1">
-              <Image
-                source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535958/A_cute__highly_detailed_3D_202606151505_2_akqmx4.jpg' }}
-                className="w-10 h-10 rounded-xl mr-3"
-              />
-              <View className="flex-1">
-                <Text className="text-black dark:text-white text-3xl font-black tracking-tight">MON JOUR</Text>
-                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1 pr-4">Enregistrez vos repas, suivez votre eau et complétez votre bilan de la journée.</Text>
+            <View className="flex-1">
+              <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-row items-center">
+                  <Image
+                    source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535958/A_cute__highly_detailed_3D_202606151505_2_akqmx4.jpg' }}
+                    className="w-10 h-10 rounded-xl mr-3"
+                  />
+                  <Text className="text-black dark:text-white text-3xl font-black tracking-tight">MON JOUR</Text>
+                </View>
+                <Image source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png' }} className="h-8 w-24" resizeMode="contain" />
               </View>
+              <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1 pr-4">Enregistrez vos repas, suivez votre eau et complétez votre bilan de la journée.</Text>
             </View>
 
             <View className="bg-zinc-100 dark:bg-zinc-900 rounded-full p-1 flex-row mt-2">
@@ -220,8 +233,7 @@ export default function MyDayScreen() {
         </View>
 
         {/* 3. FLUX DES REPAS DU JOUR */}
-        {mode === 'guided' && (
-          <View className="mb-6">
+        <View className="mb-6">
             <Text className="text-black dark:text-white text-lg font-bold mb-4">Repas du jour</Text>
             {meals.map(meal => (
               <View key={meal.id} className="rounded-2xl overflow-hidden mb-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
@@ -235,16 +247,25 @@ export default function MyDayScreen() {
                     </Text>
                     <TouchableOpacity
                       onPress={() => handleLogMeal(meal.id)}
+                      activeOpacity={0.7}
                       className="bg-[#39FF14] px-4 py-2 rounded-xl"
                     >
-                      <Text className="text-black text-xs font-bold">+ LOGUER</Text>
+                      <Text className="text-black text-xs font-bold">+ AJOUTER MON REPAS</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
             ))}
+
+            {mode === 'free' && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => console.log('Open manual entry modal')}
+                className="border-2 border-dashed border-[#39FF14] p-4 rounded-2xl items-center mt-4">
+                <Text className="text-[#39FF14] text-xs font-bold uppercase">+ AJOUTER UN ALIMENT / REPAS LIBRE</Text>
+              </TouchableOpacity>
+            )}
           </View>
-        )}
 
         {/* 4. LES 3 WIDGETS DU BAS */}
         <View className="space-y-4 mb-24">
@@ -308,6 +329,28 @@ export default function MyDayScreen() {
             <Text className="text-black/70 text-xs font-bold mt-1">Clôturez pour gagner de l'XP</Text>
           </TouchableOpacity>
 
+
+          {/* D. LA BOUTIQUE ONYX */}
+          <View className="mt-8 mb-4">
+            <Text className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-4 tracking-wider">LA BOUTIQUE ONYX • RECOMMANDÉ POUR VOUS</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+              {(products.length > 0 ? products : [
+                { id: '1', name: 'Thé Détox Minceur', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png' },
+                { id: '2', name: 'Graines de Chia Bio', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png' },
+                { id: '3', name: 'Infusion Sommeil', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png' }
+              ]).map(product => (
+                <View key={product.id} className="w-36 bg-zinc-50 dark:bg-zinc-900 rounded-2xl p-3 mr-4 border border-zinc-100 dark:border-zinc-800">
+                  <View className="w-full h-24 bg-zinc-200 dark:bg-zinc-800 rounded-xl mb-3 items-center justify-center overflow-hidden">
+                     <Image source={{ uri: product.image_url || product.img }} className="w-16 h-16 opacity-50" resizeMode="contain" />
+                  </View>
+                  <Text className="text-black dark:text-white text-xs font-bold mb-2" numberOfLines={2}>{product.name}</Text>
+                  <TouchableOpacity className="border border-zinc-200 dark:border-zinc-700 py-1.5 rounded-lg items-center mt-auto">
+                    <Text className="text-black dark:text-white text-[10px] font-bold">+ Découvrir</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
         </View>
 
       </ScrollView>
