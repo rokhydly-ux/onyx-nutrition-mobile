@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { StyleSheet, View } from 'react-native';
-import { Home, Calendar, Utensils, Users, User } from 'lucide-react-native';
+import { Home, Calendar, Utensils, Users, User, ShoppingBag } from 'lucide-react-native';
 
 
 import { useColorScheme } from 'react-native';
@@ -13,8 +13,8 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#39FF14',
-        tabBarInactiveTintColor: '#FFFFFF',
+        tabBarActiveTintColor: colorScheme === 'dark' ? '#39FF14' : '#000000',
+        tabBarInactiveTintColor: colorScheme === 'dark' ? '#9CA3AF' : '#6B7280',
         tabBarStyle: {
           position: 'absolute',
           bottom: 16,
@@ -25,14 +25,21 @@ export default function TabLayout() {
           elevation: 0,
           backgroundColor: 'transparent',
           borderTopWidth: 0,
-          borderWidth: 1,
-          borderColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.6)',
         },
         tabBarBackground: () => (
           <BlurView
             tint={colorScheme === 'dark' ? 'dark' : 'light'}
-            intensity={80}
-            style={[StyleSheet.absoluteFill, { borderRadius: 24, overflow: 'hidden' }]}
+            intensity={85}
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderRadius: 24,
+                overflow: 'hidden',
+                backgroundColor: colorScheme === 'dark' ? 'rgba(18, 18, 18, 0.85)' : 'rgba(255, 255, 255, 0.90)',
+                borderWidth: 1,
+                borderColor: colorScheme === 'dark' ? 'rgba(57, 255, 20, 0.2)' : 'rgba(0, 0, 0, 0.08)',
+              }
+            ]}
           />
         ),
       }}>
@@ -63,10 +70,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
+        name="shop"
         options={{
-          title: 'Social',
-          tabBarIcon: ({ color }) => <Users color={color} size={24} />,
+          title: 'Boutique',
+          tabBarIcon: ({ color }) => <ShoppingBag color={color} size={24} />,
         }}
       />
       <Tabs.Screen
