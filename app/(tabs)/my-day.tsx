@@ -152,9 +152,59 @@ export default function MyDayScreen() {
     }
   };
 
-  const handleLogMeal = (mealId: string) => {
-    console.log("Log meal", mealId);
-    // Add logging logic to Supabase
+  const handleLogMeal = async (meal: any) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+      const todayDateString = new Date().toISOString().split('T')[0];
+
+      const { data: existingLog } = await supabase
+        .from('nutrition_daily_logs')
+        .select('id, calories_consumed, protein_consumed, carbs_consumed, fats_consumed')
+        .eq('client_id', userId)
+        .eq('log_date', todayDateString)
+        .maybeSingle();
+
+      const updatedCalories = (existingLog?.calories_consumed || 0) + (meal.calories || 0);
+      const updatedProtein = (existingLog?.protein_consumed || 0) + (meal.p || 0);
+      const updatedCarbs = (existingLog?.carbs_consumed || 0) + (meal.c || 0);
+      const updatedFats = (existingLog?.fats_consumed || 0) + (meal.f || 0);
+
+      if (existingLog) {
+        await supabase
+          .from('nutrition_daily_logs')
+          .update({
+            calories_consumed: updatedCalories,
+            protein_consumed: updatedProtein,
+            carbs_consumed: updatedCarbs,
+            fats_consumed: updatedFats,
+          })
+          .eq('id', existingLog.id);
+      } else {
+        await supabase
+          .from('nutrition_daily_logs')
+          .insert({
+            client_id: userId,
+            log_date: todayDateString,
+            calories_consumed: updatedCalories,
+            protein_consumed: updatedProtein,
+            carbs_consumed: updatedCarbs,
+            fats_consumed: updatedFats,
+          });
+      }
+
+      setDailyStats(prev => ({
+        ...prev,
+        calories_consumed: updatedCalories,
+        protein_consumed: updatedProtein,
+        carbs_consumed: updatedCarbs,
+        fats_consumed: updatedFats
+      }));
+
+    } catch (e) {
+      console.error("Error logging meal:", e);
+    }
   };
 
   const caloriesProgress = profile.calories_goal > 0 ? (dailyStats.calories_consumed / profile.calories_goal) : 0;
@@ -246,7 +296,7 @@ export default function MyDayScreen() {
                       {meal.calories} kcal • {meal.p}g • {meal.c}g • {meal.f}g
                     </Text>
                     <TouchableOpacity
-                      onPress={() => handleLogMeal(meal.id)}
+                      onPress={() => handleLogMeal(meal)}
                       activeOpacity={0.7}
                       className="bg-[#39FF14] px-4 py-2 rounded-xl"
                     >
@@ -337,7 +387,7 @@ export default function MyDayScreen() {
               <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">Sélection 100% naturelle personnalisée selon votre métabolisme</Text>
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row pb-4">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}>
               {(products.length > 0 ? products : [
                 { id: '1', name: 'Thé Détox Minceur', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png', price: 15000 },
                 { id: '2', name: 'Graines de Chia Bio', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png', price: 8000 },
@@ -346,18 +396,22 @@ export default function MyDayScreen() {
                 <Pressable
                   key={product.id}
                   className={({ pressed, hovered }) =>
-                    `w-44 mr-4 bg-white dark:bg-zinc-900 rounded-[2rem] p-3 border shadow-sm transition-all ${pressed || hovered ? 'border-[#39FF14] shadow-lg shadow-[#39FF14]/30' : 'border-zinc-100 dark:border-zinc-800'}`
+                    `w-44 bg-white dark:bg-zinc-900 rounded-3xl p-3 border flex-col justify-between shadow-sm transition-all ${pressed || hovered ? 'border-[#39FF14] shadow-lg shadow-[#39FF14]/30' : 'border-zinc-100 dark:border-zinc-800'}`
                   }
                 >
-                  <Image source={{ uri: product.image_url || product.img }} className="h-32 w-full rounded-2xl mb-2" resizeMode="contain" />
+                  <Image source={{ uri: product.image_url || product.image || product.img }} className="w-full h-32 resize-contain rounded-2xl mb-2" />
 
-                  <Text className="text-black dark:text-white text-sm font-bold mb-1" numberOfLines={1}>{product.name}</Text>
+                  <Text className="font-poppins-bold text-sm text-zinc-900 dark:text-white mb-1" numberOfLines={1}>
+                    {product.nom || product.name}
+                  </Text>
 
                   <View className="flex-row items-center justify-between mt-1">
-                    <Text className="text-[#39FF14] text-sm font-poppins-bold">{product.price ? product.price.toLocaleString() : 'N/A'} FCFA</Text>
-                    <View className="w-6 h-6 rounded-full bg-black dark:bg-white items-center justify-center">
-                      <Text className="text-[#39FF14] font-bold text-lg leading-5">+</Text>
-                    </View>
+                    <Text className="font-poppins-bold text-xs text-[#39FF14]">
+                      {Number(product?.prix || product?.price || product?.prix_standard || 0).toLocaleString('fr-FR')} FCFA
+                    </Text>
+                    <TouchableOpacity className="bg-black dark:bg-[#39FF14] w-7 h-7 rounded-full items-center justify-center">
+                      <Text className="text-white dark:text-black font-bold">+</Text>
+                    </TouchableOpacity>
                   </View>
                 </Pressable>
               ))}
