@@ -406,7 +406,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           {/* Hydration */}
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/today')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/my-day')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
             <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783099524/Woman_drinking_clear_water_2K_202607031724_wuqqco.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.6, tintColor: 'gray' }}>
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>HYDRATION</Text>
@@ -418,17 +418,17 @@ export default function HomeScreen() {
                 </Text>
                 <Text className="text-gray-500 dark:text-gray-400 text-[10px] mb-1 ml-1">glasses</Text>
               </View>
-              <View className="flex-row flex-wrap mt-auto w-full justify-between pr-2">
+              <View className="flex-row flex-wrap mt-auto w-full justify-between px-2 gap-y-3">
                  {Array(8).fill(0).map((_, idx) => (
                    <TouchableOpacity
                      key={idx}
                      className="mb-1"
-                     hitSlop={{ top: 10, bottom: 10, left: 5, right: 5 }}
+                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                      onPress={() => handleUpdateWater(idx + 1)}
                    >
                      <Image
                        source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675042/2_maewiy.png' }}
-                       style={{ width: 12, height: 16, opacity: (idx + 1) <= dailyStats.water_glasses ? 1 : 0.3 }}
+                       style={{ width: 14, height: 18, opacity: (idx + 1) <= dailyStats.water_glasses ? 1 : 0.3 }}
                        resizeMode="contain"
                      />
                    </TouchableOpacity>
@@ -443,7 +443,7 @@ export default function HomeScreen() {
           {/* Header & Days */}
           <View className="flex-row justify-between items-center mb-6">
             <View>
-              <Text className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-2" style={{ fontFamily: 'Poppins_700Bold' }}>OBJECTIF DU JOUR</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/my-day')}><Text className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-2" style={{ fontFamily: 'Poppins_700Bold' }}>OBJECTIF DU JOUR</Text></TouchableOpacity>
               <View className="flex-row space-x-1">
                 {['C', 'J', 'V', 'S', 'D', 'L', 'M'].map((day, idx) => {
                   const isActive = idx < 3;
@@ -498,14 +498,14 @@ export default function HomeScreen() {
           <View className="flex-row space-x-3">
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => router.push('/(tabs)/today')}
+              onPress={() => router.push('/(tabs)/my-day')}
               className="flex-1 border border-gray-300 dark:border-white/20 rounded-xl py-3 flex-row items-center justify-center">
               <Coffee size={16} color={isDark ? '#A3A3A3' : '#6B7280'} />
               <Text className="text-gray-700 dark:text-gray-300 text-xs font-bold ml-2 uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>LOGUER REPAS</Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => router.push('/(tabs)/today?openReport=true')}
+              onPress={() => router.push('/(tabs)/my-day?openReport=true')}
               className="flex-1 bg-[#39FF14] rounded-xl py-3 flex-row items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.3)]">
               <Heart size={16} color="black" />
               <Text className="text-black text-xs font-bold ml-2 uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>BILAN QUOTIDIEN</Text>
