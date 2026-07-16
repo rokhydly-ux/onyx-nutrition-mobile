@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, ActivityIndicator, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
@@ -168,7 +168,7 @@ export default function MyDayScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950">
+    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans">
       <ScrollView className="flex-1 px-4 pt-12 pb-24" showsVerticalScrollIndicator={false}>
 
         {/* 1. EN-TÊTE DE PAGE */}
@@ -332,22 +332,34 @@ export default function MyDayScreen() {
 
           {/* D. LA BOUTIQUE ONYX */}
           <View className="mt-8 mb-4">
-            <Text className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-4 tracking-wider">LA BOUTIQUE ONYX • RECOMMANDÉ POUR VOUS</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+            <View className="mb-4">
+              <Text className="text-black dark:text-white text-lg font-bold uppercase tracking-wide">LE MARCHÉ ONYX • VOS ALLIÉS MINCEUR</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">Sélection 100% naturelle personnalisée selon votre métabolisme</Text>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row pb-4">
               {(products.length > 0 ? products : [
-                { id: '1', name: 'Thé Détox Minceur', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png' },
-                { id: '2', name: 'Graines de Chia Bio', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png' },
-                { id: '3', name: 'Infusion Sommeil', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png' }
+                { id: '1', name: 'Thé Détox Minceur', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png', price: 15000 },
+                { id: '2', name: 'Graines de Chia Bio', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png', price: 8000 },
+                { id: '3', name: 'Infusion Sommeil', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png', price: 12000 }
               ]).map(product => (
-                <View key={product.id} className="w-36 bg-zinc-50 dark:bg-zinc-900 rounded-2xl p-3 mr-4 border border-zinc-100 dark:border-zinc-800">
-                  <View className="w-full h-24 bg-zinc-200 dark:bg-zinc-800 rounded-xl mb-3 items-center justify-center overflow-hidden">
-                     <Image source={{ uri: product.image_url || product.img }} className="w-16 h-16 opacity-50" resizeMode="contain" />
+                <Pressable
+                  key={product.id}
+                  className={({ pressed, hovered }) =>
+                    `w-44 mr-4 bg-white dark:bg-zinc-900 rounded-[2rem] p-3 border shadow-sm transition-all ${pressed || hovered ? 'border-[#39FF14] shadow-lg shadow-[#39FF14]/30' : 'border-zinc-100 dark:border-zinc-800'}`
+                  }
+                >
+                  <Image source={{ uri: product.image_url || product.img }} className="h-32 w-full rounded-2xl mb-2" resizeMode="contain" />
+
+                  <Text className="text-black dark:text-white text-sm font-bold mb-1" numberOfLines={1}>{product.name}</Text>
+
+                  <View className="flex-row items-center justify-between mt-1">
+                    <Text className="text-[#39FF14] text-sm font-poppins-bold">{product.price ? product.price.toLocaleString() : 'N/A'} FCFA</Text>
+                    <View className="w-6 h-6 rounded-full bg-black dark:bg-white items-center justify-center">
+                      <Text className="text-[#39FF14] font-bold text-lg leading-5">+</Text>
+                    </View>
                   </View>
-                  <Text className="text-black dark:text-white text-xs font-bold mb-2" numberOfLines={2}>{product.name}</Text>
-                  <TouchableOpacity className="border border-zinc-200 dark:border-zinc-700 py-1.5 rounded-lg items-center mt-auto">
-                    <Text className="text-black dark:text-white text-[10px] font-bold">+ Découvrir</Text>
-                  </TouchableOpacity>
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           </View>
