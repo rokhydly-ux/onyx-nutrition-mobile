@@ -236,7 +236,16 @@ export default function HomeScreen() {
           ...prev,
           first_name: firstName,
           xp: nutritionData?.jongoma_xp || 0,
-          subscription_days_left: profileData?.subscription_days || prev.subscription_days_left, // Assuming subscription comes from client or keep prev
+          subscription_days_left: (() => {
+            if (profileData?.expiration_date) {
+              const diffTime = new Date(profileData.expiration_date).getTime() - new Date().getTime();
+              return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+            } else if (profileData?.end_date) {
+              const diffTime = new Date(profileData.end_date).getTime() - new Date().getTime();
+              return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+            }
+            return profileData?.subscription_days || 0;
+          })(),
           weight: currentWeight,
           calories_goal: nutritionData?.daily_calorie_goal || 2000,
           protein_goal: nutritionData?.protein_goal || 80,
@@ -341,7 +350,7 @@ export default function HomeScreen() {
               </View>
               <View>
                 <Text className="text-gray-400 text-[9px] uppercase tracking-wider font-bold">Abonnement</Text>
-                <Text className="text-black dark:text-white text-[10px] font-bold">
+                <Text className={`text-[10px] font-bold ${profile.subscription_days_left > 0 ? 'text-[#39FF14]' : 'text-black dark:text-white'}`}>
                   {profile.subscription_days_left} Jours restants
                 </Text>
               </View>
@@ -406,33 +415,37 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           {/* Hydration */}
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/my-day')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
-            <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783099524/Woman_drinking_clear_water_2K_202607031724_wuqqco.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.6, tintColor: 'gray' }}>
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>HYDRATION</Text>
-                <HydrationIcon color="#3B82F6" />
-              </View>
-              <View className="flex-row items-end mb-2">
-                <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                  {dailyStats.water_glasses}<Text className="text-gray-400 text-sm">/8</Text>
-                </Text>
-                <Text className="text-gray-500 dark:text-gray-400 text-[10px] mb-1 ml-1">glasses</Text>
-              </View>
-              <View className="flex-row flex-wrap mt-auto w-full justify-between px-2 gap-y-3">
-                 {Array(8).fill(0).map((_, idx) => (
-                   <TouchableOpacity
-                     key={idx}
-                     className="mb-1"
-                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                     onPress={() => handleUpdateWater(idx + 1)}
-                   >
-                     <Image
-                       source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675042/2_maewiy.png' }}
-                       style={{ width: 14, height: 18, opacity: (idx + 1) <= dailyStats.water_glasses ? 1 : 0.3 }}
-                       resizeMode="contain"
-                     />
-                   </TouchableOpacity>
-                 ))}
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/my-day')} className="flex-1 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black">
+            <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783099524/Woman_drinking_clear_water_2K_202607031724_wuqqco.jpg' }} style={{ flex: 1 }} imageStyle={{ opacity: 0.7 }}>
+              {/* Linear Gradient Overlay for Readability */}
+              <View className="absolute inset-0 bg-gradient-to-r from-black/90 to-transparent" />
+              <View style={{ padding: 12, flex: 1 }}>
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>HYDRATION</Text>
+                  <HydrationIcon color="#3B82F6" />
+                </View>
+                <View className="flex-row items-end mb-2">
+                  <Text className="text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    {dailyStats.water_glasses}<Text className="text-gray-400 text-sm">/8</Text>
+                  </Text>
+                  <Text className="text-gray-400 text-[10px] mb-1 ml-1">verres</Text>
+                </View>
+                <View className="flex-row flex-wrap justify-around gap-y-4 pt-3 px-2 mt-auto w-full">
+                  {Array(8).fill(0).map((_, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      className="w-[20%]"
+                      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                      onPress={() => handleUpdateWater(idx + 1)}
+                    >
+                      <Image
+                        source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675042/2_maewiy.png' }}
+                        style={{ width: 16, height: 22, opacity: (idx + 1) <= dailyStats.water_glasses ? 1 : 0.4 }}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             </ImageBackground>
           </TouchableOpacity>

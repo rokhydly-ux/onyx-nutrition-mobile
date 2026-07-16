@@ -10,7 +10,9 @@ import {
   useFonts,
   Poppins_400Regular,
   Poppins_500Medium,
+  Poppins_600SemiBold,
   Poppins_700Bold,
+  Poppins_800ExtraBold,
   Poppins_900Black,
 } from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
@@ -28,7 +30,9 @@ export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
+    Poppins_600SemiBold,
     Poppins_700Bold,
+    Poppins_800ExtraBold,
     Poppins_900Black,
   });
 
@@ -44,7 +48,8 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
+
+      <Stack screenOptions={{ headerShown: false, contentStyle: { fontFamily: 'Poppins_400Regular' } }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="welcome" />
         <Stack.Screen name="login" />

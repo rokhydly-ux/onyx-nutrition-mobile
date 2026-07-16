@@ -3,7 +3,12 @@ import { BlurView } from 'expo-blur';
 import { StyleSheet, View } from 'react-native';
 import { Home, Calendar, Utensils, Users, User } from 'lucide-react-native';
 
+
+import { useColorScheme } from 'react-native';
+
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
+
   return (
     <Tabs
       screenOptions={{
@@ -12,21 +17,22 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#FFFFFF',
         tabBarStyle: {
           position: 'absolute',
-          bottom: 24,
-          left: 20,
-          right: 20,
+          bottom: 16,
+          left: 16,
+          right: 16,
+          height: 70,
+          borderRadius: 24,
           elevation: 0,
           backgroundColor: 'transparent',
-          borderRadius: 32,
-          height: 70,
           borderTopWidth: 0,
-          // Removed overflow: 'hidden' to allow the central button to float above
+          borderWidth: 1,
+          borderColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.6)',
         },
         tabBarBackground: () => (
           <BlurView
-            tint="dark"
+            tint={colorScheme === 'dark' ? 'dark' : 'light'}
             intensity={80}
-            style={[StyleSheet.absoluteFill, { borderRadius: 32, overflow: 'hidden' }]}
+            style={[StyleSheet.absoluteFill, { borderRadius: 24, overflow: 'hidden' }]}
           />
         ),
       }}>
