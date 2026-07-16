@@ -19,7 +19,13 @@ def run_cuj(page):
     page.get_by_text("Continuer").click()
     page.wait_for_timeout(1000)
 
-    # Take screenshot of Step 2 (Objective)
+    # Step 2: Objectif
+    page.get_by_text("Perte de poids", exact=True).click()
+    page.wait_for_timeout(500)
+    page.get_by_placeholder("170", exact=True).fill("165")
+    page.get_by_placeholder("80", exact=True).fill("85")
+    page.get_by_placeholder("70", exact=True).fill("75")
+
     page.screenshot(path="verification/screenshots/verification.png")
     page.wait_for_timeout(1000)
 

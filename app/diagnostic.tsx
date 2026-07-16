@@ -7,6 +7,7 @@ import { addDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '../lib/supabase';
 import { BlurView } from 'expo-blur';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useColorScheme } from 'nativewind';
 
 const { width } = Dimensions.get('window');
@@ -58,7 +59,7 @@ const initialDiagData: DiagData = {
   phone: '',
 };
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 11;
 
 export default function DiagnosticScreen() {
   const router = useRouter();
@@ -110,7 +111,7 @@ export default function DiagnosticScreen() {
       >
         <View className="flex-row items-center flex-1">
            {imageUri && (
-             <ImageBackground source={{ uri: imageUri }} className="w-16 h-16 rounded-xl overflow-hidden mr-4 bg-gray-200 dark:bg-gray-800" />
+             <ImageBackground source={{ uri: imageUri }} className="w-20 h-20 rounded-xl overflow-hidden mr-4 aspect-square" resizeMode="contain" />
            )}
            {IconComponent && !imageUri && (
              <View className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 items-center justify-center mr-4">
@@ -127,6 +128,8 @@ export default function DiagnosticScreen() {
   };
 
 
+
+
   const SelectableGridCard = ({ label, value, selectedValue, onSelect, imageUri, icon: IconComponent, vertical = false }: any) => {
     const isSelected = selectedValue === value;
     return (
@@ -135,7 +138,7 @@ export default function DiagnosticScreen() {
         className={`flex-1 rounded-2xl p-3 mb-4 items-center justify-center border-[3px] ${isSelected ? 'border-[#39FF14] bg-[#39FF14]/10' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900'} ${vertical ? 'flex-col' : 'aspect-square'}`}
       >
         {imageUri && (
-          <ImageBackground source={{ uri: imageUri }} className={`rounded-xl overflow-hidden mb-2 bg-gray-200 dark:bg-gray-800 ${vertical ? 'w-full h-24' : 'w-16 h-16'}`} />
+          <ImageBackground source={{ uri: imageUri }} className={`rounded-xl overflow-hidden mb-2 ${vertical ? 'w-full h-36' : 'w-32 h-32'} aspect-square`} resizeMode="contain" />
         )}
         <Text className={`text-center ${isSelected ? 'text-[#39FF14] font-bold' : 'text-black dark:text-white'} ${vertical ? 'text-sm' : 'text-xs'}`} style={{ fontFamily: isSelected ? 'Poppins_700Bold' : 'Poppins_500Medium' }}>
           {label}
@@ -146,30 +149,18 @@ export default function DiagnosticScreen() {
   };
 
   const Step1 = () => (
-    <View className="flex-1">
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Parle-nous de toi</Text>
 
       <View className="flex-row gap-3">
-        <SelectableGridCard
-          label="Homme"
-          value="Homme"
-          selectedValue={data.gender}
-          onSelect={(v: string) => updateData('gender', v)}
-          imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_format_1_1_en_202606111044_rjknkg.jpg"
-        />
-        <SelectableGridCard
-          label="Femme"
-          value="Femme"
-          selectedValue={data.gender}
-          onSelect={(v: string) => updateData('gender', v)}
-          imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_1_1_en_gardant_202606111043_unmonc.jpg"
-        />
+        <SelectableGridCard label="Homme" value="Homme" selectedValue={data.gender} onSelect={(v: string) => updateData('gender', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_format_1_1_en_202606111044_rjknkg.jpg" />
+        <SelectableGridCard label="Femme" value="Femme" selectedValue={data.gender} onSelect={(v: string) => updateData('gender', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_1_1_en_gardant_202606111043_unmonc.jpg" />
       </View>
 
       <View className="mt-8">
         <Text className="text-gray-500 dark:text-gray-400 text-lg mb-2 text-center" style={{ fontFamily: 'Poppins_500Medium' }}>Quel âge as-tu ?</Text>
         <TextInput
-          value={data.age}
+          value={String(data.age || '')}
           onChangeText={(t) => updateData('age', t)}
           placeholder="Ex: 30"
           placeholderTextColor="#4B5563"
@@ -179,13 +170,11 @@ export default function DiagnosticScreen() {
           maxLength={3}
         />
       </View>
-
-
-    </View>
+    </ScrollView>
   );
 
   const Step2 = () => (
-    <View className="flex-1">
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Quel est ton objectif ?</Text>
 
       <View className="flex-row gap-2">
@@ -198,7 +187,7 @@ export default function DiagnosticScreen() {
         <View className="flex-1 mr-2">
            <Text className="text-gray-500 dark:text-gray-400 mb-2">Taille (cm)</Text>
            <TextInput
-            value={data.height}
+            value={String(data.height || '')}
             onChangeText={(t) => updateData('height', t)}
             keyboardType="numeric"
             className="text-black dark:text-white text-2xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-4 font-bold border border-gray-200 dark:border-gray-800"
@@ -209,7 +198,7 @@ export default function DiagnosticScreen() {
         <View className="flex-1 mx-1">
            <Text className="text-gray-500 dark:text-gray-400 mb-2">Poids (kg)</Text>
            <TextInput
-            value={data.currentWeight}
+            value={String(data.currentWeight || '')}
             onChangeText={(t) => updateData('currentWeight', t)}
             keyboardType="numeric"
             className="text-black dark:text-white text-2xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-4 font-bold border border-gray-200 dark:border-gray-800"
@@ -220,7 +209,7 @@ export default function DiagnosticScreen() {
         <View className="flex-1 ml-2">
            <Text className="text-gray-500 dark:text-gray-400 mb-2">Cible (kg)</Text>
            <TextInput
-            value={data.targetWeight}
+            value={String(data.targetWeight || '')}
             onChangeText={(t) => updateData('targetWeight', t)}
             keyboardType="numeric"
             className="text-black dark:text-white text-2xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-4 font-bold border border-gray-200 dark:border-gray-800"
@@ -229,61 +218,8 @@ export default function DiagnosticScreen() {
            />
         </View>
       </View>
-
-
-    </View>
+    </ScrollView>
   );
-
-  const Step2Bis = () => {
-    // Realistic Projection Calculation
-    const weightDiff = Math.abs(parseFloat(data.currentWeight) - parseFloat(data.targetWeight));
-    const weeksToGoal = weightDiff / 0.5; // Safe loss/gain: 0.5kg per week
-    const targetDate = addDays(new Date(), weeksToGoal * 7);
-    const dateFormatted = format(targetDate, 'dd MMMM yyyy', { locale: fr });
-
-    const actionText = data.objective === 'Prise de masse' ? 'Prendre' : 'Perdre';
-
-    return (
-      <ImageBackground
-        source={{ uri: 'https://images.unsplash.com/photo-1526506118029-4591b65db912?auto=format&fit=crop&q=80' }}
-        className="flex-1 -m-6 p-6 justify-end"
-      >
-        <View className="absolute inset-0 bg-black/70" />
-        <View className="flex-1 justify-center z-10 mt-10">
-          <BlurView intensity={40} tint="dark" className="p-6 rounded-[2rem] border border-white/20">
-            <Text className="text-[#39FF14] text-xl font-bold mb-6 uppercase tracking-widest text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Bilan & Objectifs validés</Text>
-
-            <View className="flex-row flex-wrap justify-between gap-y-4">
-              <View className="w-[48%] bg-white/10 rounded-2xl p-4 items-center border border-white/10">
-                <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781443964/A_cute__highly_detailed_3D_202606141332_ggiubt.jpg"}} className="w-12 h-12 rounded-xl mb-2" />
-                <Text className="text-gray-300 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Apport Énergétique</Text>
-                <Text className="text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Calcule en cours...</Text>
-              </View>
-
-              <View className="w-[48%] bg-white/10 rounded-2xl p-4 items-center border border-white/10">
-                <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781458367/A_cute__highly_detailed_3D_202606141732_kn3ujk.jpg"}} className="w-12 h-12 rounded-xl mb-2" />
-                <Text className="text-gray-300 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Poids Cible</Text>
-                <Text className="text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{data.targetWeight} kg</Text>
-              </View>
-
-              <View className="w-full bg-white/10 rounded-2xl p-4 items-center border border-white/10 mt-2 flex-row">
-                 <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781458359/A_cute__highly_detailed_3D_202606141731_wog3pz.jpg"}} className="w-12 h-12 rounded-xl mr-4" />
-                 <View className="flex-1">
-                   <Text className="text-gray-300 text-[10px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Date Prévue</Text>
-                   <Text className="text-[#39FF14] text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{dateFormatted}</Text>
-                   <Text className="text-white text-xs mt-1 leading-tight" style={{ fontFamily: 'Poppins_500Medium' }}>
-                     {actionText} {weightDiff} kg est un objectif sain.
-                   </Text>
-                 </View>
-              </View>
-            </View>
-
-          </BlurView>
-        </View>
-
-      </ImageBackground>
-    );
-  };
 
   const Step3 = () => (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -305,8 +241,6 @@ export default function DiagnosticScreen() {
       <SelectableCard label="Légère (Marche occasionnelle)" value="Légère" selectedValue={data.activityLevel} onSelect={(v: string) => updateData('activityLevel', v)} />
       <SelectableCard label="Modérée (Sport 1-3x/semaine)" value="Modérée" selectedValue={data.activityLevel} onSelect={(v: string) => updateData('activityLevel', v)} />
       <SelectableCard label="Intense (Sport 4x+/semaine)" value="Intense" selectedValue={data.activityLevel} onSelect={(v: string) => updateData('activityLevel', v)} />
-
-
     </ScrollView>
   );
 
@@ -320,17 +254,15 @@ export default function DiagnosticScreen() {
       <SelectableCard label="Hypertension" value="Hypertension" selectedValue={data.health} onSelect={(v: string) => updateData('health', v)} icon={Heart} />
 
       {data.gender === 'Femme' && (
-        <>
-          <Text className="text-gray-500 dark:text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Conditions féminines particulières ?</Text>
+        <View className="mt-6">
+          <Text className="text-gray-500 dark:text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Conditions féminines particulières ?</Text>
           <SelectableCard label="Aucune" value="Aucune" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={ShieldCheck} />
           <SelectableCard label="Allaitement" value="Allaitement" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={Droplets} />
           <SelectableCard label="Grossesse" value="Grossesse" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={Heart} />
           <SelectableCard label="SOPK" value="SOPK" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={AlertCircle} />
           <SelectableCard label="Ménopause" value="Ménopause" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={Activity} />
-        </>
+        </View>
       )}
-
-
     </ScrollView>
   );
 
@@ -355,8 +287,6 @@ export default function DiagnosticScreen() {
 
       <SelectableCard label="Je cuisine avec beaucoup d'huile" value="Beaucoup d'huile" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
       <SelectableCard label="Huile d'olive / Modéré" value="Modéré" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
-
-
     </ScrollView>
   );
 
@@ -380,8 +310,6 @@ export default function DiagnosticScreen() {
       <SelectableCard label="Très copieux (Reste du midi)" value="Très copieux" selectedValue={data.dinnerType} onSelect={(v: string) => updateData('dinnerType', v)} />
       <SelectableCard label="Léger (Salade, Soupe...)" value="Léger" selectedValue={data.dinnerType} onSelect={(v: string) => updateData('dinnerType', v)} />
       <SelectableCard label="Je grignote" value="Je grignote" selectedValue={data.dinnerType} onSelect={(v: string) => updateData('dinnerType', v)} />
-
-
     </ScrollView>
   );
 
@@ -396,27 +324,30 @@ export default function DiagnosticScreen() {
       <Text className="text-gray-500 dark:text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Pour qui cuisines-tu ?</Text>
       <SelectableCard label="Juste pour moi" value="Pour soi" selectedValue={data.cookingFor} onSelect={(v: string) => updateData('cookingFor', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/Je_cuisine_pour_moi_seule_mfo6vw.jpg" />
       <SelectableCard label="Pour toute la famille" value="Famille" selectedValue={data.cookingFor} onSelect={(v: string) => updateData('cookingFor', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/Je_cuisine_pour_la_famille_qzlwke.jpg" />
+    </ScrollView>
+  );
 
-      <Text className="text-gray-500 dark:text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Budget Courses (Mensuel estimé)</Text>
+  const Step8 = () => (
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Budget Alimentaire</Text>
+      <Text className="text-gray-500 dark:text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Budget Courses (Mensuel estimé)</Text>
       <View className="flex-row gap-2">
         <SelectableGridCard vertical label="Serré" value="< 50k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/A_cute__highly_detailed_3D_202606161723_odc2jk.jpg" />
         <SelectableGridCard vertical label="Famille" value="50k-100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631229/A_cute__highly_detailed_3D_202606161723_1_x2pfvp.jpg" />
         <SelectableGridCard vertical label="Confort" value="> 100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/A_cute__highly_detailed_3D_202606161723_2_ynd0wc.jpg" />
       </View>
-
-
     </ScrollView>
   );
 
-  const Step8 = () => (
-    <View className="flex-1">
+  const Step9 = () => (
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Presque fini !</Text>
       <Text className="text-gray-500 dark:text-gray-400 mb-8 font-medium text-lg" style={{ fontFamily: 'Poppins_500Medium' }}>Où pouvons-nous t'envoyer ton programme ?</Text>
 
       <View className="mb-6">
         <Text className="text-gray-500 dark:text-gray-400 mb-2 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Ton Prénom</Text>
         <TextInput
-          value={data.firstName}
+          value={String(data.firstName || '')}
           onChangeText={(t) => updateData('firstName', t)}
           placeholder="Ex: Awa"
           placeholderTextColor="#4B5563"
@@ -428,7 +359,7 @@ export default function DiagnosticScreen() {
       <View className="mb-6">
         <Text className="text-gray-500 dark:text-gray-400 mb-2 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Numéro WhatsApp</Text>
         <TextInput
-          value={data.phone}
+          value={String(data.phone || '')}
           onChangeText={(t) => updateData('phone', t)}
           placeholder="Ex: 77 123 45 67"
           placeholderTextColor="#4B5563"
@@ -437,32 +368,131 @@ export default function DiagnosticScreen() {
           style={{ fontFamily: 'Poppins_700Bold' }}
         />
       </View>
-
-
-    </View>
+    </ScrollView>
   );
 
-  const Step9 = () => (
-    <View className="flex-1 justify-center items-center">
-      <View className="bg-gray-50 dark:bg-gray-900 p-6 rounded-[2rem] border border-gray-200 dark:border-gray-800 w-full mb-8">
-        <View className="flex-row items-center mb-4">
-          <View className="w-12 h-12 rounded-full bg-[#39FF14] items-center justify-center mr-4">
-             <Text className="text-black font-bold text-xl" style={{ fontFamily: 'Poppins_700Bold' }}>J</Text>
+  const Step10 = () => {
+    // Realistic Projection Calculation
+    const weightDiff = Math.abs(parseFloat(data.currentWeight) - parseFloat(data.targetWeight));
+    const weeksToGoal = weightDiff / 0.5;
+    const targetDate = addDays(new Date(), weeksToGoal * 7);
+    const dateFormatted = format(targetDate, 'MMMM yyyy', { locale: fr });
+    const isGain = data.objective === 'Prise de masse';
+    const actionText = isGain ? '+' : '-';
+
+    // Calculate BMI
+    const h = parseFloat(data.height) / 100;
+    const w = parseFloat(data.currentWeight);
+    const bmi = h > 0 ? (w / (h * h)).toFixed(1) : '0';
+    let bmiStatus = "Normal";
+    if (parseFloat(bmi) > 25) bmiStatus = "Surpoids";
+    if (parseFloat(bmi) > 30) bmiStatus = "Obésité";
+    if (parseFloat(bmi) < 18.5) bmiStatus = "Sous-poids";
+
+    // Calculate Speedometer Angle based on BMI (15 to 35 range mapped to 0-180 degrees)
+    const bmiVal = parseFloat(bmi);
+    const clampedBmi = Math.min(Math.max(bmiVal, 15), 35);
+    const bmiAngle = ((clampedBmi - 15) / 20) * 180;
+
+    const tdee = calculateDailyCalories(data);
+
+    return (
+      <View className="flex-1 bg-zinc-50 dark:bg-zinc-900 -m-6 p-6 justify-center">
+        <Text className="text-black dark:text-white text-2xl font-bold mb-6 text-center mt-4" style={{ fontFamily: 'Poppins_700Bold' }}>Vos objectifs sont validés</Text>
+
+        <View className="flex-row flex-wrap justify-between gap-y-4">
+          <View className="w-[48%] bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm relative overflow-hidden">
+            <View className="h-12 w-24 mb-2 items-center justify-end relative">
+               <Svg height="48" width="96" viewBox="0 0 100 50">
+                 <Path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke={isDark ? "#333" : "#E5E7EB"} strokeWidth="10" strokeLinecap="round" />
+                 <Path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#39FF14" strokeWidth="10" strokeLinecap="round" strokeDasharray="125" strokeDashoffset={125 - (125 * bmiAngle / 180)} />
+               </Svg>
+               <Text className="absolute bottom-0 text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{bmi}</Text>
+            </View>
+            <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>IMC ({bmiStatus})</Text>
           </View>
-          <View>
-             <Text className="text-black dark:text-white font-bold text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>Jules (Coach IA)</Text>
-             <Text className="text-[#39FF14] text-xs">En ligne</Text>
+
+          <View className="w-[48%] bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781443964/A_cute__highly_detailed_3D_202606141332_ggiubt.jpg"}} className="w-12 h-12 rounded-full mb-2" />
+            <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Apport Énergétique</Text>
+            <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{tdee} kcal</Text>
+            {tdee === 1200 && <Text className="text-red-500 text-[8px] text-center mt-1 font-bold">Plancher de sécurité activé</Text>}
+          </View>
+
+          <View className="w-[48%] bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781458367/A_cute__highly_detailed_3D_202606141732_kn3ujk.jpg"}} className="w-12 h-12 rounded-full mb-2" />
+            <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Poids Cible</Text>
+            <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{data.targetWeight} kg</Text>
+            <Text className="text-gray-500 text-[9px] font-bold mt-1 text-center">{actionText}{weightDiff} kg à {isGain ? 'prendre' : 'éliminer'}</Text>
+          </View>
+
+          <View className="w-[48%] bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535959/A_cute__highly_detailed_3D_202606151505_1_uvgqf0.jpg"}} className="w-12 h-12 rounded-full mb-2" />
+            <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Date Prévue</Text>
+            <Text className="text-black dark:text-white text-lg font-bold capitalize text-center" style={{ fontFamily: 'Poppins_700Bold' }}>{dateFormatted}</Text>
           </View>
         </View>
 
-        <View className="bg-gray-200 dark:bg-gray-800 p-4 rounded-2xl rounded-tl-none">
-          <Text className="text-black dark:text-white text-lg leading-relaxed" style={{ fontFamily: 'Poppins_500Medium' }}>
-            {chatMessage || "..."}
+        <TouchableOpacity
+          className="bg-black py-4 rounded-full items-center mt-10 shadow-[0_0_15px_rgba(0,0,0,0.3)]"
+          onPress={() => {
+             handleSubmit();
+          }}
+          disabled={isSubmitting}
+        >
+          <Text className="font-bold text-lg uppercase text-[#39FF14]" style={{ fontFamily: 'Poppins_700Bold' }}>
+            {isSubmitting ? "Chargement..." : "Valider mes objectifs"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const Step11 = () => {
+    return (
+      <View className="flex-1 bg-white -m-6 p-6 justify-center items-center" style={{ borderTopWidth: 8, borderTopColor: '#39FF14' }}>
+        <View className="absolute top-1/2 -left-20 w-80 h-80 rounded-full bg-[#39FF14] opacity-20 blur-3xl" pointerEvents="none" />
+        <View className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[#39FF14] opacity-20 blur-3xl" pointerEvents="none" />
+
+        <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png" }} className="w-32 h-12 mb-8" resizeMode="contain" />
+
+        <Text className="text-black text-3xl font-bold text-center mb-8" style={{ fontFamily: 'Poppins_700Bold' }}>
+          Bienvenue <Text className="text-[#39FF14]">{data.firstName}</Text> !
+        </Text>
+
+        <View className="bg-black rounded-2xl p-6 w-full mb-6">
+          <View className="flex-row items-center justify-center mb-4">
+            <CheckCircle2 color="white" size={32} />
+          </View>
+          <Text className="text-white text-center mb-4" style={{ fontFamily: 'Poppins_500Medium' }}>
+            Numéro WhatsApp : <Text className="font-bold">{data.phone}</Text>
+          </Text>
+          <View className="flex-row items-center justify-center">
+            <Text className="text-white text-center mr-2" style={{ fontFamily: 'Poppins_500Medium' }}>Mot de passe provisoire :</Text>
+            <View className="bg-[#39FF14] rounded-lg p-2">
+              <Text className="text-black font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{data.phone.replace(/\s+/g, '').slice(-8).padStart(8, '0')}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View className="flex-row items-center justify-center mb-10">
+          <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781536233/A_cute__highly_detailed_3D_202606151510_uj9z5c.jpg" }} className="w-8 h-8 rounded-full mr-2" />
+          <Text className="text-gray-500 text-xs text-center" style={{ fontFamily: 'Poppins_400Regular' }}>
+            Vous pourrez modifier ce mot de passe plus tard.
           </Text>
         </View>
+
+        <TouchableOpacity
+          className="bg-[#39FF14] w-full py-4 rounded-full items-center shadow-[0_0_15px_rgba(57,255,20,0.5)]"
+          onPress={() => router.replace('/(tabs)')}
+        >
+          <Text className="font-bold text-lg uppercase text-black" style={{ fontFamily: 'Poppins_700Bold' }}>
+            Accéder à mon Sama Menu
+          </Text>
+        </TouchableOpacity>
       </View>
-    </View>
-  );
+    );
+  };
 
   // --- Backend Submission Logic --- //
 
@@ -600,7 +630,7 @@ export default function DiagnosticScreen() {
     const [_, success] = await Promise.all([chatSequence(), backendProcess()]);
 
     if (success) {
-      router.replace('/(tabs)');
+      setStep(11);
     } else {
       setChatMessage("Une erreur est survenue lors de la création. Veuillez réessayer.");
       setTimeout(() => {
@@ -614,14 +644,15 @@ export default function DiagnosticScreen() {
     switch (step) {
       case 1: return <Step1 />;
       case 2: return <Step2 />;
-      case 3: return <Step2Bis />;
-      case 4: return <Step3 />;
-      case 5: return <Step4 />;
-      case 6: return <Step5 />;
-      case 7: return <Step6 />;
-      case 8: return <Step7 />;
-      case 9: return <Step8 />;
-      case 10: return <Step9 />; // Technically step 10 is the 9th UI step (Chat) as Step 2Bis offset it. Wait, the step counter is 1 to 10. Let's adjust.
+      case 3: return <Step3 />;
+      case 4: return <Step4 />;
+      case 5: return <Step5 />;
+      case 6: return <Step6 />;
+      case 7: return <Step7 />;
+      case 8: return <Step8 />;
+      case 9: return <Step9 />;
+      case 10: return <Step10 />;
+      case 11: return <Step11 />;
       default: return <Step1 />;
     }
   };
@@ -630,26 +661,32 @@ export default function DiagnosticScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-zinc-900" edges={['top', 'bottom']}>
       <View className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[#39FF14]/10 blur-3xl" pointerEvents="none" />
       <View className="absolute top-1/2 -left-20 w-72 h-72 rounded-full bg-[#39FF14]/5 blur-3xl" pointerEvents="none" />
+      <View className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[#39FF14]/10 blur-3xl" pointerEvents="none" />
+      <View className="absolute top-1/2 -left-20 w-72 h-72 rounded-full bg-[#39FF14]/5 blur-3xl" pointerEvents="none" />
+
 
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
         {/* Header */}
-        <View className="px-6 pt-4 pb-2 bg-white dark:bg-zinc-900">
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center">
-              <TouchableOpacity onPress={step > 1 ? prevStep : () => router.replace('/')} className="mr-4 p-2 bg-gray-100 dark:bg-gray-50 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800">
-                <ArrowLeft color={isDark ? "white" : "black"} size={20} />
+        {step < 10 && (
+          <View className="px-6 pt-4 pb-2 bg-white dark:bg-zinc-900 z-10 relative">
+            <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png" }} className="w-24 h-8 absolute top-4 left-1/2 -ml-12" resizeMode="contain" />
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center">
+                <TouchableOpacity onPress={step > 1 ? prevStep : () => router.replace('/')} className="mr-4 p-2 bg-gray-100 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800 z-20">
+                  <ArrowLeft color={isDark ? "white" : "black"} size={20} />
+                </TouchableOpacity>
+                <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Étape {step} / 9</Text>
+              </View>
+              <TouchableOpacity onPress={toggleColorScheme} className="p-2 bg-gray-100 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800 z-20">
+                {isDark ? <Sun color="white" size={20} /> : <Moon color="black" size={20} />}
               </TouchableOpacity>
-              {step < 10 && <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Étape {step} / {TOTAL_STEPS - 1}</Text>}
             </View>
-            <TouchableOpacity onPress={toggleColorScheme} className="p-2 bg-gray-100 dark:bg-gray-50 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800">
-              {isDark ? <Sun color="white" size={20} /> : <Moon color="black" size={20} />}
-            </TouchableOpacity>
+            {renderProgressBar()}
           </View>
-          {step < 10 && renderProgressBar()}
-        </View>
+        )}
 
         {/* Content */}
-        <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: 120 }}>
+        <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: step < 10 ? 120 : 20 }}>
           {renderStep()}
         </ScrollView>
 
@@ -661,7 +698,6 @@ export default function DiagnosticScreen() {
                 className={`w-full py-4 rounded-full items-center ${data.firstName && data.phone && !isSubmitting ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}
                 onPress={() => {
                    setStep(10);
-                   handleSubmit();
                 }}
                 disabled={!(data.firstName && data.phone) || isSubmitting}
               >
@@ -671,11 +707,11 @@ export default function DiagnosticScreen() {
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                className={`w-full py-4 rounded-full items-center ${(step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3) || (step === 4 && data.sleep && data.activityLevel) || (step === 5 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 6 && data.hydration && data.pastDiets && data.cookingFats) || (step === 7 && data.mainCarb && data.dinnerType) || (step === 8 && data.lunchType && data.cookingFor && data.groceryBudget) ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
+                className={`w-full py-4 rounded-full items-center ${(step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3 && data.sleep && data.activityLevel) || (step === 4 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 5 && data.hydration && data.pastDiets && data.cookingFats) || (step === 6 && data.mainCarb && data.dinnerType) || (step === 7 && data.lunchType && data.cookingFor) || (step === 8 && data.groceryBudget) ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
                 onPress={nextStep}
-                disabled={!((step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3) || (step === 4 && data.sleep && data.activityLevel) || (step === 5 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 6 && data.hydration && data.pastDiets && data.cookingFats) || (step === 7 && data.mainCarb && data.dinnerType) || (step === 8 && data.lunchType && data.cookingFor && data.groceryBudget))}
+                disabled={!((step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3 && data.sleep && data.activityLevel) || (step === 4 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 5 && data.hydration && data.pastDiets && data.cookingFats) || (step === 6 && data.mainCarb && data.dinnerType) || (step === 7 && data.lunchType && data.cookingFor) || (step === 8 && data.groceryBudget))}
               >
-                <Text className={`font-bold text-lg uppercase ${((step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3) || (step === 4 && data.sleep && data.activityLevel) || (step === 5 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 6 && data.hydration && data.pastDiets && data.cookingFats) || (step === 7 && data.mainCarb && data.dinnerType) || (step === 8 && data.lunchType && data.cookingFor && data.groceryBudget)) ? (isDark ? 'text-[#39FF14]' : 'text-white') : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+                <Text className={`font-bold text-lg uppercase ${((step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3 && data.sleep && data.activityLevel) || (step === 4 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 5 && data.hydration && data.pastDiets && data.cookingFats) || (step === 6 && data.mainCarb && data.dinnerType) || (step === 7 && data.lunchType && data.cookingFor) || (step === 8 && data.groceryBudget)) ? (isDark ? 'text-[#39FF14]' : 'text-white') : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
                   Continuer
                 </Text>
               </TouchableOpacity>
@@ -683,6 +719,7 @@ export default function DiagnosticScreen() {
           </View>
         )}
       </KeyboardAvoidingView>
+
 
     </SafeAreaView>
   );
