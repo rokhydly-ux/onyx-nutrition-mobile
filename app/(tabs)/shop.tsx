@@ -207,9 +207,13 @@ export default function ShopScreen() {
                 )}
 
                 <View className="flex-row items-end flex-wrap">
-                  <Text className="text-[#39FF14] text-base font-black mr-2">{prod.price.toLocaleString()} F</Text>
+                  <Text className="text-[#39FF14] text-base font-black mr-2">
+                    {Number(prod?.prix || prod?.price || prod?.prix_standard || 0).toLocaleString('fr-FR')} FCFA
+                  </Text>
                   {prod.old_price && (
-                    <Text className="text-gray-400 text-xs line-through mb-0.5">{prod.old_price.toLocaleString()} F</Text>
+                    <Text className="text-gray-400 text-xs line-through mb-0.5">
+                      {Number(prod.old_price).toLocaleString('fr-FR')} FCFA
+                    </Text>
                   )}
                 </View>
               </View>
