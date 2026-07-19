@@ -12,7 +12,9 @@ import {
   useFonts,
   Poppins_400Regular,
   Poppins_500Medium,
+  Poppins_600SemiBold,
   Poppins_700Bold,
+  Poppins_800ExtraBold,
   Poppins_900Black,
 } from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
@@ -30,7 +32,9 @@ export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
+    Poppins_600SemiBold,
     Poppins_700Bold,
+    Poppins_800ExtraBold,
     Poppins_900Black,
   });
 
