@@ -8,6 +8,8 @@ import { fr } from 'date-fns/locale';
 import { supabase } from '../lib/supabase';
 import { BlurView } from 'expo-blur';
 import Svg, { Path, Circle } from 'react-native-svg';
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedView = Animated.View;
 import { useColorScheme } from 'nativewind';
 
 const { width } = Dimensions.get('window');
@@ -164,10 +166,10 @@ export default function DiagnosticScreen() {
           onChangeText={(t) => updateData('age', t)}
           placeholder="Ex: 30"
           placeholderTextColor="#4B5563"
-          keyboardType="numeric"
+          keyboardType="number-pad"
           className="text-black dark:text-white text-4xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-6 font-bold border border-gray-200 dark:border-gray-800"
           style={{ fontFamily: 'Poppins_700Bold' }}
-          maxLength={3}
+          maxLength={10}
         />
       </View>
     </ScrollView>
@@ -189,7 +191,7 @@ export default function DiagnosticScreen() {
            <TextInput
             value={String(data.height || '')}
             onChangeText={(t) => updateData('height', t)}
-            keyboardType="numeric"
+            keyboardType="number-pad"
             className="text-black dark:text-white text-2xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-4 font-bold border border-gray-200 dark:border-gray-800"
             placeholder="170"
             placeholderTextColor="#4B5563"
@@ -200,7 +202,7 @@ export default function DiagnosticScreen() {
            <TextInput
             value={String(data.currentWeight || '')}
             onChangeText={(t) => updateData('currentWeight', t)}
-            keyboardType="numeric"
+            keyboardType="number-pad"
             className="text-black dark:text-white text-2xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-4 font-bold border border-gray-200 dark:border-gray-800"
             placeholder="80"
             placeholderTextColor="#4B5563"
@@ -211,7 +213,7 @@ export default function DiagnosticScreen() {
            <TextInput
             value={String(data.targetWeight || '')}
             onChangeText={(t) => updateData('targetWeight', t)}
-            keyboardType="numeric"
+            keyboardType="number-pad"
             className="text-black dark:text-white text-2xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-4 font-bold border border-gray-200 dark:border-gray-800"
             placeholder="70"
             placeholderTextColor="#4B5563"
@@ -339,98 +341,134 @@ export default function DiagnosticScreen() {
     </ScrollView>
   );
 
-  const Step9 = () => (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Presque fini !</Text>
-      <Text className="text-gray-500 dark:text-gray-400 mb-8 font-medium text-lg" style={{ fontFamily: 'Poppins_500Medium' }}>Où pouvons-nous t'envoyer ton programme ?</Text>
+  const Step9 = () => {
+    const scale = useRef(new Animated.Value(1)).current;
 
-      <View className="mb-6">
-        <Text className="text-gray-500 dark:text-gray-400 mb-2 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Ton Prénom</Text>
-        <TextInput
-          value={String(data.firstName || '')}
-          onChangeText={(t) => updateData('firstName', t)}
-          placeholder="Ex: Awa"
-          placeholderTextColor="#4B5563"
-          className="text-black dark:text-white text-xl bg-gray-50 dark:bg-gray-900 rounded-2xl p-4 font-bold border border-gray-200 dark:border-gray-800"
-          style={{ fontFamily: 'Poppins_700Bold' }}
-        />
-      </View>
+    useEffect(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scale, { toValue: 1.08, duration: 1500, useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 1500, useNativeDriver: true })
+        ])
+      ).start();
 
-      <View className="mb-6">
-        <Text className="text-gray-500 dark:text-gray-400 mb-2 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Numéro WhatsApp</Text>
-        <TextInput
-          value={String(data.phone || '')}
-          onChangeText={(t) => updateData('phone', t)}
-          placeholder="Ex: 77 123 45 67"
-          placeholderTextColor="#4B5563"
-          keyboardType="phone-pad"
-          className="text-black dark:text-white text-xl bg-gray-50 dark:bg-gray-900 rounded-2xl p-4 font-bold border border-gray-200 dark:border-gray-800"
-          style={{ fontFamily: 'Poppins_700Bold' }}
+      const timer = setTimeout(() => {
+        setStep(10); // Automatically move to Bilan
+      }, 3000);
+      return () => clearTimeout(timer);
+    }, []);
+
+    return (
+      <View className="flex-1 -m-6 justify-center items-center bg-black">
+        <ImageBackground
+          source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783285387/Young_woman_with_braids_2K_202607052028_ht2jn7.jpg' }}
+          className="absolute inset-0 opacity-25"
+          resizeMode="cover"
         />
+        <View className="absolute inset-0 bg-black/60 dark:bg-black/80" />
+
+        <Animated.View style={{ transform: [{ scale }] }} className="w-32 h-32 rounded-full border-4 border-[#39FF14] shadow-lg shadow-[#39FF14]/50 overflow-hidden mb-8 items-center justify-center bg-gray-900">
+           <Image source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1784209735/557516971_10235324002253110_1070574324835198049_n_ch9we7.jpg' }} className="w-full h-full" />
+        </Animated.View>
+
+        <Text className="text-white text-xl text-center font-bold px-6" style={{ fontFamily: 'Poppins_700Bold' }}>
+          Coach Rokhy personnalise votre programme d'action...
+        </Text>
       </View>
-    </ScrollView>
-  );
+    );
+  };
 
   const Step10 = () => {
-    // Realistic Projection Calculation
-    const weightDiff = Math.abs(parseFloat(data.currentWeight) - parseFloat(data.targetWeight));
+    const weightDiff = Math.abs(parseFloat(data.currentWeight || "0") - parseFloat(data.targetWeight || "0"));
     const weeksToGoal = weightDiff / 0.5;
     const targetDate = addDays(new Date(), weeksToGoal * 7);
     const dateFormatted = format(targetDate, 'MMMM yyyy', { locale: fr });
     const isGain = data.objective === 'Prise de masse';
     const actionText = isGain ? '+' : '-';
 
-    // Calculate BMI
-    const h = parseFloat(data.height) / 100;
-    const w = parseFloat(data.currentWeight);
+    const h = parseFloat(data.height || "1") / 100;
+    const w = parseFloat(data.currentWeight || "0");
     const bmi = h > 0 ? (w / (h * h)).toFixed(1) : '0';
     let bmiStatus = "Normal";
     if (parseFloat(bmi) > 25) bmiStatus = "Surpoids";
     if (parseFloat(bmi) > 30) bmiStatus = "Obésité";
     if (parseFloat(bmi) < 18.5) bmiStatus = "Sous-poids";
 
-    // Calculate Speedometer Angle based on BMI (15 to 35 range mapped to 0-180 degrees)
     const bmiVal = parseFloat(bmi);
     const clampedBmi = Math.min(Math.max(bmiVal, 15), 35);
     const bmiAngle = ((clampedBmi - 15) / 20) * 180;
+    const strokeDashoffset = 125 - (125 * bmiAngle / 180);
 
     const tdee = calculateDailyCalories(data);
+
+    // Staggered native animations
+    const card1Anim = useRef(new Animated.Value(0)).current;
+    const card2Anim = useRef(new Animated.Value(0)).current;
+    const card3Anim = useRef(new Animated.Value(0)).current;
+    const card4Anim = useRef(new Animated.Value(0)).current;
+
+    const scale1 = useRef(new Animated.Value(0.8)).current;
+    const scale2 = useRef(new Animated.Value(0.8)).current;
+    const scale3 = useRef(new Animated.Value(0.8)).current;
+    const scale4 = useRef(new Animated.Value(0.8)).current;
+
+    useEffect(() => {
+      Animated.stagger(150, [
+        Animated.parallel([
+          Animated.timing(card1Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(scale1, { toValue: 1, duration: 400, useNativeDriver: true })
+        ]),
+        Animated.parallel([
+          Animated.timing(card2Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(scale2, { toValue: 1, duration: 400, useNativeDriver: true })
+        ]),
+        Animated.parallel([
+          Animated.timing(card3Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(scale3, { toValue: 1, duration: 400, useNativeDriver: true })
+        ]),
+        Animated.parallel([
+          Animated.timing(card4Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(scale4, { toValue: 1, duration: 400, useNativeDriver: true })
+        ])
+      ]).start();
+    }, []);
+
+    const style1 = { opacity: card1Anim, transform: [{ scale: scale1 }] };
+    const style2 = { opacity: card2Anim, transform: [{ scale: scale2 }] };
+    const style3 = { opacity: card3Anim, transform: [{ scale: scale3 }] };
+    const style4 = { opacity: card4Anim, transform: [{ scale: scale4 }] };
 
     return (
       <View className="flex-1 bg-zinc-50 dark:bg-zinc-900 -m-6 p-6 justify-center">
         <Text className="text-black dark:text-white text-2xl font-bold mb-6 text-center mt-4" style={{ fontFamily: 'Poppins_700Bold' }}>Vos objectifs sont validés</Text>
 
         <View className="flex-row flex-wrap justify-between gap-y-4">
-          <View className="w-[48%] bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm relative overflow-hidden">
-            <View className="h-12 w-24 mb-2 items-center justify-end relative">
-               <Svg height="48" width="96" viewBox="0 0 100 50">
-                 <Path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke={isDark ? "#333" : "#E5E7EB"} strokeWidth="10" strokeLinecap="round" />
-                 <Path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#39FF14" strokeWidth="10" strokeLinecap="round" strokeDasharray="125" strokeDashoffset={125 - (125 * bmiAngle / 180)} />
-               </Svg>
-               <Text className="absolute bottom-0 text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{bmi}</Text>
+          <Animated.View style={[style1, { width: '48%' }]} className="bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm relative overflow-hidden">
+            <View className="w-16 h-16 rounded-full border-4 border-[#39FF14] items-center justify-center mb-2">
+              <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{bmi}</Text>
             </View>
             <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>IMC ({bmiStatus})</Text>
-          </View>
+          </Animated.View>
 
-          <View className="w-[48%] bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
+          <Animated.View style={[style2, { width: '48%' }]} className="bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
             <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781443964/A_cute__highly_detailed_3D_202606141332_ggiubt.jpg"}} className="w-12 h-12 rounded-full mb-2" />
             <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Apport Énergétique</Text>
             <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{tdee} kcal</Text>
-            {tdee === 1200 && <Text className="text-red-500 text-[8px] text-center mt-1 font-bold">Plancher de sécurité activé</Text>}
-          </View>
+            {tdee === 1200 && <Text className="text-red-500 text-[8px] text-center mt-1 font-bold">Plancher sécurité</Text>}
+          </Animated.View>
 
-          <View className="w-[48%] bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
+          <Animated.View style={[style3, { width: '48%' }]} className="bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
             <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781458367/A_cute__highly_detailed_3D_202606141732_kn3ujk.jpg"}} className="w-12 h-12 rounded-full mb-2" />
             <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Poids Cible</Text>
             <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{data.targetWeight} kg</Text>
             <Text className="text-gray-500 text-[9px] font-bold mt-1 text-center">{actionText}{weightDiff} kg à {isGain ? 'prendre' : 'éliminer'}</Text>
-          </View>
+          </Animated.View>
 
-          <View className="w-[48%] bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
+          <Animated.View style={[style4, { width: '48%' }]} className="bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
             <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535959/A_cute__highly_detailed_3D_202606151505_1_uvgqf0.jpg"}} className="w-12 h-12 rounded-full mb-2" />
             <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Date Prévue</Text>
             <Text className="text-black dark:text-white text-lg font-bold capitalize text-center" style={{ fontFamily: 'Poppins_700Bold' }}>{dateFormatted}</Text>
-          </View>
+          </Animated.View>
         </View>
 
         <TouchableOpacity
@@ -448,12 +486,10 @@ export default function DiagnosticScreen() {
     );
   };
 
+
   const Step11 = () => {
     return (
       <View className="flex-1 bg-white -m-6 p-6 justify-center items-center" style={{ borderTopWidth: 8, borderTopColor: '#39FF14' }}>
-        <View className="absolute top-1/2 -left-20 w-80 h-80 rounded-full bg-[#39FF14] opacity-20 blur-3xl" pointerEvents="none" />
-        <View className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[#39FF14] opacity-20 blur-3xl" pointerEvents="none" />
-
         <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png" }} className="w-32 h-12 mb-8" resizeMode="contain" />
 
         <Text className="text-black text-3xl font-bold text-center mb-8" style={{ fontFamily: 'Poppins_700Bold' }}>
@@ -470,7 +506,7 @@ export default function DiagnosticScreen() {
           <View className="flex-row items-center justify-center">
             <Text className="text-white text-center mr-2" style={{ fontFamily: 'Poppins_500Medium' }}>Mot de passe provisoire :</Text>
             <View className="bg-[#39FF14] rounded-lg p-2">
-              <Text className="text-black font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{data.phone.replace(/\s+/g, '').slice(-8).padStart(8, '0')}</Text>
+              <Text className="text-black font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{(data.phone || "").replace(/\s+/g, '').slice(-8).padStart(8, '0')}</Text>
             </View>
           </View>
         </View>
