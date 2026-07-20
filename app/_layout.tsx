@@ -38,21 +38,9 @@ export default function RootLayout() {
     Poppins_900Black,
   });
 
-  useEffect(() => {
-    if (fontsLoaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, error]);
-
-  if (!fontsLoaded && !error) {
-    return null;
-  }
-
   const x = useRef(new Animated.Value(0)).current;
   const y = useRef(new Animated.Value(0)).current;
 
-  // Since we don't have reanimated gyro easily setup for Playwright,
-  // we will just do a slow floating parallax animation with standard Animated
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -62,6 +50,16 @@ export default function RootLayout() {
       ])
     ).start();
   }, []);
+
+  useEffect(() => {
+    if (fontsLoaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, error]);
+
+  if (!fontsLoaded && !error) {
+    return null;
+  }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
