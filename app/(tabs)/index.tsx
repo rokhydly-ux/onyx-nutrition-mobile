@@ -180,10 +180,10 @@ export default function HomeScreen() {
         const userId = session.user.id;
         console.log("Session active pour l'utilisateur ID :", userId);
 
-        // 1. RÉCUPÉRATION DE L'IDENTITÉ (Table clients)
+        // 1. RÉCUPÉRATION DE L'IDENTITÉ (Table clients) avec la jointure pour nutrition_profiles
         const { data: profileData, error: profileError } = await supabase
           .from('clients')
-          .select('*')
+          .select('*, nutrition_profiles(*)')
           .eq('id', userId)
           .maybeSingle();
 

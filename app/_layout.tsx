@@ -1,3 +1,5 @@
+import { View, Image, Animated } from "react-native";
+import { useRef } from "react";
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -42,14 +44,27 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, error]);
 
-  if (!fontsLoaded && !error) {
-    return null;
-  }
+
+
+  const x = useRef(new Animated.Value(0)).current;
+  const y = useRef(new Animated.Value(0)).current;
+
+  // Since we don't have reanimated gyro easily setup for Playwright,
+  // we will just do a slow floating parallax animation with standard Animated
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(y, { toValue: -15, duration: 4000, useNativeDriver: true }),
+        Animated.timing(y, { toValue: 15, duration: 4000, useNativeDriver: true }),
+        Animated.timing(y, { toValue: 0, duration: 4000, useNativeDriver: true })
+      ])
+    ).start();
+  }, []);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
 
-      <Stack screenOptions={{ headerShown: false, contentStyle: { fontFamily: 'Poppins_400Regular' } }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'white' } }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="welcome" />
         <Stack.Screen name="login" />
@@ -58,5 +73,4 @@ export default function RootLayout() {
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
-  );
-}
+  );}

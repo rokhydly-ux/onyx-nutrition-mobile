@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Dimensions, ImageBackground, Animated } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Dimensions, ImageBackground, Animated, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Check, CheckCircle2 } from 'lucide-react-native';
+import { ArrowLeft, Check, CheckCircle2, Sun, Moon, Activity, Heart, AlertCircle, ShieldCheck, Droplets, Utensils } from 'lucide-react-native';
 import { addDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '../lib/supabase';
 import { BlurView } from 'expo-blur';
+import Svg, { Path, Circle } from 'react-native-svg';
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedView = Animated.View;
+import { useColorScheme } from 'nativewind';
 
 const { width } = Dimensions.get('window');
 
@@ -57,16 +61,20 @@ const initialDiagData: DiagData = {
   phone: '',
 };
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 11;
 
 export default function DiagnosticScreen() {
   const router = useRouter();
+  const { colorScheme, toggleColorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [step, setStep] = useState(1);
   const [data, setData] = useState<DiagData>(initialDiagData);
 
   // Fake chat state
   const [chatMessage, setChatMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const updateData = (key: keyof DiagData, value: string) => {
     setData(prev => ({ ...prev, [key]: value }));
@@ -89,7 +97,7 @@ export default function DiagnosticScreen() {
   const renderProgressBar = () => {
     const progress = (step / TOTAL_STEPS) * 100;
     return (
-      <View className="h-1 bg-gray-800 w-full mb-4">
+      <View className="h-1 bg-gray-200 dark:bg-gray-800 w-full mb-4">
         <Animated.View style={{ width: `${progress}%` }} className="h-full bg-[#39FF14]" />
       </View>
     );
@@ -98,18 +106,23 @@ export default function DiagnosticScreen() {
   // --- Step Components --- //
 
   // Selectable Card Helper
-  const SelectableCard = ({ label, value, selectedValue, onSelect, imageUri }: any) => {
+  const SelectableCard = ({ label, value, selectedValue, onSelect, imageUri, icon: IconComponent }: any) => {
     const isSelected = selectedValue === value;
     return (
       <TouchableOpacity
         onPress={() => onSelect(value)}
-        className={`w-full rounded-2xl p-4 mb-4 flex-row items-center justify-between border-[3px] ${isSelected ? 'border-[#39FF14] bg-[#39FF14]/10' : 'border-gray-800 bg-gray-900'}`}
+        className={`w-full rounded-2xl p-4 mb-4 flex-row items-center justify-between border-[3px] ${isSelected ? 'border-[#39FF14] bg-[#39FF14]/10' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900'}`}
       >
         <View className="flex-row items-center flex-1">
            {imageUri && (
-             <ImageBackground source={{ uri: imageUri }} className="w-16 h-16 rounded-xl overflow-hidden mr-4 bg-gray-800" />
+             <ImageBackground source={{ uri: imageUri }} className="w-20 h-20 rounded-xl overflow-hidden mr-4 aspect-square" resizeMode="contain" />
            )}
-          <Text className={`text-lg flex-1 ${isSelected ? 'text-[#39FF14] font-bold' : 'text-white'}`} style={{ fontFamily: isSelected ? 'Poppins_700Bold' : 'Poppins_500Medium' }}>
+           {IconComponent && !imageUri && (
+             <View className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 items-center justify-center mr-4">
+               <IconComponent color={isSelected ? "#39FF14" : (isDark ? "#A3A3A3" : "#6B7280")} size={24} />
+             </View>
+           )}
+          <Text className={`text-lg flex-1 ${isSelected ? 'text-[#39FF14] font-bold' : 'text-black dark:text-white'}`} style={{ fontFamily: isSelected ? 'Poppins_700Bold' : 'Poppins_500Medium' }}>
             {label}
           </Text>
         </View>
@@ -118,358 +131,406 @@ export default function DiagnosticScreen() {
     );
   };
 
-  const Step1 = () => (
-    <View className="flex-1">
-      <Text className="text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Parle-nous de toi</Text>
 
-      <SelectableCard
-        label="Je suis un homme"
-        value="Homme"
-        selectedValue={data.gender}
-        onSelect={(v: string) => updateData('gender', v)}
-        imageUri="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=150&h=150"
-      />
-      <SelectableCard
-        label="Je suis une femme"
-        value="Femme"
-        selectedValue={data.gender}
-        onSelect={(v: string) => updateData('gender', v)}
-        imageUri="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150&h=150"
-      />
+
+
+  const SelectableGridCard = ({ label, value, selectedValue, onSelect, imageUri, icon: IconComponent, vertical = false }: any) => {
+    const isSelected = selectedValue === value;
+    return (
+      <TouchableOpacity
+        onPress={() => onSelect(value)}
+        className={`flex-1 rounded-2xl p-3 mb-4 items-center justify-center border-[3px] ${isSelected ? 'border-[#39FF14] bg-[#39FF14]/10' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900'} ${vertical ? 'flex-col' : 'aspect-square'}`}
+      >
+        {imageUri && (
+          <ImageBackground source={{ uri: imageUri }} className={`rounded-xl overflow-hidden mb-2 ${vertical ? 'w-full h-36' : 'w-32 h-32'} aspect-square`} resizeMode="contain" />
+        )}
+        <Text className={`text-center ${isSelected ? 'text-[#39FF14] font-bold' : 'text-black dark:text-white'} ${vertical ? 'text-sm' : 'text-xs'}`} style={{ fontFamily: isSelected ? 'Poppins_700Bold' : 'Poppins_500Medium' }}>
+          {label}
+        </Text>
+        {isSelected && <View className="absolute top-2 right-2 bg-white rounded-full"><CheckCircle2 color="#39FF14" size={16} /></View>}
+      </TouchableOpacity>
+    );
+  };
+
+  const Step1 = () => (
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Parle-nous de toi</Text>
+
+      <View className="flex-row gap-3">
+        <SelectableGridCard label="Homme" value="Homme" selectedValue={data.gender} onSelect={(v: string) => updateData('gender', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_format_1_1_en_202606111044_rjknkg.jpg" />
+        <SelectableGridCard label="Femme" value="Femme" selectedValue={data.gender} onSelect={(v: string) => updateData('gender', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_1_1_en_gardant_202606111043_unmonc.jpg" />
+      </View>
 
       <View className="mt-8">
-        <Text className="text-gray-400 text-lg mb-2 text-center" style={{ fontFamily: 'Poppins_500Medium' }}>Quel âge as-tu ?</Text>
+        <Text className="text-gray-500 dark:text-gray-400 text-lg mb-2 text-center" style={{ fontFamily: 'Poppins_500Medium' }}>Quel âge as-tu ?</Text>
         <TextInput
-          value={data.age}
+          value={String(data.age || '')}
           onChangeText={(t) => updateData('age', t)}
           placeholder="Ex: 30"
           placeholderTextColor="#4B5563"
-          keyboardType="numeric"
-          className="text-white text-4xl text-center bg-gray-900 rounded-2xl py-6 font-bold border border-gray-800"
+          keyboardType="number-pad"
+          className="text-black dark:text-white text-4xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-6 font-bold border border-gray-200 dark:border-gray-800"
           style={{ fontFamily: 'Poppins_700Bold' }}
-          maxLength={3}
+          maxLength={10}
         />
       </View>
-
-      <TouchableOpacity
-        className={`mt-auto mb-6 py-4 rounded-full items-center ${data.gender && data.age ? 'bg-black border-2 border-black bg-white' : 'bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!data.gender || !data.age}
-      >
-        <Text className={`font-bold text-lg uppercase ${data.gender && data.age ? 'text-[#39FF14] text-black' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_700Bold', color: data.gender && data.age ? '#39FF14' : undefined, backgroundColor: data.gender && data.age ? 'black' : undefined, width: '100%', textAlign: 'center', overflow: 'hidden', borderRadius: 999 }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 
   const Step2 = () => (
-    <View className="flex-1">
-      <Text className="text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Quel est ton objectif ?</Text>
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Quel est ton objectif ?</Text>
 
-      <SelectableCard label="Perdre du poids" value="Perte de poids" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} />
-      <SelectableCard label="Garder la forme (Maintien)" value="Maintien" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} />
-      <SelectableCard label="Prendre de la masse" value="Prise de masse" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} />
+      <View className="flex-row gap-2">
+        <SelectableGridCard vertical label="Perte de poids" value="Perte de poids" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781190763/An_authentic_photorealistic_full-body_portrait_202606111512_f3zs3t.jpg" />
+        <SelectableGridCard vertical label="Maintien" value="Maintien" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781542708/A_high-end_commercial_photorealistic_portrait_202606151658_noabp9.jpg" />
+        <SelectableGridCard vertical label="Prise de masse" value="Prise de masse" selectedValue={data.objective} onSelect={(v: string) => updateData('objective', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781544091/rajoute_le_logo_sur_la_202606151721_aayo61.jpg" />
+      </View>
 
       <View className="mt-6 flex-row justify-between">
         <View className="flex-1 mr-2">
-           <Text className="text-gray-400 mb-2">Taille (cm)</Text>
+           <Text className="text-gray-500 dark:text-gray-400 mb-2">Taille (cm)</Text>
            <TextInput
-            value={data.height}
+            value={String(data.height || '')}
             onChangeText={(t) => updateData('height', t)}
-            keyboardType="numeric"
-            className="text-white text-2xl text-center bg-gray-900 rounded-2xl py-4 font-bold border border-gray-800"
+            keyboardType="number-pad"
+            className="text-black dark:text-white text-2xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-4 font-bold border border-gray-200 dark:border-gray-800"
             placeholder="170"
             placeholderTextColor="#4B5563"
            />
         </View>
         <View className="flex-1 mx-1">
-           <Text className="text-gray-400 mb-2">Poids (kg)</Text>
+           <Text className="text-gray-500 dark:text-gray-400 mb-2">Poids (kg)</Text>
            <TextInput
-            value={data.currentWeight}
+            value={String(data.currentWeight || '')}
             onChangeText={(t) => updateData('currentWeight', t)}
-            keyboardType="numeric"
-            className="text-white text-2xl text-center bg-gray-900 rounded-2xl py-4 font-bold border border-gray-800"
+            keyboardType="number-pad"
+            className="text-black dark:text-white text-2xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-4 font-bold border border-gray-200 dark:border-gray-800"
             placeholder="80"
             placeholderTextColor="#4B5563"
            />
         </View>
         <View className="flex-1 ml-2">
-           <Text className="text-gray-400 mb-2">Cible (kg)</Text>
+           <Text className="text-gray-500 dark:text-gray-400 mb-2">Cible (kg)</Text>
            <TextInput
-            value={data.targetWeight}
+            value={String(data.targetWeight || '')}
             onChangeText={(t) => updateData('targetWeight', t)}
-            keyboardType="numeric"
-            className="text-white text-2xl text-center bg-gray-900 rounded-2xl py-4 font-bold border border-gray-800"
+            keyboardType="number-pad"
+            className="text-black dark:text-white text-2xl text-center bg-gray-50 dark:bg-gray-900 rounded-2xl py-4 font-bold border border-gray-200 dark:border-gray-800"
             placeholder="70"
             placeholderTextColor="#4B5563"
            />
         </View>
       </View>
-
-      <TouchableOpacity
-        className={`mt-auto mb-6 py-4 rounded-full items-center ${data.objective && data.height && data.currentWeight && data.targetWeight ? 'bg-black border-2 border-black' : 'bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.objective && data.height && data.currentWeight && data.targetWeight)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.objective && data.height && data.currentWeight && data.targetWeight ? '#39FF14' : '#6B7280' }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
-
-  const Step2Bis = () => {
-    // Realistic Projection Calculation
-    const weightDiff = Math.abs(parseFloat(data.currentWeight) - parseFloat(data.targetWeight));
-    const weeksToGoal = weightDiff / 0.5; // Safe loss/gain: 0.5kg per week
-    const targetDate = addDays(new Date(), weeksToGoal * 7);
-    const dateFormatted = format(targetDate, 'dd MMMM yyyy', { locale: fr });
-
-    const actionText = data.objective === 'Prise de masse' ? 'Prendre' : 'Perdre';
-
-    return (
-      <ImageBackground
-        source={{ uri: 'https://images.unsplash.com/photo-1526506118029-4591b65db912?auto=format&fit=crop&q=80' }}
-        className="flex-1 -m-6 p-6 justify-end"
-      >
-        <View className="absolute inset-0 bg-black/70" />
-        <View className="flex-1 justify-center z-10">
-          <BlurView intensity={40} tint="dark" className="p-8 rounded-[2rem] border border-white/20">
-            <Text className="text-[#39FF14] text-xl font-bold mb-4 uppercase tracking-widest text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Projection réaliste</Text>
-            <Text className="text-white text-3xl font-bold text-center leading-relaxed" style={{ fontFamily: 'Poppins_700Bold' }}>
-              {actionText} <Text className="text-[#39FF14]">{weightDiff} kg</Text> est un objectif atteignable et sain.
-            </Text>
-            <Text className="text-gray-300 text-lg text-center mt-6" style={{ fontFamily: 'Poppins_400Regular' }}>
-              Atteignez-le d'ici le :
-            </Text>
-            <Text className="text-white text-2xl font-bold text-center mt-2" style={{ fontFamily: 'Poppins_700Bold' }}>
-              {dateFormatted}
-            </Text>
-          </BlurView>
-        </View>
-        <TouchableOpacity
-          className="bg-black py-4 rounded-full items-center mb-6 z-10 shadow-[0_0_15px_rgba(57,255,20,0.5)] border border-[#39FF14]/50"
-          onPress={nextStep}
-        >
-          <Text className="font-bold text-lg uppercase text-[#39FF14]" style={{ fontFamily: 'Poppins_700Bold' }}>
-            Je suis prêt !
-          </Text>
-        </TouchableOpacity>
-      </ImageBackground>
-    );
-  };
 
   const Step3 = () => (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <Text className="text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Ton mode de vie</Text>
+      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Ton mode de vie</Text>
 
-      <Text className="text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Sommeil moyen</Text>
+      <View className="flex-row items-center mb-4">
+        <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675093/3_topvyj.png" }} className="w-6 h-6 mr-2" resizeMode="contain" />
+        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Heures de sommeil par nuit</Text>
+      </View>
       <SelectableCard label="Moins de 5h" value="Moins de 5h" selectedValue={data.sleep} onSelect={(v: string) => updateData('sleep', v)} />
       <SelectableCard label="6 à 7h" value="6-7h" selectedValue={data.sleep} onSelect={(v: string) => updateData('sleep', v)} />
       <SelectableCard label="8h ou plus" value="8h+" selectedValue={data.sleep} onSelect={(v: string) => updateData('sleep', v)} />
 
-      <Text className="text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Niveau d'activité (Travail / Sport)</Text>
+      <View className="flex-row items-center mt-6 mb-4">
+        <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675092/5_olxege.png" }} className="w-6 h-6 mr-2" resizeMode="contain" />
+        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Déplacements au quotidien</Text>
+      </View>
       <SelectableCard label="Sédentaire (Bureau, peu de marche)" value="Sédentaire" selectedValue={data.activityLevel} onSelect={(v: string) => updateData('activityLevel', v)} />
       <SelectableCard label="Légère (Marche occasionnelle)" value="Légère" selectedValue={data.activityLevel} onSelect={(v: string) => updateData('activityLevel', v)} />
       <SelectableCard label="Modérée (Sport 1-3x/semaine)" value="Modérée" selectedValue={data.activityLevel} onSelect={(v: string) => updateData('activityLevel', v)} />
       <SelectableCard label="Intense (Sport 4x+/semaine)" value="Intense" selectedValue={data.activityLevel} onSelect={(v: string) => updateData('activityLevel', v)} />
-
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.sleep && data.activityLevel ? 'bg-black border-2 border-black' : 'bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.sleep && data.activityLevel)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.sleep && data.activityLevel ? '#39FF14' : '#6B7280' }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 
   const Step4 = () => (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <Text className="text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Profil Santé</Text>
+      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Profil Santé</Text>
 
-      <Text className="text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>As-tu des conditions médicales ?</Text>
-      <SelectableCard label="Aucune" value="Aucun" selectedValue={data.health} onSelect={(v: string) => updateData('health', v)} />
-      <SelectableCard label="Diabète" value="Diabète" selectedValue={data.health} onSelect={(v: string) => updateData('health', v)} />
-      <SelectableCard label="Hypertension" value="Hypertension" selectedValue={data.health} onSelect={(v: string) => updateData('health', v)} />
+      <Text className="text-gray-500 dark:text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>As-tu des conditions médicales ?</Text>
+      <SelectableCard label="Aucune" value="Aucun" selectedValue={data.health} onSelect={(v: string) => updateData('health', v)} icon={ShieldCheck} />
+      <SelectableCard label="Diabète" value="Diabète" selectedValue={data.health} onSelect={(v: string) => updateData('health', v)} icon={Activity} />
+      <SelectableCard label="Hypertension" value="Hypertension" selectedValue={data.health} onSelect={(v: string) => updateData('health', v)} icon={Heart} />
 
       {data.gender === 'Femme' && (
-        <>
-          <Text className="text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Conditions féminines particulières ?</Text>
-          <SelectableCard label="Aucune" value="Aucune" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} />
-          <SelectableCard label="Allaitement" value="Allaitement" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} />
-          <SelectableCard label="Grossesse" value="Grossesse" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} />
-          <SelectableCard label="SOPK" value="SOPK" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} />
-          <SelectableCard label="Ménopause" value="Ménopause" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} />
-        </>
+        <View className="mt-6">
+          <Text className="text-gray-500 dark:text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Conditions féminines particulières ?</Text>
+          <SelectableCard label="Aucune" value="Aucune" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={ShieldCheck} />
+          <SelectableCard label="Allaitement" value="Allaitement" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={Droplets} />
+          <SelectableCard label="Grossesse" value="Grossesse" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={Heart} />
+          <SelectableCard label="SOPK" value="SOPK" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={AlertCircle} />
+          <SelectableCard label="Ménopause" value="Ménopause" selectedValue={data.womenCondition} onSelect={(v: string) => updateData('womenCondition', v)} icon={Activity} />
+        </View>
       )}
-
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.health && (data.gender === 'Homme' || data.womenCondition) ? 'bg-black border-2 border-black' : 'bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.health && (data.gender === 'Homme' || data.womenCondition))}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.health && (data.gender === 'Homme' || data.womenCondition) ? '#39FF14' : '#6B7280' }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 
   const Step5 = () => (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <Text className="text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Habitudes Alimentaires</Text>
+      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Habitudes Alimentaires</Text>
 
-      <Text className="text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Hydratation quotidienne</Text>
+      <View className="flex-row items-center mb-4">
+        <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675042/2_maewiy.png" }} className="w-6 h-6 mr-2" resizeMode="contain" />
+        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Quelle quantité d'eau consommez-vous ?</Text>
+      </View>
       <SelectableCard label="Moins de 1L" value="Moins 1L" selectedValue={data.hydration} onSelect={(v: string) => updateData('hydration', v)} />
       <SelectableCard label="1L à 2L" value="1L-2L" selectedValue={data.hydration} onSelect={(v: string) => updateData('hydration', v)} />
       <SelectableCard label="Plus de 2L" value="Plus 2L" selectedValue={data.hydration} onSelect={(v: string) => updateData('hydration', v)} />
 
-      <Text className="text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>As-tu déjà suivi des régimes ?</Text>
-      <SelectableCard label="Jamais" value="Jamais" selectedValue={data.pastDiets} onSelect={(v: string) => updateData('pastDiets', v)} />
-      <SelectableCard label="Oui, sans succès à long terme" value="Oui" selectedValue={data.pastDiets} onSelect={(v: string) => updateData('pastDiets', v)} />
+      <View className="flex-row items-center mt-6 mb-4">
+        <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675094/4_uk6ui2.png" }} className="w-6 h-6 mr-2" resizeMode="contain" />
+        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Habitudes (Régimes / Cuisson)</Text>
+      </View>
+      <SelectableCard label="Jamais suivi de régime" value="Jamais" selectedValue={data.pastDiets} onSelect={(v: string) => updateData('pastDiets', v)} />
+      <SelectableCard label="Régimes passés sans succès" value="Oui" selectedValue={data.pastDiets} onSelect={(v: string) => updateData('pastDiets', v)} />
 
-      <Text className="text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Matières grasses utilisées pour cuisiner</Text>
-      <SelectableCard label="Beaucoup d'huile" value="Beaucoup d'huile" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
+      <SelectableCard label="Je cuisine avec beaucoup d'huile" value="Beaucoup d'huile" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
       <SelectableCard label="Huile d'olive / Modéré" value="Modéré" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
-
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.hydration && data.pastDiets && data.cookingFats ? 'bg-black border-2 border-black' : 'bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.hydration && data.pastDiets && data.cookingFats)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.hydration && data.pastDiets && data.cookingFats ? '#39FF14' : '#6B7280' }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 
   const Step6 = () => (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <Text className="text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Le Rythme Africain</Text>
+      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Le Rythme Africain</Text>
 
-      <Text className="text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>L'élément principal de tes repas</Text>
+      <View className="flex-row items-center mb-4">
+        <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675091/sauce_gmyero.png" }} className="w-6 h-6 mr-2" resizeMode="contain" />
+        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Quel est l'élément principal de vos repas ?</Text>
+      </View>
       <SelectableCard label="Féculents lourds (Foutou, Igname...)" value="Féculents lourds" selectedValue={data.mainCarb} onSelect={(v: string) => updateData('mainCarb', v)} />
       <SelectableCard label="Riz / Céréales" value="Riz/Céréales" selectedValue={data.mainCarb} onSelect={(v: string) => updateData('mainCarb', v)} />
       <SelectableCard label="Sauces riches (Arachide, Graine...)" value="Sauces riches" selectedValue={data.mainCarb} onSelect={(v: string) => updateData('mainCarb', v)} />
       <SelectableCard label="Protéines et Légumes" value="Protéines/Légumes" selectedValue={data.mainCarb} onSelect={(v: string) => updateData('mainCarb', v)} />
 
-      <Text className="text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Le Dîner</Text>
+      <View className="flex-row items-center mt-6 mb-4">
+        <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675258/inox_lnbt0p.png" }} className="w-6 h-6 mr-2" resizeMode="contain" />
+        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Le soir à la maison, votre dîner est généralement :</Text>
+      </View>
       <SelectableCard label="Très copieux (Reste du midi)" value="Très copieux" selectedValue={data.dinnerType} onSelect={(v: string) => updateData('dinnerType', v)} />
       <SelectableCard label="Léger (Salade, Soupe...)" value="Léger" selectedValue={data.dinnerType} onSelect={(v: string) => updateData('dinnerType', v)} />
       <SelectableCard label="Je grignote" value="Je grignote" selectedValue={data.dinnerType} onSelect={(v: string) => updateData('dinnerType', v)} />
-
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.mainCarb && data.dinnerType ? 'bg-black border-2 border-black' : 'bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.mainCarb && data.dinnerType)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.mainCarb && data.dinnerType ? '#39FF14' : '#6B7280' }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 
   const Step7 = () => (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <Text className="text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Pratique & Famille</Text>
+      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Pratique & Famille</Text>
 
-      <Text className="text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Comment manges-tu à midi ?</Text>
-      <SelectableCard label="Gamelle personnelle" value="Gamelle" selectedValue={data.lunchType} onSelect={(v: string) => updateData('lunchType', v)} />
-      <SelectableCard label="Bol commun familial" value="Bol commun" selectedValue={data.lunchType} onSelect={(v: string) => updateData('lunchType', v)} />
+      <Text className="text-gray-500 dark:text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Comment manges-tu à midi ?</Text>
+      <SelectableCard label="Gamelle personnelle" value="Gamelle" selectedValue={data.lunchType} onSelect={(v: string) => updateData('lunchType', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/La_Gamelle_ywfy3t.jpg" />
+      <SelectableCard label="Bol commun familial" value="Bol commun" selectedValue={data.lunchType} onSelect={(v: string) => updateData('lunchType', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/Le_Bol_Commun_hb9fns.jpg" />
 
-      <Text className="text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Pour qui cuisines-tu ?</Text>
-      <SelectableCard label="Juste pour moi" value="Pour soi" selectedValue={data.cookingFor} onSelect={(v: string) => updateData('cookingFor', v)} />
-      <SelectableCard label="Pour toute la famille" value="Famille" selectedValue={data.cookingFor} onSelect={(v: string) => updateData('cookingFor', v)} />
-
-      <Text className="text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Budget Courses (Mensuel estimé)</Text>
-      <SelectableCard label="Moins de 50 000 FCFA" value="< 50k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} />
-      <SelectableCard label="50 000 - 100 000 FCFA" value="50k-100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} />
-      <SelectableCard label="Plus de 100 000 FCFA" value="> 100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} />
-
-      <TouchableOpacity
-        className={`mt-8 mb-6 py-4 rounded-full items-center ${data.lunchType && data.cookingFor && data.groceryBudget ? 'bg-black border-2 border-black' : 'bg-gray-800'}`}
-        onPress={nextStep}
-        disabled={!(data.lunchType && data.cookingFor && data.groceryBudget)}
-      >
-        <Text className="font-bold text-lg uppercase" style={{ fontFamily: 'Poppins_700Bold', color: data.lunchType && data.cookingFor && data.groceryBudget ? '#39FF14' : '#6B7280' }}>
-          Continuer
-        </Text>
-      </TouchableOpacity>
+      <Text className="text-gray-500 dark:text-gray-400 mt-6 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Pour qui cuisines-tu ?</Text>
+      <SelectableCard label="Juste pour moi" value="Pour soi" selectedValue={data.cookingFor} onSelect={(v: string) => updateData('cookingFor', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/Je_cuisine_pour_moi_seule_mfo6vw.jpg" />
+      <SelectableCard label="Pour toute la famille" value="Famille" selectedValue={data.cookingFor} onSelect={(v: string) => updateData('cookingFor', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/Je_cuisine_pour_la_famille_qzlwke.jpg" />
     </ScrollView>
   );
 
   const Step8 = () => (
-    <View className="flex-1">
-      <Text className="text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Presque fini !</Text>
-      <Text className="text-gray-400 mb-8 font-medium text-lg" style={{ fontFamily: 'Poppins_500Medium' }}>Où pouvons-nous t'envoyer ton programme ?</Text>
-
-      <View className="mb-6">
-        <Text className="text-gray-400 mb-2 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Ton Prénom</Text>
-        <TextInput
-          value={data.firstName}
-          onChangeText={(t) => updateData('firstName', t)}
-          placeholder="Ex: Awa"
-          placeholderTextColor="#4B5563"
-          className="text-white text-xl bg-gray-900 rounded-2xl p-4 font-bold border border-gray-800"
-          style={{ fontFamily: 'Poppins_700Bold' }}
-        />
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Budget Alimentaire</Text>
+      <Text className="text-gray-500 dark:text-gray-400 mb-4 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Budget Courses (Mensuel estimé)</Text>
+      <View className="flex-row gap-2">
+        <SelectableGridCard vertical label="Serré" value="< 50k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/A_cute__highly_detailed_3D_202606161723_odc2jk.jpg" />
+        <SelectableGridCard vertical label="Famille" value="50k-100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631229/A_cute__highly_detailed_3D_202606161723_1_x2pfvp.jpg" />
+        <SelectableGridCard vertical label="Confort" value="> 100k" selectedValue={data.groceryBudget} onSelect={(v: string) => updateData('groceryBudget', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781631228/A_cute__highly_detailed_3D_202606161723_2_ynd0wc.jpg" />
       </View>
-
-      <View className="mb-6">
-        <Text className="text-gray-400 mb-2 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Numéro WhatsApp</Text>
-        <TextInput
-          value={data.phone}
-          onChangeText={(t) => updateData('phone', t)}
-          placeholder="Ex: 77 123 45 67"
-          placeholderTextColor="#4B5563"
-          keyboardType="phone-pad"
-          className="text-white text-xl bg-gray-900 rounded-2xl p-4 font-bold border border-gray-800"
-          style={{ fontFamily: 'Poppins_700Bold' }}
-        />
-      </View>
-
-      <TouchableOpacity
-        className={`mt-auto mb-6 py-4 rounded-full items-center ${data.firstName && data.phone && !isSubmitting ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.5)]' : 'bg-gray-800'}`}
-        onPress={() => {
-           setStep(10);
-           handleSubmit();
-        }}
-        disabled={!(data.firstName && data.phone) || isSubmitting}
-      >
-        <Text className={`font-bold text-lg uppercase ${data.firstName && data.phone ? 'text-black' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
-          Générer mon programme
-        </Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 
-  const Step9 = () => (
-    <View className="flex-1 justify-center items-center">
-      <View className="bg-gray-900 p-6 rounded-[2rem] border border-gray-800 w-full mb-8">
-        <View className="flex-row items-center mb-4">
-          <View className="w-12 h-12 rounded-full bg-[#39FF14] items-center justify-center mr-4">
-             <Text className="text-black font-bold text-xl" style={{ fontFamily: 'Poppins_700Bold' }}>J</Text>
+  const Step9 = () => {
+    const scale = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scale, { toValue: 1.08, duration: 1500, useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 1500, useNativeDriver: true })
+        ])
+      ).start();
+
+      const timer = setTimeout(() => {
+        setStep(10); // Automatically move to Bilan
+      }, 3000);
+      return () => clearTimeout(timer);
+    }, []);
+
+    return (
+      <View className="flex-1 -m-6 justify-center items-center bg-black">
+        <ImageBackground
+          source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783285387/Young_woman_with_braids_2K_202607052028_ht2jn7.jpg' }}
+          className="absolute inset-0 opacity-25"
+          resizeMode="cover"
+        />
+        <View className="absolute inset-0 bg-black/60 dark:bg-black/80" />
+
+        <Animated.View style={{ transform: [{ scale }] }} className="w-32 h-32 rounded-full border-4 border-[#39FF14] shadow-lg shadow-[#39FF14]/50 overflow-hidden mb-8 items-center justify-center bg-gray-900">
+           <Image source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1784209735/557516971_10235324002253110_1070574324835198049_n_ch9we7.jpg' }} className="w-full h-full" />
+        </Animated.View>
+
+        <Text className="text-white text-xl text-center font-bold px-6" style={{ fontFamily: 'Poppins_700Bold' }}>
+          Coach Rokhy personnalise votre programme d'action...
+        </Text>
+      </View>
+    );
+  };
+
+  const Step10 = () => {
+    const weightDiff = Math.abs(parseFloat(data.currentWeight || "0") - parseFloat(data.targetWeight || "0"));
+    const weeksToGoal = weightDiff / 0.5;
+    const targetDate = addDays(new Date(), weeksToGoal * 7);
+    const dateFormatted = format(targetDate, 'MMMM yyyy', { locale: fr });
+    const isGain = data.objective === 'Prise de masse';
+    const actionText = isGain ? '+' : '-';
+
+    const h = parseFloat(data.height || "1") / 100;
+    const w = parseFloat(data.currentWeight || "0");
+    const bmi = h > 0 ? (w / (h * h)).toFixed(1) : '0';
+    let bmiStatus = "Normal";
+    if (parseFloat(bmi) > 25) bmiStatus = "Surpoids";
+    if (parseFloat(bmi) > 30) bmiStatus = "Obésité";
+    if (parseFloat(bmi) < 18.5) bmiStatus = "Sous-poids";
+
+    const bmiVal = parseFloat(bmi);
+    const clampedBmi = Math.min(Math.max(bmiVal, 15), 35);
+    const bmiAngle = ((clampedBmi - 15) / 20) * 180;
+    const strokeDashoffset = 125 - (125 * bmiAngle / 180);
+
+    const tdee = calculateDailyCalories(data);
+
+    // Staggered native animations
+    const card1Anim = useRef(new Animated.Value(0)).current;
+    const card2Anim = useRef(new Animated.Value(0)).current;
+    const card3Anim = useRef(new Animated.Value(0)).current;
+    const card4Anim = useRef(new Animated.Value(0)).current;
+
+    const scale1 = useRef(new Animated.Value(0.8)).current;
+    const scale2 = useRef(new Animated.Value(0.8)).current;
+    const scale3 = useRef(new Animated.Value(0.8)).current;
+    const scale4 = useRef(new Animated.Value(0.8)).current;
+
+    useEffect(() => {
+      Animated.stagger(150, [
+        Animated.parallel([
+          Animated.timing(card1Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(scale1, { toValue: 1, duration: 400, useNativeDriver: true })
+        ]),
+        Animated.parallel([
+          Animated.timing(card2Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(scale2, { toValue: 1, duration: 400, useNativeDriver: true })
+        ]),
+        Animated.parallel([
+          Animated.timing(card3Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(scale3, { toValue: 1, duration: 400, useNativeDriver: true })
+        ]),
+        Animated.parallel([
+          Animated.timing(card4Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(scale4, { toValue: 1, duration: 400, useNativeDriver: true })
+        ])
+      ]).start();
+    }, []);
+
+    const style1 = { opacity: card1Anim, transform: [{ scale: scale1 }] };
+    const style2 = { opacity: card2Anim, transform: [{ scale: scale2 }] };
+    const style3 = { opacity: card3Anim, transform: [{ scale: scale3 }] };
+    const style4 = { opacity: card4Anim, transform: [{ scale: scale4 }] };
+
+    return (
+      <View className="flex-1 bg-zinc-50 dark:bg-zinc-900 -m-6 p-6 justify-center">
+        <Text className="text-black dark:text-white text-2xl font-bold mb-6 text-center mt-4" style={{ fontFamily: 'Poppins_700Bold' }}>Vos objectifs sont validés</Text>
+
+        <View className="flex-row flex-wrap justify-between gap-y-4">
+          <Animated.View style={[style1, { width: '48%' }]} className="bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm relative overflow-hidden">
+            <View className="w-16 h-16 rounded-full border-4 border-[#39FF14] items-center justify-center mb-2">
+              <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{bmi}</Text>
+            </View>
+            <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>IMC ({bmiStatus})</Text>
+          </Animated.View>
+
+          <Animated.View style={[style2, { width: '48%' }]} className="bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781443964/A_cute__highly_detailed_3D_202606141332_ggiubt.jpg"}} className="w-12 h-12 rounded-full mb-2" />
+            <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Apport Énergétique</Text>
+            <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{tdee} kcal</Text>
+            {tdee === 1200 && <Text className="text-red-500 text-[8px] text-center mt-1 font-bold">Plancher sécurité</Text>}
+          </Animated.View>
+
+          <Animated.View style={[style3, { width: '48%' }]} className="bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781458367/A_cute__highly_detailed_3D_202606141732_kn3ujk.jpg"}} className="w-12 h-12 rounded-full mb-2" />
+            <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Poids Cible</Text>
+            <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{data.targetWeight} kg</Text>
+            <Text className="text-gray-500 text-[9px] font-bold mt-1 text-center">{actionText}{weightDiff} kg à {isGain ? 'prendre' : 'éliminer'}</Text>
+          </Animated.View>
+
+          <Animated.View style={[style4, { width: '48%' }]} className="bg-white dark:bg-black rounded-[2rem] p-4 items-center border border-gray-200 dark:border-gray-800 shadow-sm">
+            <Image source={{uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535959/A_cute__highly_detailed_3D_202606151505_1_uvgqf0.jpg"}} className="w-12 h-12 rounded-full mb-2" />
+            <Text className="text-gray-500 text-[10px] uppercase font-bold text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Date Prévue</Text>
+            <Text className="text-black dark:text-white text-lg font-bold capitalize text-center" style={{ fontFamily: 'Poppins_700Bold' }}>{dateFormatted}</Text>
+          </Animated.View>
+        </View>
+
+        <TouchableOpacity
+          className="bg-black py-4 rounded-full items-center mt-10 shadow-[0_0_15px_rgba(0,0,0,0.3)]"
+          onPress={() => {
+             handleSubmit();
+          }}
+          disabled={isSubmitting}
+        >
+          <Text className="font-bold text-lg uppercase text-[#39FF14]" style={{ fontFamily: 'Poppins_700Bold' }}>
+            {isSubmitting ? "Chargement..." : "Valider mes objectifs"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+
+  const Step11 = () => {
+    return (
+      <View className="flex-1 bg-white -m-6 p-6 justify-center items-center" style={{ borderTopWidth: 8, borderTopColor: '#39FF14' }}>
+        <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png" }} className="w-32 h-12 mb-8" resizeMode="contain" />
+
+        <Text className="text-black text-3xl font-bold text-center mb-8" style={{ fontFamily: 'Poppins_700Bold' }}>
+          Bienvenue <Text className="text-[#39FF14]">{data.firstName}</Text> !
+        </Text>
+
+        <View className="bg-black rounded-2xl p-6 w-full mb-6">
+          <View className="flex-row items-center justify-center mb-4">
+            <CheckCircle2 color="white" size={32} />
           </View>
-          <View>
-             <Text className="text-white font-bold text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>Jules (Coach IA)</Text>
-             <Text className="text-[#39FF14] text-xs">En ligne</Text>
+          <Text className="text-white text-center mb-4" style={{ fontFamily: 'Poppins_500Medium' }}>
+            Numéro WhatsApp : <Text className="font-bold">{data.phone}</Text>
+          </Text>
+          <View className="flex-row items-center justify-center">
+            <Text className="text-white text-center mr-2" style={{ fontFamily: 'Poppins_500Medium' }}>Mot de passe provisoire :</Text>
+            <View className="bg-[#39FF14] rounded-lg p-2">
+              <Text className="text-black font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{(data.phone || "").replace(/\s+/g, '').slice(-8).padStart(8, '0')}</Text>
+            </View>
           </View>
         </View>
 
-        <View className="bg-gray-800 p-4 rounded-2xl rounded-tl-none">
-          <Text className="text-white text-lg leading-relaxed" style={{ fontFamily: 'Poppins_500Medium' }}>
-            {chatMessage || "..."}
+        <View className="flex-row items-center justify-center mb-10">
+          <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781536233/A_cute__highly_detailed_3D_202606151510_uj9z5c.jpg" }} className="w-8 h-8 rounded-full mr-2" />
+          <Text className="text-gray-500 text-xs text-center" style={{ fontFamily: 'Poppins_400Regular' }}>
+            Vous pourrez modifier ce mot de passe plus tard.
           </Text>
         </View>
+
+        <TouchableOpacity
+          className="bg-[#39FF14] w-full py-4 rounded-full items-center shadow-[0_0_15px_rgba(57,255,20,0.5)]"
+          onPress={() => router.replace('/(tabs)')}
+        >
+          <Text className="font-bold text-lg uppercase text-black" style={{ fontFamily: 'Poppins_700Bold' }}>
+            Accéder à mon Sama Menu
+          </Text>
+        </TouchableOpacity>
       </View>
-    </View>
-  );
+    );
+  };
 
   // --- Backend Submission Logic --- //
 
@@ -496,15 +557,6 @@ export default function DiagnosticScreen() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    setChatMessage(`Salut ${data.firstName}, je suis en train d'analyser ton profil...`);
-
-    // Minimum visual delay for the "chat" effect
-    const chatSequence = async () => {
-      await new Promise(r => setTimeout(r, 1500));
-      setChatMessage(`Je calcule tes besoins métaboliques...`);
-      await new Promise(r => setTimeout(r, 1500));
-      setChatMessage(`Programme généré ! Création de ton espace...`);
-    };
 
     const backendProcess = async () => {
       try {
@@ -517,7 +569,7 @@ export default function DiagnosticScreen() {
         // ÉTAPE A : Tentative de connexion (Si le compte existe déjà)
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: authEmail,
-          password: defaultPassword,
+          password: password || defaultPassword,
         });
 
         if (signInData?.user) {
@@ -529,14 +581,14 @@ export default function DiagnosticScreen() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               email: authEmail,
-              password: defaultPassword,
+              password: password || defaultPassword,
               full_name: data.firstName,
               phone: cleanPhone.startsWith('+221') ? cleanPhone : `+221${cleanPhone}`,
               role: 'client',
               saas: "Nutrition à l'Africaine",
               type: 'Client',
               status: 'Compte Créé',
-              password_temp: defaultPassword
+              password_temp: password || defaultPassword
             }),
           });
 
@@ -551,7 +603,7 @@ export default function DiagnosticScreen() {
           // Connecter immédiatement la session côté mobile après la création API
           await supabase.auth.signInWithPassword({
             email: authEmail,
-            password: defaultPassword,
+            password: password || defaultPassword,
           });
         }
 
@@ -603,11 +655,10 @@ export default function DiagnosticScreen() {
       }
     };
 
-    // Run both sequences in parallel, but wait for both
-    const [_, success] = await Promise.all([chatSequence(), backendProcess()]);
+    const success = await backendProcess();
 
     if (success) {
-      router.replace('/(tabs)');
+      setShowWelcomeModal(true);
     } else {
       setChatMessage("Une erreur est survenue lors de la création. Veuillez réessayer.");
       setTimeout(() => {
@@ -621,39 +672,83 @@ export default function DiagnosticScreen() {
     switch (step) {
       case 1: return <Step1 />;
       case 2: return <Step2 />;
-      case 3: return <Step2Bis />;
-      case 4: return <Step3 />;
-      case 5: return <Step4 />;
-      case 6: return <Step5 />;
-      case 7: return <Step6 />;
-      case 8: return <Step7 />;
-      case 9: return <Step8 />;
-      case 10: return <Step9 />; // Technically step 10 is the 9th UI step (Chat) as Step 2Bis offset it. Wait, the step counter is 1 to 10. Let's adjust.
+      case 3: return <Step3 />;
+      case 4: return <Step4 />;
+      case 5: return <Step5 />;
+      case 6: return <Step6 />;
+      case 7: return <Step7 />;
+      case 8: return <Step8 />;
+      case 9: return <Step9 />;
+      case 10: return <Step10 />;
+      case 11: return <Step11 />;
       default: return <Step1 />;
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-black" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-900" edges={['top', 'bottom']}>
+      <View className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[#39FF14]/10 blur-3xl" pointerEvents="none" />
+      <View className="absolute top-1/2 -left-20 w-72 h-72 rounded-full bg-[#39FF14]/5 blur-3xl" pointerEvents="none" />
+      <View className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[#39FF14]/10 blur-3xl" pointerEvents="none" />
+      <View className="absolute top-1/2 -left-20 w-72 h-72 rounded-full bg-[#39FF14]/5 blur-3xl" pointerEvents="none" />
+
+
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
         {/* Header */}
-        <View className="px-6 pt-4 pb-2 bg-black">
-          <View className="flex-row items-center mb-4">
-            {step > 1 && step < 10 && !isSubmitting && (
-              <TouchableOpacity onPress={prevStep} className="mr-4 p-2 bg-gray-900 rounded-full border border-gray-800">
-                <ArrowLeft color="white" size={20} />
+        {step < 10 && (
+          <View className="px-6 pt-4 pb-2 bg-white dark:bg-zinc-900 z-10 relative">
+            <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png" }} className="w-24 h-8 absolute top-4 left-1/2 -ml-12" resizeMode="contain" />
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center">
+                <TouchableOpacity onPress={step > 1 ? prevStep : () => router.replace('/')} className="mr-4 p-2 bg-gray-100 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800 z-20">
+                  <ArrowLeft color={isDark ? "white" : "black"} size={20} />
+                </TouchableOpacity>
+                <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Étape {step} / 9</Text>
+              </View>
+              <TouchableOpacity onPress={toggleColorScheme} className="p-2 bg-gray-100 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800 z-20">
+                {isDark ? <Sun color="white" size={20} /> : <Moon color="black" size={20} />}
               </TouchableOpacity>
-            )}
-            {step < 10 && <Text className="text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Étape {step} / {TOTAL_STEPS - 1}</Text>}
+            </View>
+            {renderProgressBar()}
           </View>
-          {step < 10 && renderProgressBar()}
-        </View>
+        )}
 
         {/* Content */}
-        <View className="flex-1 px-6 pt-4">
+        <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: step < 10 ? 120 : 20 }}>
           {renderStep()}
-        </View>
+        </ScrollView>
+
+        {/* Sticky Footer */}
+        {step < 10 && (
+          <View className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 border-t border-zinc-100 dark:border-zinc-800" >
+            {step === 9 ? (
+              <TouchableOpacity
+                className={`w-full py-4 rounded-full items-center ${data.firstName && data.phone && !isSubmitting ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}
+                onPress={() => {
+                   setStep(10);
+                }}
+                disabled={!(data.firstName && data.phone) || isSubmitting}
+              >
+                <Text className={`font-bold text-lg uppercase ${data.firstName && data.phone ? 'text-black' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+                  Générer mon programme
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                className={`w-full py-4 rounded-full items-center ${(step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3 && data.sleep && data.activityLevel) || (step === 4 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 5 && data.hydration && data.pastDiets && data.cookingFats) || (step === 6 && data.mainCarb && data.dinnerType) || (step === 7 && data.lunchType && data.cookingFor) || (step === 8 && data.groceryBudget) ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`}
+                onPress={nextStep}
+                disabled={!((step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3 && data.sleep && data.activityLevel) || (step === 4 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 5 && data.hydration && data.pastDiets && data.cookingFats) || (step === 6 && data.mainCarb && data.dinnerType) || (step === 7 && data.lunchType && data.cookingFor) || (step === 8 && data.groceryBudget))}
+              >
+                <Text className={`font-bold text-lg uppercase ${((step === 1 && data.gender && data.age) || (step === 2 && data.objective && data.height && data.currentWeight && data.targetWeight) || (step === 3 && data.sleep && data.activityLevel) || (step === 4 && data.health && (data.gender === 'Homme' || data.womenCondition)) || (step === 5 && data.hydration && data.pastDiets && data.cookingFats) || (step === 6 && data.mainCarb && data.dinnerType) || (step === 7 && data.lunchType && data.cookingFor) || (step === 8 && data.groceryBudget)) ? (isDark ? 'text-[#39FF14]' : 'text-white') : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+                  Continuer
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </KeyboardAvoidingView>
+
+
     </SafeAreaView>
   );
 }

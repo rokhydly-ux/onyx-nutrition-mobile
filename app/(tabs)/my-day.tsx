@@ -395,9 +395,7 @@ export default function MyDayScreen() {
               ]).map(product => (
                 <Pressable
                   key={product.id}
-                  className={({ pressed, hovered }) =>
-                    `w-44 bg-white dark:bg-zinc-900 rounded-3xl p-3 border flex-col justify-between shadow-sm transition-all ${pressed || hovered ? 'border-[#39FF14] shadow-lg shadow-[#39FF14]/30' : 'border-zinc-100 dark:border-zinc-800'}`
-                  }
+                  className="w-44 bg-white dark:bg-zinc-900 rounded-3xl p-3 border border-zinc-100 dark:border-zinc-800 flex-col justify-between shadow-sm"
                 >
                   <Image source={{ uri: product.image_url || product.image || product.img }} className="w-full h-32 resize-contain rounded-2xl mb-2" />
 
