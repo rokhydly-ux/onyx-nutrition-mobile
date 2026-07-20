@@ -1,6 +1,15 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import { View } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
+
+interface CircularProgressProps {
+  size: number;
+  strokeWidth: number;
+  progress: number; // 0 to 1
+  color: string;
+  backgroundColor: string;
+  children?: React.ReactNode;
+}
 
 export default function CircularProgress({
   size,
@@ -8,46 +17,40 @@ export default function CircularProgress({
   progress,
   color,
   backgroundColor,
-  children
-}: {
-  size: number,
-  strokeWidth: number,
-  progress: number,
-  color: string,
-  backgroundColor: string,
-  children: React.ReactNode
-}) {
+  children,
+}: CircularProgressProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (Math.min(progress, 1) * circumference);
+  const strokeDashoffset = circumference - progress * circumference;
 
   return (
-    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-      <Svg width={size} height={size} style={{ position: 'absolute' }}>
-        <Circle
-          stroke={backgroundColor}
-          fill="none"
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          strokeWidth={strokeWidth}
-        />
-        <Circle
-          stroke={color}
-          fill="none"
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          originX={size / 2}
-          originY={size / 2}
-          rotation="-90"
-        />
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={size} height={size}>
+        <G rotation="-90" originX={size / 2} originY={size / 2}>
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={backgroundColor}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+          />
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={color}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </G>
       </Svg>
-      {children}
+      <View style={{ position: 'absolute' }}>
+        {children}
+      </View>
     </View>
   );
 }

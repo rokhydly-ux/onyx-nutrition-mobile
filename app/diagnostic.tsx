@@ -560,14 +560,15 @@ export default function DiagnosticScreen() {
 
     const backendProcess = async () => {
       try {
-        const cleanPhone = data.phone.replace(/\s+/g, '');
-        const authEmail = cleanPhone.includes('@') ? cleanPhone : `${cleanPhone}@clients.onyxcrm.com`;
-        const defaultPassword = cleanPhone.slice(-8).padStart(8, '0');
+        // 1. Format identifiants STRICTLY PWA logic
+        const cleanIdentifier = data.phone.replace(/\s+/g, '');
+        const authEmail = cleanIdentifier.includes('@')
+          ? cleanIdentifier
+          : `${cleanIdentifier}@clients.onyxcrm.com`;
+        const defaultPassword = cleanIdentifier.slice(-8).padStart(8, '0');
 
-        let userId = null;
-
-        // ÉTAPE A : Tentative de connexion (Si le compte existe déjà)
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        // 2. Auth Fallback
+        let authResult: any = await supabase.auth.signInWithPassword({
           email: authEmail,
           password: password || defaultPassword,
         });
@@ -607,50 +608,42 @@ export default function DiagnosticScreen() {
           });
         }
 
-        if (!userId) throw new Error("Impossible de récupérer l'ID utilisateur.");
+        if (authResult.error) throw authResult.error;
 
+        const userId = authResult.data.user?.id;
+        if (!userId) throw new Error("No user ID returned");
+
+        // 3. Calcul & DB Insertions
         const calories = calculateDailyCalories(data);
 
-        // ÉTAPE C : Remontée commerciale dans la table LEADS
-        const { error: leadsError } = await supabase
-          .from('leads')
-          .insert([
-            {
-              full_name: data.firstName,
-              phone: cleanPhone,
-              source: "Diagnostic Nutrition Landing",
-              intent: "A complété son diagnostic",
-              status: "Nouveau",
-              saas: "Nutrition à l'Africaine",
-              message: `Objectif: ${calories} kcal`
-            }
-          ]);
+        // upsert clients table
+        await supabase.from('clients').upsert({
+          id: userId,
+          first_name: data.firstName,
+          phone: cleanIdentifier,
+          email: authEmail,
+        });
 
-        if (leadsError) console.error("Erreur insertion Lead:", leadsError);
+        // upsert nutrition_profiles
+        await supabase.from('nutrition_profiles').upsert({
+          id: userId,
+          diag_data: data,
+          target_calories: calories,
+          macro_split: { protein: 30, carbs: 40, fat: 30 },
+          created_at: new Date().toISOString(),
+        });
 
-        // ÉTAPE D : Création / Mise à jour du profil dans NUTRITION_PROFILES (Pour le Dashboard)
-        const { error: profileError } = await supabase
-          .from('nutrition_profiles')
-          .upsert([
-            {
-              client_id: userId,
-              phone: cleanPhone,
-              daily_calorie_goal: calories,
-              bmr: 0,
-              tdee: 0,
-              carbs_goal: 150,
-              protein_goal: 80,
-              fats_goal: 50,
-              diagnostic_data: data, // Le JSON complet des réponses
-              tracking_mode: 'guided'
-            }
-          ], { onConflict: 'client_id' });
-
-        if (profileError) console.error("Erreur insertion Nutrition Profile:", profileError);
+        // insert leads
+        await supabase.from('leads').insert({
+          first_name: data.firstName,
+          phone: cleanIdentifier,
+          source: 'mobile_app_diag',
+          created_at: new Date().toISOString(),
+        });
 
         return true;
       } catch (e: any) {
-        console.error("Erreur Backend Diagnostic:", e.message);
+        console.error("Erreur Backend Diagnostic:", e);
         return false;
       }
     };

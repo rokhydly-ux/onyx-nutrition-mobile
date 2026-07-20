@@ -1,45 +1,32 @@
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { StyleSheet, View } from 'react-native';
-import { Home, Calendar, Utensils, Users, User, ShoppingBag } from 'lucide-react-native';
-
-
-import { useColorScheme } from 'react-native';
+import { Home, Calendar, Utensils, Users, User } from 'lucide-react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colorScheme === 'dark' ? '#39FF14' : '#000000',
-        tabBarInactiveTintColor: colorScheme === 'dark' ? '#9CA3AF' : '#6B7280',
+        tabBarActiveTintColor: '#39FF14',
+        tabBarInactiveTintColor: '#FFFFFF',
         tabBarStyle: {
           position: 'absolute',
-          bottom: 16,
-          left: 16,
-          right: 16,
-          height: 70,
-          borderRadius: 24,
+          bottom: 24,
+          left: 20,
+          right: 20,
           elevation: 0,
           backgroundColor: 'transparent',
+          borderRadius: 32,
+          height: 70,
           borderTopWidth: 0,
+          // Removed overflow: 'hidden' to allow the central button to float above
         },
         tabBarBackground: () => (
           <BlurView
-            tint={colorScheme === 'dark' ? 'dark' : 'light'}
-            intensity={85}
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                borderRadius: 24,
-                overflow: 'hidden',
-                backgroundColor: colorScheme === 'dark' ? 'rgba(18, 18, 18, 0.85)' : 'rgba(255, 255, 255, 0.90)',
-                borderWidth: 1,
-                borderColor: colorScheme === 'dark' ? 'rgba(57, 255, 20, 0.2)' : 'rgba(0, 0, 0, 0.08)',
-              }
-            ]}
+            tint="dark"
+            intensity={80}
+            style={[StyleSheet.absoluteFill, { borderRadius: 32, overflow: 'hidden' }]}
           />
         ),
       }}>
@@ -70,10 +57,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="shop"
+        name="community"
         options={{
-          title: 'Boutique',
-          tabBarIcon: ({ color }) => <ShoppingBag color={color} size={24} />,
+          title: 'Social',
+          tabBarIcon: ({ color }) => <Users color={color} size={24} />,
         }}
       />
       <Tabs.Screen
