@@ -73,6 +73,8 @@ export default function DiagnosticScreen() {
   // Fake chat state
   const [chatMessage, setChatMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const updateData = (key: keyof DiagData, value: string) => {
     setData(prev => ({ ...prev, [key]: value }));
@@ -555,15 +557,6 @@ export default function DiagnosticScreen() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    setChatMessage(`Salut ${data.firstName}, je suis en train d'analyser ton profil...`);
-
-    // Minimum visual delay for the "chat" effect
-    const chatSequence = async () => {
-      await new Promise(r => setTimeout(r, 1500));
-      setChatMessage(`Je calcule tes besoins métaboliques...`);
-      await new Promise(r => setTimeout(r, 1500));
-      setChatMessage(`Programme généré ! Création de ton espace...`);
-    };
 
     const backendProcess = async () => {
       try {
@@ -577,14 +570,41 @@ export default function DiagnosticScreen() {
         // 2. Auth Fallback
         let authResult: any = await supabase.auth.signInWithPassword({
           email: authEmail,
-          password: defaultPassword,
+          password: password || defaultPassword,
         });
 
-        if (authResult.error) {
-          // Si erreur (le compte n'existe pas), lance la création
-          authResult = await supabase.auth.signUp({
+        if (signInData?.user) {
+          userId = signInData.user.id;
+        } else {
+          // ÉTAPE B : Création via notre API Backend Web (Bypass RLS & Période d'essai J+15)
+          const response = await fetch('https://nutriafro.app/api/create-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: authEmail,
+              password: password || defaultPassword,
+              full_name: data.firstName,
+              phone: cleanPhone.startsWith('+221') ? cleanPhone : `+221${cleanPhone}`,
+              role: 'client',
+              saas: "Nutrition à l'Africaine",
+              type: 'Client',
+              status: 'Compte Créé',
+              password_temp: password || defaultPassword
+            }),
+          });
+
+          const apiResult = await response.json();
+
+          if (!response.ok) {
+            throw new Error(apiResult.message || "Erreur lors de la création du compte via API");
+          }
+
+          userId = apiResult.user?.id || apiResult.id;
+
+          // Connecter immédiatement la session côté mobile après la création API
+          await supabase.auth.signInWithPassword({
             email: authEmail,
-            password: defaultPassword,
+            password: password || defaultPassword,
           });
         }
 
@@ -628,11 +648,10 @@ export default function DiagnosticScreen() {
       }
     };
 
-    // Run both sequences in parallel, but wait for both
-    const [_, success] = await Promise.all([chatSequence(), backendProcess()]);
+    const success = await backendProcess();
 
     if (success) {
-      setStep(11);
+      setShowWelcomeModal(true);
     } else {
       setChatMessage("Une erreur est survenue lors de la création. Veuillez réessayer.");
       setTimeout(() => {
@@ -694,7 +713,7 @@ export default function DiagnosticScreen() {
 
         {/* Sticky Footer */}
         {step < 10 && (
-          <View className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 border-t border-zinc-100 dark:border-zinc-800" style={{ backdropFilter: 'blur(10px)' }}>
+          <View className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 border-t border-zinc-100 dark:border-zinc-800" >
             {step === 9 ? (
               <TouchableOpacity
                 className={`w-full py-4 rounded-full items-center ${data.firstName && data.phone && !isSubmitting ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}

@@ -75,14 +75,13 @@ export default function RootLayout() {
           </View>
         </Animated.View>
 
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="welcome" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
-        </Stack>
-      </View>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'white' } }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="welcome" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
+      </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
   );}

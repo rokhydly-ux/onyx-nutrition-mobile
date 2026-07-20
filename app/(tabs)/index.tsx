@@ -142,10 +142,10 @@ export default function HomeScreen() {
         const userId = session.user.id;
         console.log("Session active pour l'utilisateur ID :", userId);
 
-        // Fetch Profile
+        // 1. RÉCUPÉRATION DE L'IDENTITÉ (Table clients) avec la jointure pour nutrition_profiles
         const { data: profileData, error: profileError } = await supabase
-          .from('nutrition_profiles')
-          .select('*')
+          .from('clients')
+          .select('*, nutrition_profiles(*)')
           .eq('id', userId)
           .maybeSingle();
 
