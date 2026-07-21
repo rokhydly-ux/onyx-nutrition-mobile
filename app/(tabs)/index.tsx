@@ -12,6 +12,7 @@ import {
   Coffee,
 } from 'lucide-react-native';
 import CircularProgress from '../../components/CircularProgress';
+import GlobalHeader from '../../components/GlobalHeader';
 
 // --- Types ---
 type DailyLog = {
@@ -309,32 +310,12 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]" edges={['top']}>
+      <GlobalHeader />
       <ScrollView className="flex-1 px-5 pt-4 pb-32" showsVerticalScrollIndicator={false}>
 
-        {/* Header - Logo */}
-        <View className="flex-row items-center justify-between mb-6">
-          <Image
-            source={{ uri: isDark ? logoDark : logoLight }}
-            className="w-32 h-10"
-            resizeMode="contain"
-          />
-        </View>
 
-        {/* User Greeting & XP */}
-        <View className="flex-row justify-between items-start mb-6">
-          <View>
-            <Text className="text-black dark:text-white text-3xl uppercase tracking-tight" style={{ fontFamily: 'Poppins_900Black' }}>
-              BONJOUR,
-            </Text>
-            <Text className="text-[#39FF14] text-3xl uppercase tracking-tight" style={{ fontFamily: 'Poppins_900Black' }}>
-              {profile.first_name} !
-            </Text>
-            <Text className="text-gray-500 dark:text-gray-400 text-sm mt-1" style={{ fontFamily: 'Poppins_400Regular' }}>
-              En pleine forme pour cet après-midi
-            </Text>
-          </View>
-
-          <View className="items-end">
+        <View className="flex-row justify-between items-center mb-6">
+          <View className="items-start">
             <View className="flex-row items-center mb-1">
               <Text className="text-gray-800 dark:text-white text-xs font-bold mr-1 uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
                 {profile.xp < 500 ? 'NOVICE' : 'EXPERT'}
@@ -359,7 +340,7 @@ export default function HomeScreen() {
         </View>
 
         {/* 4 Stat Cards Row */}
-        <View className="flex-row justify-between mb-6 space-x-2">
+        <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(tabs)/my-day')} className="flex-row justify-between mb-6 space-x-2">
           {/* Poids */}
           <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/weight')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
             <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783280413/Woman_standing_on_scale_smiling_202607051938_e6h39p.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.25 }}>
@@ -449,7 +430,7 @@ export default function HomeScreen() {
               </View>
             </ImageBackground>
           </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
 
         {/* Objectif du Jour */}
         <View className="bg-white dark:bg-[#151515] rounded-3xl p-5 mb-6 border border-gray-200 dark:border-white/10 shadow-sm">

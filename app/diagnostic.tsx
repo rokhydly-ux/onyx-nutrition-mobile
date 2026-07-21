@@ -369,8 +369,12 @@ export default function DiagnosticScreen() {
         />
         <View className="absolute inset-0 bg-black/60 dark:bg-black/80" />
 
-        <Animated.View style={{ transform: [{ scale }] }} className="w-32 h-32 rounded-full border-4 border-[#39FF14] shadow-lg shadow-[#39FF14]/50 overflow-hidden mb-8 items-center justify-center bg-gray-900">
-           <Image source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1784209735/557516971_10235324002253110_1070574324835198049_n_ch9we7.jpg' }} className="w-full h-full" />
+        <Animated.View style={{ transform: [{ scale }] }} className="w-32 h-32 rounded-full shadow-lg shadow-[#39FF14]/50 mb-8 items-center justify-center bg-gray-900 overflow-visible">
+           <Image
+             source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1784209735/557516971_10235324002253110_1070574324835198049_n_ch9we7.jpg" }}
+             style={{ width: 128, height: 128, borderRadius: 64, borderWidth: 4, borderColor: '#39FF14' }}
+             resizeMode="cover"
+           />
         </Animated.View>
 
         <Text className="text-white text-xl text-center font-bold px-6" style={{ fontFamily: 'Poppins_700Bold' }}>
@@ -475,10 +479,7 @@ export default function DiagnosticScreen() {
 
         <TouchableOpacity
           className="bg-black py-4 rounded-full items-center mt-10 shadow-[0_0_15px_rgba(0,0,0,0.3)]"
-          onPress={() => {
-             handleSubmit();
-          }}
-          disabled={isSubmitting}
+          onPress={() => setStep(11)}
         >
           <Text className="font-bold text-lg uppercase text-[#39FF14]" style={{ fontFamily: 'Poppins_700Bold' }}>
             {isSubmitting ? "Chargement..." : "Valider mes objectifs"}
