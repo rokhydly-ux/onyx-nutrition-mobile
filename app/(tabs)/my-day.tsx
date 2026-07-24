@@ -383,7 +383,7 @@ export default function MyDayScreen() {
           {/* D. LA BOUTIQUE ONYX */}
           <View className="mt-8 mb-4">
             <View className="mb-4">
-              <Text className="text-black dark:text-white text-lg font-bold uppercase tracking-wide">LE MARCHÉ ONYX • VOS ALLIÉS MINCEUR</Text>
+              <Text className="text-black dark:text-white text-lg uppercase tracking-wide" style={{ fontFamily: "Poppins_700Bold" }}>LE MARCHÉ ONYX • VOS ALLIÉS MINCEUR</Text>
               <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">Sélection 100% naturelle personnalisée selon votre métabolisme</Text>
             </View>
 
@@ -399,16 +399,16 @@ export default function MyDayScreen() {
                 >
                   <Image source={{ uri: product.image_url || product.image || product.img }} className="w-full h-32 resize-contain rounded-2xl mb-2" />
 
-                  <Text className="font-poppins-bold text-sm text-zinc-900 dark:text-white mb-1" numberOfLines={1}>
+                  <Text className="text-sm text-zinc-900 dark:text-white mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={1}>
                     {product.nom || product.name}
                   </Text>
 
                   <View className="flex-row items-center justify-between mt-1">
-                    <Text className="font-poppins-bold text-xs text-[#39FF14]">
+                    <Text className="text-xs text-[#39FF14]" style={{ fontFamily: "Poppins_700Bold" }}>
                       {Number(product?.prix || product?.price || product?.prix_standard || 0).toLocaleString('fr-FR')} FCFA
                     </Text>
                     <TouchableOpacity className="bg-black dark:bg-[#39FF14] w-7 h-7 rounded-full items-center justify-center">
-                      <Text className="text-white dark:text-black font-bold">+</Text>
+                      <Text className="text-white dark:text-black" style={{ fontFamily: "Poppins_700Bold" }}>+</Text>
                     </TouchableOpacity>
                   </View>
                 </Pressable>
