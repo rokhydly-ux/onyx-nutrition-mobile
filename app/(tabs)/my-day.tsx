@@ -236,11 +236,11 @@ export default function MyDayScreen() {
                     source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535958/A_cute__highly_detailed_3D_202606151505_2_akqmx4.jpg' }}
                     className="w-10 h-10 rounded-xl mr-3"
                   />
-                  <Text className="text-black dark:text-white text-3xl font-black tracking-tight">MON JOUR</Text>
+                  <Text className="text-black dark:text-white text-3xl font-black tracking-tight font-poppins">MON JOUR</Text>
                 </View>
                 <Image source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png' }} className="h-8 w-24" resizeMode="contain" />
               </View>
-              <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1 pr-4">Enregistrez vos repas, suivez votre eau et complétez votre bilan de la journée.</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1 pr-4 font-poppins">Enregistrez vos repas, suivez votre eau et complétez votre bilan de la journée.</Text>
             </View>
 
             <View className="bg-zinc-100 dark:bg-zinc-900 rounded-full p-1 flex-row mt-2">
@@ -269,7 +269,7 @@ export default function MyDayScreen() {
                 backgroundColor={isDark ? 'rgba(255,255,255,0.1)' : '#E5E7EB'}
               >
                 <View className="items-center justify-center">
-                  <Text className="text-black dark:text-white text-4xl font-black">{Math.round(dailyStats.calories_consumed)}</Text>
+                  <Text className="text-black dark:text-white text-4xl font-black font-poppins">{Math.round(dailyStats.calories_consumed)}</Text>
                   <Text className="text-gray-400 text-xs font-bold uppercase mt-1">/ {profile.calories_goal} KCAL</Text>
                 </View>
               </CircularProgress>
@@ -284,15 +284,15 @@ export default function MyDayScreen() {
 
         {/* 3. FLUX DES REPAS DU JOUR */}
         <View className="mb-6">
-            <Text className="text-black dark:text-white text-lg font-bold mb-4">Repas du jour</Text>
+            <Text className="text-black dark:text-white text-lg font-bold mb-4 font-poppins-bold">Repas du jour</Text>
             {meals.map(meal => (
               <View key={meal.id} className="rounded-2xl overflow-hidden mb-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
                 <Image source={{ uri: meal.img }} className="w-full h-32 opacity-90" />
                 <View className="p-4">
-                  <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-1">{meal.type}</Text>
-                  <Text className="text-black dark:text-white text-base font-bold mb-2">{meal.name}</Text>
+                  <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-1 font-poppins-bold">{meal.type}</Text>
+                  <Text className="text-black dark:text-white text-base font-bold mb-2 font-poppins-bold">{meal.name}</Text>
                   <View className="flex-row items-center justify-between mt-2">
-                    <Text className="text-gray-500 dark:text-gray-400 text-xs font-medium">
+                    <Text className="text-gray-500 dark:text-gray-400 text-xs font-medium font-poppins-medium">
                       {meal.calories} kcal • {meal.p}g • {meal.c}g • {meal.f}g
                     </Text>
                     <TouchableOpacity
@@ -300,7 +300,7 @@ export default function MyDayScreen() {
                       activeOpacity={0.7}
                       className="bg-[#39FF14] px-4 py-2 rounded-xl"
                     >
-                      <Text className="text-black text-xs font-bold">+ AJOUTER MON REPAS</Text>
+                      <Text className="text-black text-xs font-bold font-poppins-bold">+ AJOUTER MON REPAS</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -328,10 +328,10 @@ export default function MyDayScreen() {
               imageStyle={{ opacity: 0.5 }}
             >
               <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-white text-sm font-bold uppercase">Hydratation</Text>
-                <Text className="text-white text-lg font-black">{dailyStats.water_glasses} <Text className="text-gray-300 text-sm">/ 8 verres</Text></Text>
+                <Text className="text-white text-sm font-bold uppercase font-poppins-bold">Hydratation</Text>
+                <Text className="text-white text-lg font-black font-poppins-bold">{dailyStats.water_glasses} <Text className="text-gray-300 text-sm">/ 8 verres</Text></Text>
               </View>
-              <Text className="text-gray-300 text-xs mb-6">L'eau booste votre métabolisme de 30% en 10 min</Text>
+              <Text className="text-gray-300 text-xs mb-6 font-poppins">L'eau booste votre métabolisme de 30% en 10 min</Text>
 
               <View className="flex-row flex-wrap justify-between gap-y-4 px-2">
                  {Array(8).fill(0).map((_, idx) => (
@@ -364,8 +364,8 @@ export default function MyDayScreen() {
               <View className="w-10 h-10 rounded-full bg-[#39FF14]/20 items-center justify-center mb-2 animate-pulse">
                 <View className="w-4 h-4 rounded-full bg-[#39FF14]" />
               </View>
-              <Text className="text-white text-sm font-bold uppercase tracking-widest">REFAIRE MON DIAGNOSTIC</Text>
-              <Text className="text-gray-300 text-xs mt-1">Ajuster mes objectifs</Text>
+              <Text className="text-white text-sm font-bold uppercase tracking-widest font-poppins-bold">REFAIRE MON DIAGNOSTIC</Text>
+              <Text className="text-gray-300 text-xs mt-1 font-poppins">Ajuster mes objectifs</Text>
             </ImageBackground>
           </TouchableOpacity>
 
@@ -375,8 +375,8 @@ export default function MyDayScreen() {
             onPress={() => console.log('Open Daily Report Modal')}
             className="bg-[#39FF14] rounded-[2rem] p-6 items-center justify-center mt-4 shadow-lg shadow-[#39FF14]/20 mb-10">
             <CheckCircle size={32} color="black" className="mb-2" />
-            <Text className="text-black text-xl font-black uppercase">BILAN DU JOUR</Text>
-            <Text className="text-black/70 text-xs font-bold mt-1">Clôturez pour gagner de l'XP</Text>
+            <Text className="text-black text-xl font-black uppercase font-poppins-bold">BILAN DU JOUR</Text>
+            <Text className="text-black/70 text-xs font-bold mt-1 font-poppins-bold">Clôturez pour gagner de l'XP</Text>
           </TouchableOpacity>
 
 
