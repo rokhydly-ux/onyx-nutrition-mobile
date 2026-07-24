@@ -63,6 +63,48 @@ const initialDiagData: DiagData = {
 
 const TOTAL_STEPS = 12;
 
+  const SelectableCard = ({ label, value, selectedValue, onSelect, imageUri, icon: IconComponent }: any) => {
+    const isSelected = selectedValue === value;
+    return (
+      <TouchableOpacity
+        onPress={() => onSelect(value)}
+        className={`w-full rounded-2xl p-4 mb-4 flex-row items-center justify-between border-[3px] ${isSelected ? 'border-[#39FF14] bg-[#39FF14]/10' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900'}`}
+      >
+        <View className="flex-row items-center flex-1">
+           {imageUri && (
+             <ImageBackground source={{ uri: imageUri }} className="w-20 h-20 rounded-xl overflow-hidden mr-4 aspect-square" resizeMode="contain" />
+           )}
+           {IconComponent && (
+             <View className="w-12 h-12 rounded-full bg-black dark:bg-white items-center justify-center mr-4">
+               <IconComponent color={isSelected ? '#39FF14' : 'gray'} size={24} />
+             </View>
+           )}
+           <Text className={`text-lg flex-1 ${isSelected ? 'text-[#39FF14] font-bold' : 'text-black dark:text-white'}`} style={{ fontFamily: isSelected ? 'Poppins_700Bold' : 'Poppins_500Medium' }}>{label}</Text>
+        </View>
+        <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${isSelected ? 'border-[#39FF14] bg-[#39FF14]' : 'border-gray-300 dark:border-gray-700'}`}>
+          {isSelected && <Check color="black" size={14} strokeWidth={4} />}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const SelectableGridCard = ({ label, value, selectedValue, onSelect, imageUri, icon: IconComponent, vertical = false }: any) => {
+    const isSelected = selectedValue === value;
+    return (
+      <TouchableOpacity
+        onPress={() => onSelect(value)}
+        className={`flex-1 rounded-2xl p-3 mb-4 items-center justify-center border-[3px] ${isSelected ? 'border-[#39FF14] bg-[#39FF14]/10' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900'} ${vertical ? 'flex-col' : 'aspect-square'}`}
+      >
+        {imageUri && (
+          <ImageBackground source={{ uri: imageUri }} className={`rounded-xl overflow-hidden mb-2 ${vertical ? 'w-full h-36' : 'w-32 h-32'} aspect-square`} resizeMode="contain" />
+        )}
+        <Text className={`text-center ${isSelected ? 'text-[#39FF14] font-bold' : 'text-black dark:text-white'} ${vertical ? 'text-sm' : 'text-xs'}`} style={{ fontFamily: isSelected ? 'Poppins_700Bold' : 'Poppins_500Medium' }}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
 export default function DiagnosticScreen() {
   const router = useRouter();
   const { colorScheme, toggleColorScheme } = useColorScheme();
@@ -730,19 +772,19 @@ export default function DiagnosticScreen() {
 
   const renderStep = () => {
     switch (step) {
-      case 1: return <Step1 />;
-      case 2: return <Step2 />;
-      case 3: return <Step3 />;
-      case 4: return <Step4 />;
-      case 5: return <Step5 />;
-      case 6: return <Step6 />;
-      case 7: return <Step7 />;
-      case 8: return <Step8 />;
-      case 9: return <Step9 />;
-      case 10: return <Step10 />;
-      case 11: return <Step11 />;
-      case 12: return <Step12 />;
-      default: return <Step1 />;
+      case 1: return Step1();
+      case 2: return Step2();
+      case 3: return Step3();
+      case 4: return Step4();
+      case 5: return Step5();
+      case 6: return Step6();
+      case 7: return Step7();
+      case 8: return Step8();
+      case 9: return Step9();
+      case 10: return Step10();
+      case 11: return Step11();
+      case 12: return Step12();
+      default: return Step1();
     }
   };
 
