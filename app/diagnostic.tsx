@@ -61,7 +61,7 @@ const initialDiagData: DiagData = {
   phone: '',
 };
 
-const TOTAL_STEPS = 11;
+const TOTAL_STEPS = 12;
 
 export default function DiagnosticScreen() {
   const router = useRouter();
@@ -482,7 +482,7 @@ export default function DiagnosticScreen() {
           onPress={() => setStep(11)}
         >
           <Text className="font-bold text-lg uppercase text-[#39FF14]" style={{ fontFamily: 'Poppins_700Bold' }}>
-            {isSubmitting ? "Chargement..." : "Valider mes objectifs"}
+            Valider mes objectifs
           </Text>
         </TouchableOpacity>
       </View>
@@ -491,6 +491,57 @@ export default function DiagnosticScreen() {
 
 
   const Step11 = () => {
+    return (
+      <View className="flex-1 bg-zinc-900 -m-6 p-6 justify-center">
+        <Text className="text-white text-3xl font-bold mb-2 text-center" style={{ fontFamily: 'Poppins_700Bold' }}>Création de Compte</Text>
+        <Text className="text-gray-400 mb-8 text-center" style={{ fontFamily: 'Poppins_500Medium' }}>Vos accès automatiques seront configurés avec ces informations.</Text>
+
+        <View className="mb-4">
+          <Text className="text-gray-400 mb-2 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Nom Complet</Text>
+          <TextInput
+            value={data.firstName}
+            onChangeText={(t) => updateData('firstName', t)}
+            placeholder="Ex: Amina Diop"
+            placeholderTextColor="#4B5563"
+            className="text-white text-xl bg-black rounded-2xl p-4 font-bold border border-zinc-800 focus:border-[#39FF14]"
+            style={{ fontFamily: 'Poppins_700Bold' }}
+          />
+        </View>
+
+        <View className="mb-8">
+          <Text className="text-gray-400 mb-2 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Numéro WhatsApp</Text>
+          <TextInput
+            value={data.phone}
+            onChangeText={(t) => updateData('phone', t)}
+            placeholder="+221 77 000 00 00"
+            placeholderTextColor="#4B5563"
+            keyboardType="phone-pad"
+            className="text-white text-xl bg-black rounded-2xl p-4 font-bold border border-zinc-800 focus:border-[#39FF14]"
+            style={{ fontFamily: 'Poppins_700Bold' }}
+          />
+        </View>
+
+        <TouchableOpacity
+          className={`py-4 rounded-full items-center shadow-[0_0_15px_rgba(57,255,20,0.5)] ${data.firstName && data.phone && !isSubmitting ? 'bg-[#39FF14]' : 'bg-gray-800'}`}
+          onPress={handleSubmit}
+          disabled={!(data.firstName && data.phone) || isSubmitting}
+        >
+          <Text className={`font-bold text-lg uppercase ${data.firstName && data.phone && !isSubmitting ? 'text-black' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+            {isSubmitting ? "Création..." : "CRÉER MON COMPTE & DÉMARRER"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const Step12 = () => {
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }, []);
+
     return (
       <View className="flex-1 bg-white -m-6 p-6 justify-center items-center" style={{ borderTopWidth: 8, borderTopColor: '#39FF14' }}>
         <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png" }} className="w-32 h-12 mb-8" resizeMode="contain" />
@@ -526,7 +577,7 @@ export default function DiagnosticScreen() {
           onPress={() => router.replace('/(tabs)')}
         >
           <Text className="font-bold text-lg uppercase text-black" style={{ fontFamily: 'Poppins_700Bold' }}>
-            Accéder à mon Sama Menu
+            🚀 ACCÉDER À MON TABLEAU DE BORD
           </Text>
         </TouchableOpacity>
       </View>
@@ -604,8 +655,15 @@ export default function DiagnosticScreen() {
           // Connecter immédiatement la session côté mobile après la création API
           await supabase.auth.signInWithPassword({
             email: authEmail,
-            password: password || defaultPassword,
+            password: defaultPassword,
           });
+
+          await supabase.from('clients').upsert([{
+            id: userId,
+            full_name: data.firstName,
+            phone: cleanPhone,
+            created_at: new Date().toISOString()
+          }], { onConflict: 'id' });
         }
 
         if (!userId) throw new Error("Impossible de récupérer l'ID utilisateur.");
@@ -659,7 +717,8 @@ export default function DiagnosticScreen() {
     const success = await backendProcess();
 
     if (success) {
-      setShowWelcomeModal(true);
+      setStep(12);
+      setIsSubmitting(false);
     } else {
       setChatMessage("Une erreur est survenue lors de la création. Veuillez réessayer.");
       setTimeout(() => {
@@ -682,6 +741,7 @@ export default function DiagnosticScreen() {
       case 9: return <Step9 />;
       case 10: return <Step10 />;
       case 11: return <Step11 />;
+      case 12: return <Step12 />;
       default: return <Step1 />;
     }
   };
