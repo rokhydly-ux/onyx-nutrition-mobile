@@ -657,16 +657,16 @@ export default function DiagnosticScreen() {
             email: authEmail,
             password: defaultPassword,
           });
-
-          await supabase.from('clients').upsert([{
-            id: userId,
-            full_name: data.firstName,
-            phone: cleanPhone,
-            created_at: new Date().toISOString()
-          }], { onConflict: 'id' });
         }
 
         if (!userId) throw new Error("Impossible de récupérer l'ID utilisateur.");
+
+        await supabase.from('clients').upsert([{
+          id: userId,
+          full_name: data.firstName,
+          phone: cleanPhone,
+          created_at: new Date().toISOString()
+        }], { onConflict: 'id' });
 
         const calories = calculateDailyCalories(data);
 

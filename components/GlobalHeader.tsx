@@ -18,17 +18,19 @@ export default function GlobalHeader() {
   }, []);
 
   const fetchProfile = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const { data } = await supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: clientData, error } = await supabase
         .from('clients')
-        .select('full_name, name, first_name, avatar_url')
-        .eq('id', session.user.id)
-        .maybeSingle();
+        .select('full_name, avatar_url')
+        .eq('id', user.id)
+        .single();
 
-      if (data) {
-        setClientName(data.first_name || data.name || data.full_name?.split(' ')[0] || 'Membre');
-        if (data.avatar_url) setAvatar(data.avatar_url);
+      if (clientData && clientData.full_name) {
+        setClientName(clientData.full_name);
+        if (clientData.avatar_url) setAvatar(clientData.avatar_url);
+      } else {
+        setClientName(user.user_metadata?.full_name || "Membre");
       }
     }
   };
@@ -42,8 +44,8 @@ export default function GlobalHeader() {
     <View className="flex-row items-center justify-between px-5 pt-4 pb-2 bg-transparent z-50">
       <View className="flex-row items-center">
         <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full border-2 border-[#39FF14] mr-3" />
-        <Text className="text-black dark:text-white font-poppins-bold text-lg">
-          Hello {clientName} <Text className="text-lg">⚡</Text>
+        <Text className="text-black dark:text-white text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>
+          Hello {clientName && clientName !== "Membre" ? clientName.split(' ')[0] : "Membre"} <Text className="text-lg">⚡</Text>
         </Text>
       </View>
       <View className="flex-row items-center space-x-4">
