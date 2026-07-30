@@ -116,6 +116,67 @@ export default function DiagnosticScreen() {
   const [chatMessage, setChatMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [password, setPassword] = useState('');
+
+  const step9Scale = useRef(new Animated.Value(1)).current;
+
+  const step10Card1Anim = useRef(new Animated.Value(0)).current;
+  const step10Card2Anim = useRef(new Animated.Value(0)).current;
+  const step10Card3Anim = useRef(new Animated.Value(0)).current;
+  const step10Card4Anim = useRef(new Animated.Value(0)).current;
+  const step10Scale1 = useRef(new Animated.Value(0.8)).current;
+  const step10Scale2 = useRef(new Animated.Value(0.8)).current;
+  const step10Scale3 = useRef(new Animated.Value(0.8)).current;
+  const step10Scale4 = useRef(new Animated.Value(0.8)).current;
+
+  // Effects for Steps
+  useEffect(() => {
+    if (step === 9) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(step9Scale, { toValue: 1.08, duration: 1500, useNativeDriver: true }),
+          Animated.timing(step9Scale, { toValue: 1, duration: 1500, useNativeDriver: true })
+        ])
+      ).start();
+
+      const timer = setTimeout(() => {
+        setStep(10);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 10) {
+      Animated.stagger(150, [
+        Animated.parallel([
+          Animated.timing(step10Card1Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(step10Scale1, { toValue: 1, duration: 400, useNativeDriver: true })
+        ]),
+        Animated.parallel([
+          Animated.timing(step10Card2Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(step10Scale2, { toValue: 1, duration: 400, useNativeDriver: true })
+        ]),
+        Animated.parallel([
+          Animated.timing(step10Card3Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(step10Scale3, { toValue: 1, duration: 400, useNativeDriver: true })
+        ]),
+        Animated.parallel([
+          Animated.timing(step10Card4Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(step10Scale4, { toValue: 1, duration: 400, useNativeDriver: true })
+        ])
+      ]).start();
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 12) {
+      const timer = setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const updateData = (key: keyof DiagData, value: string) => {
@@ -386,21 +447,7 @@ export default function DiagnosticScreen() {
   );
 
   const Step9 = () => {
-    const scale = useRef(new Animated.Value(1)).current;
-
-    useEffect(() => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(scale, { toValue: 1.08, duration: 1500, useNativeDriver: true }),
-          Animated.timing(scale, { toValue: 1, duration: 1500, useNativeDriver: true })
-        ])
-      ).start();
-
-      const timer = setTimeout(() => {
-        setStep(10); // Automatically move to Bilan
-      }, 3000);
-      return () => clearTimeout(timer);
-    }, []);
+    const scale = step9Scale;
 
     return (
       <View className="flex-1 -m-6 justify-center items-center bg-black">
@@ -449,37 +496,15 @@ export default function DiagnosticScreen() {
 
     const tdee = calculateDailyCalories(data);
 
-    // Staggered native animations
-    const card1Anim = useRef(new Animated.Value(0)).current;
-    const card2Anim = useRef(new Animated.Value(0)).current;
-    const card3Anim = useRef(new Animated.Value(0)).current;
-    const card4Anim = useRef(new Animated.Value(0)).current;
+    const card1Anim = step10Card1Anim;
+    const card2Anim = step10Card2Anim;
+    const card3Anim = step10Card3Anim;
+    const card4Anim = step10Card4Anim;
 
-    const scale1 = useRef(new Animated.Value(0.8)).current;
-    const scale2 = useRef(new Animated.Value(0.8)).current;
-    const scale3 = useRef(new Animated.Value(0.8)).current;
-    const scale4 = useRef(new Animated.Value(0.8)).current;
-
-    useEffect(() => {
-      Animated.stagger(150, [
-        Animated.parallel([
-          Animated.timing(card1Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(scale1, { toValue: 1, duration: 400, useNativeDriver: true })
-        ]),
-        Animated.parallel([
-          Animated.timing(card2Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(scale2, { toValue: 1, duration: 400, useNativeDriver: true })
-        ]),
-        Animated.parallel([
-          Animated.timing(card3Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(scale3, { toValue: 1, duration: 400, useNativeDriver: true })
-        ]),
-        Animated.parallel([
-          Animated.timing(card4Anim, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(scale4, { toValue: 1, duration: 400, useNativeDriver: true })
-        ])
-      ]).start();
-    }, []);
+    const scale1 = step10Scale1;
+    const scale2 = step10Scale2;
+    const scale3 = step10Scale3;
+    const scale4 = step10Scale4;
 
     const style1 = { opacity: card1Anim, transform: [{ scale: scale1 }] };
     const style2 = { opacity: card2Anim, transform: [{ scale: scale2 }] };
@@ -577,12 +602,6 @@ export default function DiagnosticScreen() {
   };
 
   const Step12 = () => {
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        router.replace('/(tabs)');
-      }, 3000);
-      return () => clearTimeout(timer);
-    }, []);
 
     return (
       <View className="flex-1 bg-white -m-6 p-6 justify-center items-center" style={{ borderTopWidth: 8, borderTopColor: '#39FF14' }}>
