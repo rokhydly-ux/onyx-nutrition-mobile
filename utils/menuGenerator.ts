@@ -22,6 +22,7 @@ export interface ProfileData {
   diagnostic_data: {
     allergies?: string[];
     fasting_mode?: boolean;
+    userMode?: 'strict' | 'free'; // 'strict' is Guided Mode, 'free' is Free Mode
   };
   budget: string; // the exact exact tier they are e.g. "Serré 8k", "Famille 15k"
   expert_mode?: boolean;
