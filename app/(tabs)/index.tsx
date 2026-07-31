@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -128,9 +129,11 @@ export default function HomeScreen() {
   const [meals, setMeals] = useState<DailyLog[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboardData();
+    }, [])
+  );
 
   const handleUpdateWater = async (glasses: number) => {
     try {
@@ -433,11 +436,11 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         {/* Objectif du Jour */}
-        <View className="bg-white dark:bg-[#151515] rounded-3xl p-5 mb-6 border border-gray-200 dark:border-white/10 shadow-sm">
+        <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(tabs)/my-day')} className="bg-white dark:bg-[#151515] rounded-3xl p-5 mb-6 border border-gray-200 dark:border-white/10 shadow-sm">
           {/* Header & Days */}
           <View className="flex-row justify-between items-center mb-6">
             <View>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/my-day')}><Text className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-2" style={{ fontFamily: 'Poppins_700Bold' }}>OBJECTIF DU JOUR</Text></TouchableOpacity>
+              <Text className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase mb-2" style={{ fontFamily: 'Poppins_700Bold' }}>OBJECTIF DU JOUR</Text>
               <View className="flex-row space-x-1">
                 {['C', 'J', 'V', 'S', 'D', 'L', 'M'].map((day, idx) => {
                   const isActive = idx < 3;
@@ -505,7 +508,7 @@ export default function HomeScreen() {
               <Text className="text-black text-xs font-bold ml-2 uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>BILAN QUOTIDIEN</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Bottom 2 Cards Grid */}
         <View className="flex-row space-x-3 mb-10">
