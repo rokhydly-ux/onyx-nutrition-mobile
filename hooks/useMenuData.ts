@@ -199,6 +199,36 @@ export const useMenuData = () => {
     }
   };
 
+  const removeMealLog = async (recipeId: string, date: string) => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) return;
+
+      // Ensure date format covers the whole day or specific time.
+      // Usually matching date string since our app logs them at "YYYY-MM-DDT12:00:00Z"
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const { error } = await supabase
+        .from('nutrition_daily_logs')
+        .delete()
+        .eq('client_id', session.session.user.id)
+        .eq('recipe_id', recipeId)
+        .gte('created_at', startOfDay.toISOString())
+        .lt('created_at', endOfDay.toISOString());
+
+      if (error) {
+        console.error("[useMenuData] Error deleting meal log:", error);
+      } else {
+        setConsumedMeal(date, recipeId, false);
+      }
+    } catch (err) {
+      console.error("[useMenuData] Unexpected error during meal delete:", err);
+    }
+  };
+
   const swapMeal = async (mealId: string, mealType: string, date: string) => {
     if (!profile) return;
     try {
@@ -280,6 +310,7 @@ export const useMenuData = () => {
     menu: weeklyGeneratedMenu,
     generateMenu,
     swapMeal,
+    removeMealLog,
     consumedMeals
   };
 };
