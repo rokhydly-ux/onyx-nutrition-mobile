@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, CheckSquare, Square } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { supabase } from '../lib/supabase';
 
@@ -11,6 +11,7 @@ export default function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
 
   const handleLogin = async () => {
     if (!phone || !pin) return;
@@ -89,24 +90,40 @@ export default function LoginScreen() {
               </View>
 
               <View className="mb-6">
-                <Text className="text-gray-500 font-medium mb-2" style={{ fontFamily: 'Poppins_500Medium' }}>Code PIN secret</Text>
+                <Text className="text-gray-500 font-medium mb-2" style={{ fontFamily: 'Poppins_500Medium' }}>Mot de passe</Text>
                 <View className="border-b border-gray-300 pb-2">
                   <TextInput
                     value={pin}
                     onChangeText={setPin}
-                    placeholder="••••"
+                    placeholder="Votre mot de passe"
                     placeholderTextColor="#9CA3AF"
                     secureTextEntry
-                    keyboardType="number-pad"
-                    maxLength={4}
-                    className="text-black text-lg p-0 m-0 tracking-[1em]"
+                    keyboardType="default"
+                    className="text-black text-lg p-0 m-0"
+                    style={{ fontFamily: 'Poppins_400Regular' }}
                   />
                 </View>
               </View>
+
+              {/* Keep Me Logged In Checkbox (Visual Only) */}
+              <TouchableOpacity
+                className="flex-row items-center mt-2 mb-2"
+                onPress={() => setKeepLoggedIn(!keepLoggedIn)}
+                activeOpacity={0.7}
+              >
+                {keepLoggedIn ? (
+                  <CheckSquare size={20} color="#39FF14" />
+                ) : (
+                  <Square size={20} color="#9CA3AF" />
+                )}
+                <Text className="ml-2 text-gray-700" style={{ fontFamily: 'Poppins_400Regular' }}>
+                  Rester connecté(e)
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
-              className={`w-full py-4 rounded-full items-center shadow-[0_0_15px_rgba(57,255,20,0.5)] ${loading ? 'bg-gray-400' : 'bg-[#39FF14]'}`}
+              className={`w-full py-4 rounded-full items-center shadow-[0_0_15px_rgba(57,255,20,0.5)] mb-6 ${loading ? 'bg-gray-400' : 'bg-[#39FF14]'}`}
               onPress={handleLogin}
               disabled={loading}
             >
@@ -114,6 +131,16 @@ export default function LoginScreen() {
                 {loading ? 'Connexion...' : "C'est parti !"}
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => Linking.openURL('https://wa.me/1234567890?text=Bonjour%20Coach%2C%20j%27ai%20oubli%C3%A9%20le%20mot%20de%20passe%20de%20mon%20application%20Onyx%20Nutrition.%20Pouvez-vous%20m%27aider%20%C3%A0%20le%20r%C3%A9initialiser%20%3F')}
+              className="items-center"
+            >
+              <Text className="text-gray-300 font-medium underline" style={{ fontFamily: 'Poppins_500Medium' }}>
+                Mot de passe oublié ?
+              </Text>
+            </TouchableOpacity>
+
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
