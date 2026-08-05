@@ -11,7 +11,7 @@ export interface Meal {
   carbs: number;
   fats: number;
   ingredients: any[];
-  is_logged?: boolean; // If it's been consumed
+  is_logged?: boolean;
   original_calories?: number;
 }
 
@@ -23,7 +23,7 @@ export interface DayMenu {
 
 interface MenuStoreState {
   weeklyGeneratedMenu: DayMenu[];
-  consumedMeals: Record<string, boolean>; // key could be `${date}-${meal.id}`
+  consumedMeals: Record<string, boolean>; // key: `${date}-${meal.id}`
   showGroceryList: boolean;
   setWeeklyMenu: (menu: DayMenu[]) => void;
   setConsumedMeal: (date: string, mealId: string, isLogged: boolean) => void;

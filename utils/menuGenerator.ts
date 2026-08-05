@@ -14,7 +14,7 @@ export interface Recipe {
   proteins: number;
   carbs: number;
   fats: number;
-  ingredients: any[]; // { name, quantite, price_cfa }
+  ingredients: any[];
 }
 
 export interface ProfileData {
@@ -22,9 +22,9 @@ export interface ProfileData {
   diagnostic_data: {
     allergies?: string[];
     fasting_mode?: boolean;
-    userMode?: 'strict' | 'free'; // 'strict' is Guided Mode, 'free' is Free Mode
+    userMode?: 'strict' | 'free';
   };
-  budget: string; // the exact exact tier they are e.g. "Serré 8k", "Famille 15k"
+  budget: string;
   expert_mode?: boolean;
 }
 
@@ -39,30 +39,24 @@ export const generateWeeklyMenu = (
   const allergies = diagnostic_data?.allergies || [];
   const fastingMode = !!diagnostic_data?.fasting_mode;
 
-  // 1. Filter out non-meals (assuming 'Accessoire' or 'Ingrédient pur' is the category/type)
-  // Need to know exactly what the column looks like. Assuming category is not these.
   let validRecipes = recipes.filter((r) =>
     !r.category?.toLowerCase().includes('accessoire') &&
     !r.category?.toLowerCase().includes('ingrédient')
   );
 
-  // 2. Filter Allergies
   if (allergies.length > 0) {
     validRecipes = validRecipes.filter(r => {
       const ingredientsText = JSON.stringify(r.ingredients || []).toLowerCase();
-      // If the ingredients contains ANY of the allergy words, exclude it
       return !allergies.some(allergy => ingredientsText.includes(allergy.toLowerCase()));
     });
   }
 
-  // 3. Filter Budget
   if (budget === 'Serré 8k') {
     validRecipes = validRecipes.filter(r => r.budget_tier === 'Serré 8k');
   } else if (budget === 'Famille 15k') {
     validRecipes = validRecipes.filter(r => r.budget_tier === 'Serré 8k' || r.budget_tier === 'Famille 15k');
   }
 
-  // Group valid recipes by type
   const recipesByType: Record<string, Recipe[]> = {
     'Petit-Déjeuner': validRecipes.filter(r => r.type?.toLowerCase().includes('petit')),
     'Déjeuner': validRecipes.filter(r => r.type?.toLowerCase().includes('déjeuner') || r.type?.toLowerCase().includes('dejeuner')),
@@ -70,7 +64,6 @@ export const generateWeeklyMenu = (
     'Dîner': validRecipes.filter(r => r.type?.toLowerCase().includes('dîner') || r.type?.toLowerCase().includes('diner')),
   };
 
-  // Fallbacks if one category is empty due to strict filters
   const allMeals = [...validRecipes];
   if (recipesByType['Petit-Déjeuner'].length === 0) recipesByType['Petit-Déjeuner'] = allMeals;
   if (recipesByType['Déjeuner'].length === 0) recipesByType['Déjeuner'] = allMeals;
@@ -87,7 +80,7 @@ export const generateWeeklyMenu = (
 
   const getMealTargetCalories = (mealType: string) => {
     if (fastingMode) {
-      if (mealType === 'Petit-Déjeuner') return 0; // Skip
+      if (mealType === 'Petit-Déjeuner') return 0;
       if (mealType === 'Déjeuner') return daily_calorie_goal * 0.45;
       if (mealType === 'Collation') return daily_calorie_goal * 0.20;
       if (mealType === 'Dîner') return daily_calorie_goal * 0.35;
@@ -103,7 +96,7 @@ export const generateWeeklyMenu = (
   const pickRandomRecipe = (type: string, lastUsedId: string | null) => {
     let choices = recipesByType[type] || [];
     if (choices.length > 1 && lastUsedId) {
-      choices = choices.filter(c => c.id !== lastUsedId); // prevent consecutive days
+      choices = choices.filter(c => c.id !== lastUsedId);
     }
     const randomIndex = Math.floor(Math.random() * choices.length);
     return choices[randomIndex];
@@ -113,9 +106,7 @@ export const generateWeeklyMenu = (
     const originalCal = getCalories(recipe);
     const ratio = originalCal > 0 ? (targetCal / originalCal) : 1;
 
-    // Scale ingredients
     const scaledIngredients = (recipe.ingredients || []).map(ing => {
-      // Assuming quantite might be a number or a string with units. We try to scale numbers.
       let newQuantite = ing.quantite;
       if (typeof ing.quantite === 'number') {
         newQuantite = parseFloat((ing.quantite * ratio).toFixed(2));
@@ -130,12 +121,12 @@ export const generateWeeklyMenu = (
       return {
         ...ing,
         quantite: newQuantite,
-        scaledRatio: ratio // pass this to calculate price later if price is proportional to quantity
+        scaledRatio: ratio
       };
     });
 
     return {
-      id: `${recipe.id}-${Math.random().toString(36).substring(7)}`, // Unique ID for this instance in the menu
+      id: `${recipe.id}-${Math.random().toString(36).substring(7)}`,
       recipe_id: recipe.id,
       name: recipe.name,
       type: recipe.type as Meal['type'],
@@ -166,7 +157,6 @@ export const generateWeeklyMenu = (
       if (recipe) {
         recentRecipes[type].push(recipe.id);
         const scaledMeal = scaleRecipe(recipe, targetCal);
-        // Force the type in case the DB type is slightly different spelling
         scaledMeal.type = type as Meal['type'];
         dayMeals.push(scaledMeal);
       }

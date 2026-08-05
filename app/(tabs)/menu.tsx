@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, FlatList, ActivityIndicator, Dimensions, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
 import { CheckCircle, Lock, Plus, RefreshCw, ShoppingCart, Trash2 } from 'lucide-react-native';
 import { useMenuData } from '../../hooks/useMenuData';
 import { useMenuStore } from '../../store/useMenuStore';
@@ -21,7 +20,6 @@ export default function MenuScreen() {
   const [showFoodSearch, setShowFoodSearch] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  // Focus today by default
   useEffect(() => {
     if (menu.length > 0) {
       const today = new Date().toISOString().split('T')[0];
@@ -41,7 +39,6 @@ export default function MenuScreen() {
     );
   }
 
-  // Paywall Logic
   const hasAccess = profile?.plan_type === 'premium' || (profile?.daysLeft && profile.daysLeft > 0);
 
   if (!hasAccess) {
@@ -60,7 +57,7 @@ export default function MenuScreen() {
 
             <TouchableOpacity
               className="bg-[#39FF14] w-full py-4 rounded-full flex-row justify-center items-center shadow-[0_0_15px_rgba(57,255,20,0.4)]"
-              onPress={() => Linking.openURL('https://wa.me/1234567890')} // Replace with actual WhatsApp link
+              onPress={() => Linking.openURL('https://wa.me/1234567890')}
             >
               <Text className="text-black font-bold text-lg mr-2" style={{ fontFamily: 'Poppins_700Bold' }}>Contacter sur WhatsApp</Text>
             </TouchableOpacity>
@@ -69,7 +66,6 @@ export default function MenuScreen() {
     );
   }
 
-  // Determine Mode
   const userMode = profile?.diagnostic_data?.userMode || 'strict';
 
   if (userMode === 'strict' && menu.length === 0) {
@@ -109,10 +105,9 @@ export default function MenuScreen() {
       const carbs = Math.round(food.carbs * ratio);
       const fats = Math.round(food.fats * ratio);
 
-      // We log it directly for today
       const { error } = await supabase.from('nutrition_daily_logs').insert({
         client_id: session.session.user.id,
-        recipe_id: food.id, // using mock ID for now
+        recipe_id: food.id,
         calories,
         proteins,
         carbs,
@@ -120,17 +115,13 @@ export default function MenuScreen() {
       });
 
       if (error) console.error("Error logging free food:", error);
-      else {
-        // Ideally trigger a refresh of the dashboard here
-        setShowFoodSearch(false);
-      }
+      else setShowFoodSearch(false);
     } catch (e) {
       console.error(e);
     }
   };
 
   const logMeal = async (meal: any, date: string) => {
-    // Add to daily logs
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) return;
@@ -142,7 +133,6 @@ export default function MenuScreen() {
         proteins: meal.proteins,
         carbs: meal.carbs,
         fats: meal.fats,
-        // using the date of the meal plan, setting time to noon approx
         created_at: new Date(`${date}T12:00:00Z`).toISOString(),
       });
 
@@ -154,7 +144,6 @@ export default function MenuScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F4F4F5]" edges={['top']}>
-      {/* Header */}
       <View className="px-6 py-4 flex-row justify-between items-center">
         <Text className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Poppins_700Bold' }}>Sama Menu</Text>
         <TouchableOpacity
@@ -165,7 +154,6 @@ export default function MenuScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Days Carousel */}
       <View className="mb-6">
         <FlatList
           ref={flatListRef}
@@ -201,11 +189,9 @@ export default function MenuScreen() {
         />
       </View>
 
-      {/* Dynamic Content based on Mode */}
       {userMode === 'strict' ? (
         <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 100, gap: 16 }}>
           {selectedDay?.meals.map((meal) => {
-            // Check if consumed (using either recipe_id or meal id based on how it's stored in consumedMeals)
             const isConsumed = consumedMeals[`${selectedDay.date}-${meal.recipe_id}`] || false;
 
             return (
@@ -216,10 +202,8 @@ export default function MenuScreen() {
                   ) : (
                     <View className="w-full h-full bg-gray-200" />
                   )}
-                  {/* Dark Gradient Overlay */}
                   <View className="absolute inset-0 bg-black/40" />
 
-                  {/* Content over image */}
                   <View className="absolute inset-0 p-4 justify-between">
                     <View className="flex-row justify-between items-start">
                       <View className="bg-white/20 px-3 py-1 rounded-full backdrop-blur-md">
@@ -250,7 +234,6 @@ export default function MenuScreen() {
                   </View>
                 </View>
 
-                {/* Actions */}
                 <View className="p-4 bg-white border-b border-gray-100">
                   <View className="flex-row gap-3 mb-3">
                     <TouchableOpacity
@@ -288,7 +271,7 @@ export default function MenuScreen() {
           })}
 
           <TouchableOpacity
-            className="flex-row justify-center items-center py-4 bg-white rounded-[24px] border border-dashed border-gray-300 shadow-sm"
+            className="flex-row justify-center items-center py-4 bg-white rounded-[24px] border border-dashed border-gray-300 shadow-sm mt-2"
             onPress={() => setShowFoodSearch(true)}
           >
             <Plus size={20} color="#9CA3AF" className="mr-2" />
@@ -296,7 +279,6 @@ export default function MenuScreen() {
           </TouchableOpacity>
         </ScrollView>
       ) : (
-        /* Render Free Mode Menu */
         <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 100, gap: 16 }}>
           <View className="bg-white p-6 rounded-[24px] shadow-sm items-center border border-dashed border-gray-300 mt-4">
              <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
@@ -317,15 +299,8 @@ export default function MenuScreen() {
         </ScrollView>
       )}
 
-      {/* Grocery List Modal */}
       <GroceryListModal />
-
-      {/* Food Search Modal for Free Mode / Extras */}
-      <FoodSearchModal
-        visible={showFoodSearch}
-        onClose={() => setShowFoodSearch(false)}
-        onAddFood={handleAddFreeFood}
-      />
+      <FoodSearchModal visible={showFoodSearch} onClose={() => setShowFoodSearch(false)} onAddFood={handleAddFreeFood} />
     </SafeAreaView>
   );
 }
