@@ -5,12 +5,9 @@
 env: load .env
 env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY
 Starting project at /app
-React Compiler enabled
-Starting Metro Bundler
-warning: Bundler cache is empty, rebuilding (this may take a minute)
-The following packages should be updated for best compatibility with the installed expo version:
-  @react-native-async-storage/async-storage@3.1.1 - expected version: 2.2.0
-  expo@54.0.35 - expected version: ~54.0.36
-Your project may not work correctly until you install the expected versions of the packages.
-Waiting on http://localhost:8081
-Logs for your project will appear below.
+› Port 8081 is running this app in another window
+  /app (pid 323265)
+Input is required, but 'npx expo' is in non-interactive mode.
+Required input:
+> Use port 8082 instead?
+› Skipping dev server

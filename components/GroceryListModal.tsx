@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, FileText, Share2, ShoppingCart } from 'lucide-react-native';
-import { useMenuStore, DayMenu } from '../store/useMenuStore';
+import { X, FileText, ShoppingCart } from 'lucide-react-native';
+import { useMenuStore } from '../store/useMenuStore';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -16,7 +16,6 @@ export default function GroceryListModal() {
   const { showGroceryList, setShowGroceryList, weeklyGeneratedMenu } = useMenuStore();
   const [isExporting, setIsExporting] = useState(false);
 
-  // Generate grocery list from menu
   const { groupedIngredients, totalPrice } = useMemo(() => {
     let priceSum = 0;
     const ingMap: Record<string, GroceryItem> = {};
@@ -25,10 +24,7 @@ export default function GroceryListModal() {
       day.meals.forEach(meal => {
         meal.ingredients.forEach(ing => {
           const name = ing.name?.toLowerCase().trim() || 'Ingrédient inconnu';
-          // Calculate price if available
           const rawPrice = ing.price_cfa || 0;
-          // Note: if price scales with ratio, we should use scaledRatio.
-          // Assuming original data gives base price for original quantity, and we scale it.
           const ratio = ing.scaledRatio || 1;
           const itemPrice = typeof rawPrice === 'number' ? rawPrice * ratio : 0;
 
@@ -37,13 +33,11 @@ export default function GroceryListModal() {
           if (!ingMap[name]) {
             ingMap[name] = {
               name: ing.name,
-              quantityStr: String(ing.quantite), // simplified merging
+              quantityStr: String(ing.quantite),
               totalPriceCfa: itemPrice
             };
           } else {
-             // In a real app we'd parse and sum numeric quantities. For now we append or simplify
              ingMap[name].totalPriceCfa += itemPrice;
-             // Naive string append for now if they are strings, but if it's a number we sum
              if (!isNaN(Number(ingMap[name].quantityStr)) && !isNaN(Number(ing.quantite))) {
                  ingMap[name].quantityStr = String(Number(ingMap[name].quantityStr) + Number(ing.quantite));
              } else {
@@ -112,19 +106,9 @@ export default function GroceryListModal() {
         </html>
       `;
 
-      const { uri } = await Print.printToFileAsync({
-        html,
-        base64: false
-      });
-
-      console.log('PDF generated at:', uri);
-
+      const { uri } = await Print.printToFileAsync({ html, base64: false });
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, {
-          mimeType: 'application/pdf',
-          dialogTitle: 'Partager ma liste de courses',
-          UTI: 'com.adobe.pdf'
-        });
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Partager ma liste de courses', UTI: 'com.adobe.pdf' });
       } else {
         alert("Le partage n'est pas disponible sur cet appareil");
       }
@@ -137,14 +121,8 @@ export default function GroceryListModal() {
   };
 
   return (
-    <Modal
-      visible={showGroceryList}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={() => setShowGroceryList(false)}
-    >
+    <Modal visible={showGroceryList} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowGroceryList(false)}>
       <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-        {/* Header */}
         <View className="flex-row justify-between items-center p-6 border-b border-gray-100">
           <Text className="text-xl font-bold text-black" style={{ fontFamily: 'Poppins_700Bold' }}>Liste de courses</Text>
           <TouchableOpacity onPress={() => setShowGroceryList(false)} className="bg-gray-100 p-2 rounded-full">
@@ -166,22 +144,15 @@ export default function GroceryListModal() {
                 {groupedIngredients.map((item, idx) => (
                   <View key={idx} className="flex-row justify-between items-center py-3 border-b border-gray-50 mb-3">
                     <View className="flex-1">
-                      <Text className="text-black font-bold text-base capitalize" style={{ fontFamily: 'Poppins_700Bold' }}>
-                        {item.name}
-                      </Text>
-                      <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'Poppins_400Regular' }}>
-                        {item.quantityStr}
-                      </Text>
+                      <Text className="text-black font-bold text-base capitalize" style={{ fontFamily: 'Poppins_700Bold' }}>{item.name}</Text>
+                      <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'Poppins_400Regular' }}>{item.quantityStr}</Text>
                     </View>
-                    <Text className="text-black font-medium" style={{ fontFamily: 'Poppins_400Regular' }}>
-                      {Math.round(item.totalPriceCfa)} CFA
-                    </Text>
+                    <Text className="text-black font-medium" style={{ fontFamily: 'Poppins_400Regular' }}>{Math.round(item.totalPriceCfa)} CFA</Text>
                   </View>
                 ))}
               </View>
             </ScrollView>
 
-            {/* Footer Summary & Action */}
             <View className="p-6 bg-gray-50 rounded-t-[30px] border-t border-gray-200">
               <View className="flex-row justify-between items-center mb-6">
                 <Text className="text-gray-500 font-medium" style={{ fontFamily: 'Poppins_400Regular' }}>Budget Estimé</Text>
@@ -193,9 +164,7 @@ export default function GroceryListModal() {
                 onPress={generateAndSharePDF}
                 disabled={isExporting}
               >
-                {isExporting ? (
-                   <ActivityIndicator color="#000" />
-                ) : (
+                {isExporting ? <ActivityIndicator color="#000" /> : (
                   <>
                     <FileText size={20} color="#000" className="mr-2" />
                     <Text className="text-black font-bold text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>Exporter en PDF</Text>

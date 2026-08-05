@@ -9,7 +9,6 @@ interface FoodSearchModalProps {
   onAddFood: (food: any, quantity: number) => void;
 }
 
-// Temporary mocked database
 const MOCK_FOOD_DATABASE = [
   { id: '1', name: 'Riz brisé', caloriesPer100g: 130, proteins: 2.7, carbs: 28, fats: 0.3 },
   { id: '2', name: 'Poulet rôti', caloriesPer100g: 239, proteins: 27, carbs: 0, fats: 14 },
@@ -31,7 +30,6 @@ export default function FoodSearchModal({ visible, onClose, onAddFood }: FoodSea
     const qty = parseFloat(quantityStr);
     if (selectedFood && !isNaN(qty) && qty > 0) {
       onAddFood(selectedFood, qty);
-      // Reset
       setSelectedFood(null);
       setQuantityStr('');
       setSearchQuery('');
@@ -49,7 +47,6 @@ export default function FoodSearchModal({ visible, onClose, onAddFood }: FoodSea
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={closeModal}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1 bg-[#F4F4F5]">
         <SafeAreaView className="flex-1" edges={['top']}>
-          {/* Header */}
           <View className="flex-row justify-between items-center p-6 bg-white border-b border-gray-200">
             <Text className="text-xl font-bold text-black" style={{ fontFamily: 'Poppins_700Bold' }}>
               Ajouter un aliment
