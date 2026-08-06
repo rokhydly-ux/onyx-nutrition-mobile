@@ -31,11 +31,12 @@ export default function MyDayScreen() {
   const [mode, setMode] = useState<'guided' | 'free'>('guided');
   const [isLoading, setIsLoading] = useState(true);
 
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState<any>({
     calories_goal: 1500,
     protein_goal: 80,
     carbs_goal: 150,
     fats_goal: 50,
+    diagnostic_data: null
   });
 
   const [dailyStats, setDailyStats] = useState({
@@ -74,6 +75,7 @@ export default function MyDayScreen() {
           protein_goal: nutritionData.protein_goal || 80,
           carbs_goal: nutritionData.carbs_goal || 150,
           fats_goal: nutritionData.fats_goal || 50,
+          diagnostic_data: nutritionData.diagnostic_data || null,
         });
       }
 
@@ -152,6 +154,59 @@ export default function MyDayScreen() {
     }
   };
 
+  const [coachBubble, setCoachBubble] = useState<{visible: boolean, message: string}>({ visible: false, message: '' });
+
+  const triggerCoachBubble = (message: string) => {
+    setCoachBubble({ visible: true, message });
+    setTimeout(() => setCoachBubble({ visible: false, message: '' }), 4000);
+  };
+
+  const handleRemoveMeal = async (meal: any) => {
+    // Logic to reverse the logged meal
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+      const todayDateString = new Date().toISOString().split('T')[0];
+
+      const { data: existingLog } = await supabase
+        .from('nutrition_daily_logs')
+        .select('id, calories_consumed, protein_consumed, carbs_consumed, fats_consumed')
+        .eq('client_id', userId)
+        .eq('log_date', todayDateString)
+        .maybeSingle();
+
+      if (existingLog) {
+        const updatedCalories = Math.max(0, (existingLog.calories_consumed || 0) - (meal.calories || 0));
+        const updatedProtein = Math.max(0, (existingLog.protein_consumed || 0) - (meal.p || 0));
+        const updatedCarbs = Math.max(0, (existingLog.carbs_consumed || 0) - (meal.c || 0));
+        const updatedFats = Math.max(0, (existingLog.fats_consumed || 0) - (meal.f || 0));
+
+        await supabase
+          .from('nutrition_daily_logs')
+          .update({
+            calories_consumed: updatedCalories,
+            protein_consumed: updatedProtein,
+            carbs_consumed: updatedCarbs,
+            fats_consumed: updatedFats,
+          })
+          .eq('id', existingLog.id);
+
+        setDailyStats(prev => ({
+          ...prev,
+          calories_consumed: updatedCalories,
+          protein_consumed: updatedProtein,
+          carbs_consumed: updatedCarbs,
+          fats_consumed: updatedFats
+        }));
+
+        setMeals(prev => prev.map(m => m.id === meal.id ? { ...m, logged: false } : m));
+      }
+    } catch (e) {
+      console.error("Error removing meal:", e);
+    }
+  };
+
   const handleLogMeal = async (meal: any) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -202,6 +257,9 @@ export default function MyDayScreen() {
         fats_consumed: updatedFats
       }));
 
+      setMeals(prev => prev.map(m => m.id === meal.id ? { ...m, logged: true } : m));
+      triggerCoachBubble("Super choix ! Repas validé, tu es sur la bonne voie !");
+
     } catch (e) {
       console.error("Error logging meal:", e);
     }
@@ -218,7 +276,13 @@ export default function MyDayScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans">
+    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
+      {coachBubble.visible && (
+        <View className="absolute bottom-20 left-4 right-4 bg-zinc-900 rounded-3xl p-4 flex-row items-center shadow-lg border border-[#39FF14]/30 z-50">
+          <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1784209735/557516971_10235324002253110_1070574324835198049_n_ch9we7.jpg" }} className="w-12 h-12 rounded-full border-2 border-[#39FF14] mr-3" />
+          <Text className="flex-1 text-white text-xs" style={{ fontFamily: 'Poppins_500Medium' }}>{coachBubble.message}</Text>
+        </View>
+      )}
       <ScrollView className="flex-1 px-4 pt-12 pb-24" showsVerticalScrollIndicator={false}>
 
         {/* 1. EN-TÊTE DE PAGE */}
@@ -285,7 +349,7 @@ export default function MyDayScreen() {
         {/* 3. FLUX DES REPAS DU JOUR */}
         <View className="mb-6">
             <Text className="text-black dark:text-white text-lg font-bold mb-4 font-poppins-bold">Repas du jour</Text>
-            {meals.map(meal => (
+            {mode === 'guided' && meals.map(meal => (
               <View key={meal.id} className="rounded-2xl overflow-hidden mb-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
                 <Image source={{ uri: meal.img }} className="w-full h-32 opacity-90" />
                 <View className="p-4">
@@ -308,12 +372,19 @@ export default function MyDayScreen() {
             ))}
 
             {mode === 'free' && (
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => console.log('Open manual entry modal')}
-                className="border-2 border-dashed border-[#39FF14] p-4 rounded-2xl items-center mt-4">
-                <Text className="text-[#39FF14] text-xs font-bold uppercase">+ AJOUTER UN ALIMENT / REPAS LIBRE</Text>
-              </TouchableOpacity>
+              <View>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => console.log('Open manual entry modal')}
+                  className="border-2 border-dashed border-[#39FF14] p-4 rounded-2xl items-center mt-4 mb-2 flex-row justify-center">
+                  <Text className="text-[#39FF14] text-xs font-bold uppercase mr-2" style={{ fontFamily: 'Poppins_700Bold' }}>+ Ajouter un aliment</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  className="bg-zinc-800 p-4 rounded-2xl items-center flex-row justify-center opacity-50">
+                  <Text className="text-white text-xs font-bold uppercase mr-2" style={{ fontFamily: 'Poppins_700Bold' }}>📷 Scanner</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
 
