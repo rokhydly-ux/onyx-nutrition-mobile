@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Heart } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { useColorScheme } from 'nativewind';
+import { Modal, Vibration, Alert, Linking, Pressable } from 'react-native';
+import { useShopStore } from '../../lib/store';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -21,6 +23,16 @@ export default function ShopScreen() {
 
   const [scratchCount, setScratchCount] = useState(0);
   const [scratched, setScratched] = useState(false);
+
+  // Cart & Modal State
+  const { shopCart, addToCart, removeFromCart, updateQuantity, clearCart } = useShopStore();
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState('');
+
+  const cartItemCount = shopCart.reduce((acc, item) => acc + item.quantity, 0);
+  const calculatedTotal = shopCart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
 
   useEffect(() => {
     fetchProducts();
@@ -70,8 +82,10 @@ export default function ShopScreen() {
     const newCount = scratchCount + 1;
     setScratchCount(newCount);
     if (newCount >= 3) {
+      Vibration.vibrate();
       LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
       setScratched(true);
+      setAppliedPromo('CODE10');
     }
   };
 
@@ -86,6 +100,57 @@ export default function ShopScreen() {
   const filteredProducts = activeFilter === '❤️ Sauvegardés'
     ? displayProducts.filter(p => savedProductIds.includes(p.id))
     : displayProducts;
+
+
+  const handleCheckout = async () => {
+    if (shopCart.length === 0) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+
+      const { data: profile } = await supabase
+        .from('clients')
+        .select('full_name, phone')
+        .eq('id', userId)
+        .maybeSingle();
+
+      const finalTotal = appliedPromo ? calculatedTotal * 0.9 : calculatedTotal;
+
+      await supabase.from('nutrition_orders').insert([{
+        client_id: userId,
+        client_name: profile?.full_name || 'Inconnu',
+        phone: profile?.phone || '',
+        items: shopCart,
+        total: finalTotal,
+        status: 'Nouveau',
+        promo_code: appliedPromo
+      }]);
+
+      let cartText = `Nouvelle Commande :\n`;
+      shopCart.forEach(item => {
+        cartText += `- ${item.quantity}x ${item.name}\n`;
+      });
+      cartText += `\nTotal: ${finalTotal.toLocaleString('fr-FR')} FCFA`;
+      if (appliedPromo) cartText += ` (Code ${appliedPromo} appliqué)`;
+
+      const waURL = `whatsapp://send?phone=+221770000000&text=${encodeURIComponent(cartText)}`;
+
+      Linking.openURL(waURL).catch(() => {
+        Alert.alert("Erreur", "WhatsApp n'est pas installé sur cet appareil.");
+      });
+
+      clearCart();
+      setIsModalVisible(false);
+      setSelectedProduct(null);
+    } catch(err) {
+      console.error(err);
+      Alert.alert("Erreur", "Impossible de valider la commande.");
+    }
+  };
+
+  const similarProducts = selectedProduct ? products.filter(p => p.categorie_nom === selectedProduct.categorie_nom && p.id !== selectedProduct.id).slice(0, 3) : [];
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans">
@@ -103,11 +168,13 @@ export default function ShopScreen() {
               <Text className="text-white text-3xl font-black">Essentiels{'\n'}Nutrition</Text>
               <Text className="text-[#39FF14] text-sm font-bold mt-1">Atteignez vos objectifs plus vite.</Text>
             </View>
-            <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full items-center justify-center relative backdrop-blur-md">
+            <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className="w-10 h-10 bg-white/20 rounded-full items-center justify-center relative backdrop-blur-md">
               <ShoppingBagIcon color="white" size={20} />
+              {cartItemCount > 0 && (
               <View className="absolute -top-1 -right-1 bg-[#39FF14] w-4 h-4 rounded-full items-center justify-center">
-                <Text className="text-black text-[9px] font-black">2</Text>
+                <Text className="text-black text-[9px] font-black">{cartItemCount}</Text>
               </View>
+            )}
             </TouchableOpacity>
           </View>
         </View>
@@ -137,7 +204,7 @@ export default function ShopScreen() {
           <Text className="text-black dark:text-white text-lg font-bold mb-4">Nouveautés de la semaine</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
             {displayProducts.slice(0, 3).map(prod => (
-              <View key={prod.id} className="w-32 mr-4">
+              <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => { setSelectedProduct(prod); setIsModalVisible(true); }} className="w-32 mr-4">
                 <View className="w-32 h-32 bg-zinc-100 dark:bg-zinc-900 rounded-2xl mb-2 p-2 relative">
                   <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
                   {prod.isNew && (
@@ -152,7 +219,7 @@ export default function ShopScreen() {
                   )}
                 </View>
                 <Text className="text-black dark:text-white text-xs font-bold" numberOfLines={1}>{prod.name}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
@@ -187,7 +254,7 @@ export default function ShopScreen() {
           {filteredProducts.map(prod => {
             const isSaved = savedProductIds.includes(prod.id);
             return (
-              <View key={prod.id} className="w-[48%]">
+              <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => { setSelectedProduct(prod); setIsModalVisible(true); }} className="w-[48%]">
                 <View className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-3xl p-3 mb-3 relative">
                   <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
                   <TouchableOpacity
@@ -216,7 +283,7 @@ export default function ShopScreen() {
                     </Text>
                   )}
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>
@@ -231,6 +298,94 @@ export default function ShopScreen() {
         </View>
 
       </ScrollView>
+
+      {/* Dynamic Modal for Product Details & Cart */}
+      <Modal visible={isModalVisible} animationType="slide" transparent>
+        <View className="flex-1 bg-black/80 justify-end">
+          <View className="bg-white dark:bg-zinc-950 rounded-t-[2.5rem] p-6 h-[80%]">
+            <TouchableOpacity onPress={() => { setIsModalVisible(false); setSelectedProduct(null); }} className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-full items-center justify-center self-end mb-4">
+               <Text className="text-black dark:text-white font-bold text-lg">✕</Text>
+            </TouchableOpacity>
+
+            {selectedProduct ? (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Image source={{ uri: selectedProduct.image_url }} className="w-full h-48 resize-contain mb-6" />
+                <Text className="text-black dark:text-white text-2xl font-black mb-2">{selectedProduct.name}</Text>
+                <Text className="text-[#39FF14] text-xl font-bold mb-4">{Number(selectedProduct?.prix || selectedProduct?.price || 0).toLocaleString('fr-FR')} FCFA</Text>
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => addToCart(selectedProduct)}
+                  className="bg-[#39FF14] w-full py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mb-8"
+                >
+                  <Text className="text-black font-black text-lg">AJOUTER AU PANIER</Text>
+                </TouchableOpacity>
+
+                {similarProducts.length > 0 && (
+                  <View>
+                    <Text className="text-gray-500 dark:text-gray-400 font-bold mb-4 uppercase">Souvent acheté ensemble</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                      {similarProducts.map(p => (
+                        <TouchableOpacity key={p.id} className="w-24 mr-4" onPress={() => setSelectedProduct(p)}>
+                          <View className="w-24 h-24 bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-2 mb-2">
+                             <Image source={{ uri: p.image_url }} className="w-full h-full resize-contain" />
+                          </View>
+                          <Text className="text-black dark:text-white text-[10px] font-bold" numberOfLines={2}>{p.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </ScrollView>
+            ) : (
+              <View className="flex-1">
+                <Text className="text-black dark:text-white text-2xl font-black mb-6">Mon Panier</Text>
+                {shopCart.length > 0 ? (
+                  <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+                    {shopCart.map(item => (
+                      <View key={item.id} className="flex-row items-center justify-between mb-4 bg-zinc-100 dark:bg-zinc-900 p-3 rounded-2xl">
+                         <View className="flex-1 pr-2">
+                           <Text className="text-black dark:text-white font-bold" numberOfLines={1}>{item.name}</Text>
+                           <Text className="text-[#39FF14] font-bold">{item.price.toLocaleString('fr-FR')} FCFA</Text>
+                         </View>
+                         <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1 ml-2">
+                           <TouchableOpacity onPress={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeFromCart(item.id)}>
+                             <Text className="text-white dark:text-black px-2">-</Text>
+                           </TouchableOpacity>
+                           <Text className="text-white dark:text-black font-bold px-2">{item.quantity}</Text>
+                           <TouchableOpacity onPress={() => updateQuantity(item.id, item.quantity + 1)}>
+                             <Text className="text-white dark:text-black px-2">+</Text>
+                           </TouchableOpacity>
+                         </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                ) : (
+                  <View className="flex-1 items-center justify-center">
+                    <Text className="text-gray-500">Votre panier est vide.</Text>
+                  </View>
+                )}
+
+                {shopCart.length > 0 && (
+                  <View className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <View className="flex-row justify-between items-center mb-4">
+                      <Text className="text-gray-500">Total :</Text>
+                      <Text className="text-black dark:text-white text-2xl font-black">{calculatedTotal.toLocaleString('fr-FR')} FCFA</Text>
+                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={handleCheckout}
+                      className="bg-black dark:bg-[#39FF14] w-full py-4 rounded-2xl items-center"
+                    >
+                      <Text className="text-white dark:text-black font-black text-lg">VALIDER LA COMMANDE</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
