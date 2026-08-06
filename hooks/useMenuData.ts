@@ -193,16 +193,26 @@ export const useMenuData = () => {
 
       if (error || !recipes) return;
 
-      const tempMenu = generateWeeklyMenu(recipes, profile, new Date(date));
-      const newMeal = tempMenu[0]?.meals.find(m => m.type === mealType);
-
-      if (!newMeal) return;
-
       let updatedMenu = [...weeklyGeneratedMenu];
       const dayIndex = updatedMenu.findIndex(d => d.date === date);
 
       if (dayIndex > -1) {
          const mealIndex = updatedMenu[dayIndex].meals.findIndex(m => m.id === mealId);
+         const currentRecipeId = mealIndex > -1 ? updatedMenu[dayIndex].meals[mealIndex].recipe_id : null;
+
+         const tempMenu = generateWeeklyMenu(recipes, profile, new Date(date));
+         let newMeal = tempMenu[0]?.meals.find(m => m.type === mealType);
+
+         // In case the generator gave us the same recipe again, try again (quick hack)
+         let attempts = 0;
+         while (newMeal && newMeal.recipe_id === currentRecipeId && attempts < 5) {
+            const temp = generateWeeklyMenu(recipes, profile, new Date(date));
+            newMeal = temp[0]?.meals.find(m => m.type === mealType);
+            attempts++;
+         }
+
+         if (!newMeal) return;
+
          if (mealIndex > -1) {
              updatedMenu[dayIndex].meals[mealIndex] = newMeal;
              setWeeklyMenu(updatedMenu);

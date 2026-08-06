@@ -9,6 +9,8 @@ import { fr } from 'date-fns/locale';
 import { supabase } from '../../lib/supabase';
 import GroceryListModal from '../../components/GroceryListModal';
 import FoodSearchModal from '../../components/FoodSearchModal';
+import GuidedModeMenu from '../../components/GuidedModeMenu';
+import FreeModeMenu from '../../components/FreeModeMenu';
 
 const { width } = Dimensions.get('window');
 
@@ -177,149 +179,58 @@ export default function MenuScreen() {
         </View>
       </View>
 
-      <View className="mb-6">
-        <FlatList
-          ref={flatListRef}
-          data={menu}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}
-          keyExtractor={(item) => item.date}
-          renderItem={({ item, index }) => {
-            const dateObj = parseISO(item.date);
-            const dayName = format(dateObj, 'EEE', { locale: fr });
-            const dayNumber = format(dateObj, 'd');
-            const isActive = index === selectedDayIndex;
-            const isToday = item.date === new Date().toISOString().split('T')[0];
+      {userMode === 'strict' && (
+        <View className="mb-6">
+          <FlatList
+            ref={flatListRef}
+            data={menu}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}
+            keyExtractor={(item) => item.date}
+            renderItem={({ item, index }) => {
+              const dateObj = parseISO(item.date);
+              const dayName = format(dateObj, 'EEE', { locale: fr });
+              const dayNumber = format(dateObj, 'd');
+              const isActive = index === selectedDayIndex;
+              const isToday = item.date === new Date().toISOString().split('T')[0];
 
-            return (
-              <TouchableOpacity
-                onPress={() => setSelectedDayIndex(index)}
-                className={`items-center justify-center w-16 h-20 rounded-[20px] transition-all bg-white shadow-sm border ${
-                  isActive ? 'border-[#39FF14] border-2' : 'border-transparent'
-                }`}
-              >
-                <Text className={`text-xs uppercase mb-1 ${isActive ? 'text-black font-bold' : 'text-gray-400'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
-                  {dayName}
-                </Text>
-                <Text className={`text-xl ${isActive ? 'text-black font-bold' : 'text-gray-900'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
-                  {dayNumber}
-                </Text>
-                {isToday && <View className="w-2 h-2 rounded-full bg-[#39FF14] mt-1" />}
-              </TouchableOpacity>
-            );
-          }}
-        />
-      </View>
+              return (
+                <TouchableOpacity
+                  onPress={() => setSelectedDayIndex(index)}
+                  className={`items-center justify-center w-16 h-20 rounded-[20px] transition-all bg-white shadow-sm border ${
+                    isActive ? 'border-[#39FF14] border-2' : 'border-transparent'
+                  }`}
+                >
+                  <Text className={`text-xs uppercase mb-1 ${isActive ? 'text-black font-bold' : 'text-gray-400'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+                    {dayName}
+                  </Text>
+                  <Text className={`text-xl ${isActive ? 'text-black font-bold' : 'text-gray-900'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+                    {dayNumber}
+                  </Text>
+                  {isToday && <View className="w-2 h-2 rounded-full bg-[#39FF14] mt-1" />}
+                </TouchableOpacity>
+              );
+            }}
+          />
+        </View>
+      )}
 
       {userMode === 'strict' ? (
-        <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 100, gap: 16 }}>
-          {selectedDay?.meals.map((meal) => {
-            const isConsumed = consumedMeals[`${selectedDay.date}-${meal.recipe_id}`] || false;
-
-            return (
-              <View key={meal.id} className="bg-white rounded-[24px] overflow-hidden shadow-sm">
-                <View className="h-40 relative">
-                  {meal.image_url ? (
-                    <Image source={{ uri: meal.image_url }} className="w-full h-full" resizeMode="cover" />
-                  ) : (
-                    <View className="w-full h-full bg-gray-200" />
-                  )}
-                  <View className="absolute inset-0 bg-black/40" />
-
-                  <View className="absolute inset-0 p-4 justify-between">
-                    <View className="flex-row justify-between items-start">
-                      <View className="bg-white/20 px-3 py-1 rounded-full backdrop-blur-md">
-                        <Text className="text-white text-xs font-bold uppercase tracking-wider" style={{ fontFamily: 'Poppins_700Bold' }}>{meal.type}</Text>
-                      </View>
-                      {isConsumed && (
-                        <View className="bg-[#39FF14] px-2 py-1 rounded-full flex-row items-center">
-                          <CheckCircle size={12} color="#000" className="mr-1" />
-                          <Text className="text-black text-xs font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>Validé</Text>
-                        </View>
-                      )}
-                    </View>
-
-                    <View>
-                      <Text className="text-white text-xl font-bold mb-1 shadow-sm" style={{ fontFamily: 'Poppins_700Bold' }} numberOfLines={2}>
-                        {meal.name}
-                      </Text>
-                      {profile?.expert_mode ? (
-                         <Text className="text-white/90 text-xs shadow-sm" style={{ fontFamily: 'Poppins_400Regular' }}>
-                           {meal.calories} kcal • P: {meal.proteins}g • G: {meal.carbs}g • L: {meal.fats}g
-                         </Text>
-                      ) : (
-                         <Text className="text-white/90 text-xs shadow-sm" style={{ fontFamily: 'Poppins_400Regular' }}>
-                           1 portion optimisée
-                         </Text>
-                      )}
-                    </View>
-                  </View>
-                </View>
-
-                <View className="p-4 bg-white border-b border-gray-100">
-                  <View className="flex-row gap-3 mb-3">
-                    <TouchableOpacity
-                      className={`flex-1 flex-row justify-center items-center py-3 rounded-[16px] ${
-                        isConsumed ? 'bg-gray-100 opacity-50' : 'bg-gray-100'
-                      }`}
-                      disabled={isConsumed}
-                      onPress={() => swapMeal(meal.id, meal.type, selectedDay.date)}
-                    >
-                      <RefreshCw size={18} color="#4B5563" className="mr-2" />
-                      <Text className="text-gray-700 font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Changer</Text>
-                    </TouchableOpacity>
-
-                    {isConsumed ? (
-                      <TouchableOpacity
-                        className="flex-1 flex-row justify-center items-center py-3 rounded-[16px] bg-red-100"
-                        onPress={() => removeMealLog(meal.recipe_id, selectedDay.date)}
-                      >
-                        <Trash2 size={18} color="#EF4444" className="mr-2" />
-                        <Text className="text-red-500 font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Supprimer</Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        className="flex-1 flex-row justify-center items-center py-3 rounded-[16px] bg-black"
-                        onPress={() => logMeal(meal, selectedDay.date)}
-                      >
-                        <Plus size={18} color="#39FF14" className="mr-2" />
-                        <Text className="text-[#39FF14] font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Ajouter</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              </View>
-            );
-          })}
-
-          <TouchableOpacity
-            className="flex-row justify-center items-center py-4 bg-white rounded-[24px] border border-dashed border-gray-300 shadow-sm mt-2"
-            onPress={() => setShowFoodSearch(true)}
-          >
-            <Plus size={20} color="#9CA3AF" className="mr-2" />
-            <Text className="text-gray-500 font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>+ Ajouter un Extra</Text>
-          </TouchableOpacity>
-        </ScrollView>
+        <GuidedModeMenu
+          selectedDay={selectedDay}
+          consumedMeals={consumedMeals}
+          profile={profile}
+          onSwapMeal={swapMeal}
+          onRemoveMeal={removeMealLog}
+          onLogMeal={logMeal}
+          onAddExtra={() => setShowFoodSearch(true)}
+        />
       ) : (
-        <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 100, gap: 16 }}>
-          <View className="bg-white p-6 rounded-[24px] shadow-sm items-center border border-dashed border-gray-300 mt-4">
-             <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
-                <Plus size={32} color="#9CA3AF" />
-             </View>
-             <Text className="text-black font-bold text-lg mb-2" style={{ fontFamily: 'Poppins_700Bold' }}>Mode Libre Actif</Text>
-             <Text className="text-gray-500 text-center mb-6" style={{ fontFamily: 'Poppins_400Regular' }}>
-               Vous avez le contrôle total sur votre alimentation. Ajoutez les aliments que vous consommez pour suivre vos macros.
-             </Text>
-             <TouchableOpacity
-                className="bg-[#39FF14] w-full py-4 rounded-full flex-row justify-center items-center shadow-[0_0_15px_rgba(57,255,20,0.4)]"
-                onPress={() => setShowFoodSearch(true)}
-             >
-                <Plus size={20} color="#000" className="mr-2" />
-                <Text className="text-black font-bold text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>Ajouter un aliment</Text>
-             </TouchableOpacity>
-          </View>
-        </ScrollView>
+        <FreeModeMenu
+          onOpenSearch={() => setShowFoodSearch(true)}
+          consumedMeals={consumedMeals}
+        />
       )}
 
       <GroceryListModal />
