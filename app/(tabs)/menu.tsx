@@ -30,7 +30,7 @@ export default function MenuScreen() {
     }
   }, [menu]);
 
-  if (loading) {
+  if (loading || !profile) {
     return (
       <SafeAreaView className="flex-1 bg-[#F4F4F5] items-center justify-center">
         <ActivityIndicator size="large" color="#39FF14" />
@@ -39,7 +39,7 @@ export default function MenuScreen() {
     );
   }
 
-  const hasAccess = profile?.plan_type === 'premium' || (profile?.daysLeft && profile.daysLeft > 0);
+  const hasAccess = profile.plan_type === 'premium' || (typeof profile.daysLeft === 'number' && profile.daysLeft > 0);
 
   if (!hasAccess) {
     return (
@@ -66,7 +66,20 @@ export default function MenuScreen() {
     );
   }
 
-  const userMode = profile?.diagnostic_data?.userMode || 'strict';
+  const [localUserMode, setLocalUserMode] = useState<'strict' | 'free' | null>(null);
+
+  useEffect(() => {
+    if (profile && !localUserMode) {
+      const mode = profile.diagnostic_data?.diet_mode || profile.diagnostic_data?.userMode || 'strict';
+      setLocalUserMode(mode);
+    }
+  }, [profile, localUserMode]);
+
+  const userMode = localUserMode || 'strict';
+
+  const toggleUserMode = () => {
+    setLocalUserMode(prev => prev === 'strict' ? 'free' : 'strict');
+  };
 
   if (userMode === 'strict' && menu.length === 0) {
     return (
@@ -146,12 +159,22 @@ export default function MenuScreen() {
     <SafeAreaView className="flex-1 bg-[#F4F4F5]" edges={['top']}>
       <View className="px-6 py-4 flex-row justify-between items-center">
         <Text className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Poppins_700Bold' }}>Sama Menu</Text>
-        <TouchableOpacity
-          className="bg-white p-3 rounded-full shadow-sm"
-          onPress={() => setShowGroceryList(true)}
-        >
-          <ShoppingCart size={24} color="#000" />
-        </TouchableOpacity>
+        <View className="flex-row gap-3">
+          <TouchableOpacity
+            className="bg-gray-100 px-4 py-3 rounded-full shadow-sm"
+            onPress={toggleUserMode}
+          >
+            <Text className="text-xs font-bold text-black" style={{ fontFamily: 'Poppins_700Bold' }}>
+              {userMode === 'strict' ? 'Passer en Libre' : 'Passer en Guidé'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="bg-white p-3 rounded-full shadow-sm"
+            onPress={() => setShowGroceryList(true)}
+          >
+            <ShoppingCart size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View className="mb-6">

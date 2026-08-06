@@ -23,6 +23,7 @@ export interface ProfileData {
     allergies?: string[];
     fasting_mode?: boolean;
     userMode?: 'strict' | 'free';
+    diet_mode?: 'strict' | 'free';
   };
   budget: string;
   expert_mode?: boolean;
