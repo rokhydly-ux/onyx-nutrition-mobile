@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, TextInput, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Modal, TouchableOpacity, TextInput, FlatList, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, Search } from 'lucide-react-native';
+import { supabase } from '../lib/supabase';
 
 interface FoodSearchModalProps {
   visible: boolean;
@@ -9,22 +10,78 @@ interface FoodSearchModalProps {
   onAddFood: (food: any, quantity: number) => void;
 }
 
-const MOCK_FOOD_DATABASE = [
-  { id: '1', name: 'Riz brisé', caloriesPer100g: 130, proteins: 2.7, carbs: 28, fats: 0.3 },
-  { id: '2', name: 'Poulet rôti', caloriesPer100g: 239, proteins: 27, carbs: 0, fats: 14 },
-  { id: '3', name: 'Pâte d\'arachide', caloriesPer100g: 588, proteins: 25, carbs: 20, fats: 50 },
-  { id: '4', name: 'Manioc', caloriesPer100g: 160, proteins: 1.4, carbs: 38, fats: 0.3 },
-  { id: '5', name: 'Poisson frais', caloriesPer100g: 206, proteins: 22, carbs: 0, fats: 12 },
-];
-
 export default function FoodSearchModal({ visible, onClose, onAddFood }: FoodSearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
   const [selectedFood, setSelectedFood] = useState<any>(null);
   const [quantityStr, setQuantityStr] = useState('');
 
-  const filteredFoods = MOCK_FOOD_DATABASE.filter(food =>
-    food.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.trim().length > 2) {
+        performSearch(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const performSearch = async (query: string) => {
+    setLoadingSearch(true);
+    let results: any[] = [];
+
+    try {
+      // 1. Search Supabase nutrition_recipes
+      const { data: dbData, error } = await supabase
+        .from('nutrition_recipes')
+        .select('*')
+        .ilike('name', `%${query}%`)
+        .limit(10);
+
+      if (!error && dbData) {
+        // Map database recipes to standard format
+        const dbMapped = dbData.map(item => ({
+          id: item.id,
+          name: item.name,
+          caloriesPer100g: item.calories || 0,
+          proteins: item.proteins || 0,
+          carbs: item.carbs || 0,
+          fats: item.fats || 0,
+          source: 'Sama DB'
+        }));
+        results = [...results, ...dbMapped];
+      }
+
+      // 2. Search OpenFoodFacts
+      const offResponse = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1`);
+      const offData = await offResponse.json();
+
+      if (offData && offData.products) {
+        const offMapped = offData.products
+          .filter((p: any) => p.product_name && p.nutriments && p.nutriments['energy-kcal_100g'])
+          .slice(0, 10)
+          .map((p: any) => ({
+            id: `off_${p.code}`,
+            name: p.product_name,
+            caloriesPer100g: p.nutriments['energy-kcal_100g'] || 0,
+            proteins: p.nutriments.proteins_100g || 0,
+            carbs: p.nutriments.carbohydrates_100g || 0,
+            fats: p.nutriments.fat_100g || 0,
+            source: 'OpenFoodFacts'
+          }));
+        results = [...results, ...offMapped];
+      }
+
+      setSearchResults(results);
+    } catch (err) {
+      console.error("Search failed:", err);
+    } finally {
+      setLoadingSearch(false);
+    }
+  };
 
   const handleAdd = () => {
     const qty = parseFloat(quantityStr);
@@ -70,31 +127,38 @@ export default function FoodSearchModal({ visible, onClose, onAddFood }: FoodSea
                 />
               </View>
 
-              <FlatList
-                data={filteredFoods}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    className="bg-white p-4 rounded-[16px] mb-3 border border-gray-100 shadow-sm flex-row justify-between items-center"
-                    onPress={() => setSelectedFood(item)}
-                  >
-                    <View>
-                      <Text className="text-black font-bold text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>{item.name}</Text>
-                      <Text className="text-gray-500 text-sm" style={{ fontFamily: 'Poppins_400Regular' }}>
-                        {item.caloriesPer100g} kcal / 100g
-                      </Text>
-                    </View>
-                    <View className="bg-gray-100 px-3 py-1 rounded-full">
-                      <Text className="text-black font-bold text-xs" style={{ fontFamily: 'Poppins_700Bold' }}>Choisir</Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-                ListEmptyComponent={
-                  <Text className="text-center text-gray-500 mt-10" style={{ fontFamily: 'Poppins_400Regular' }}>
-                    Aucun résultat trouvé.
-                  </Text>
-                }
-              />
+              {loadingSearch ? (
+                <View className="flex-1 justify-center items-center">
+                  <ActivityIndicator size="large" color="#39FF14" />
+                  <Text className="mt-4 text-gray-500" style={{ fontFamily: 'Poppins_400Regular' }}>Recherche en cours...</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={searchResults}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      className="bg-white p-4 rounded-[16px] mb-3 border border-gray-100 shadow-sm flex-row justify-between items-center"
+                      onPress={() => setSelectedFood(item)}
+                    >
+                      <View className="flex-1 pr-4">
+                        <Text className="text-black font-bold text-lg" style={{ fontFamily: 'Poppins_700Bold' }} numberOfLines={2}>{item.name}</Text>
+                        <Text className="text-gray-500 text-sm" style={{ fontFamily: 'Poppins_400Regular' }}>
+                          {Math.round(item.caloriesPer100g)} kcal / 100g • {item.source}
+                        </Text>
+                      </View>
+                      <View className="bg-gray-100 px-3 py-1 rounded-full">
+                        <Text className="text-black font-bold text-xs" style={{ fontFamily: 'Poppins_700Bold' }}>Choisir</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                  ListEmptyComponent={
+                    <Text className="text-center text-gray-500 mt-10" style={{ fontFamily: 'Poppins_400Regular' }}>
+                      {searchQuery.length > 2 ? "Aucun résultat trouvé." : "Tapez au moins 3 caractères pour chercher."}
+                    </Text>
+                  }
+                />
+              )}
             </View>
           ) : (
             <View className="flex-1 justify-center px-6">
