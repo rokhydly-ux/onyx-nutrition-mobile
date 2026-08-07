@@ -32,6 +32,7 @@ export default function TabLayout() {
             intensity={85}
             style={[
               StyleSheet.absoluteFill,
+
               {
                 borderRadius: 24,
                 overflow: 'hidden',
