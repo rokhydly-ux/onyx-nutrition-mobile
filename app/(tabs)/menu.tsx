@@ -3,12 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, Dimensions, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
-import GroceryListModal from '../../components/GroceryListModal';
-import FoodSearchModal from '../../components/FoodSearchModal';
-import GuidedModeMenu from '../../components/GuidedModeMenu';
-import FreeModeMenu from '../../components/FreeModeMenu';
-
-const { width } = Dimensions.get('window');
 
 export default function MenuScreen() {
   const [isLoading, setIsLoading] = useState(true);
@@ -58,10 +52,7 @@ export default function MenuScreen() {
       {menu ? (
         <Text className="text-gray-500" style={{ fontFamily: 'Poppins_400Regular' }}>Votre menu est prêt.</Text>
       ) : (
-        <FreeModeMenu
-          onOpenSearch={() => setShowFoodSearch(true)}
-          consumedMeals={consumedMeals}
-        />
+        <Text className="text-gray-500" style={{ fontFamily: 'Poppins_400Regular' }}>Aucun menu généré pour le moment.</Text>
       )}
     </SafeAreaView>
   );

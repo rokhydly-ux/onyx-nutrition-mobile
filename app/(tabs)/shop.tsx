@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Image, ImageBackground, TouchableOpacity, TextInput, LayoutAnimation, UIManager, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Heart } from 'lucide-react-native';
+import GlobalHeader from '../../components/GlobalHeader';
 import { supabase } from '../../lib/supabase';
 import { useColorScheme } from 'nativewind';
 import { Modal, Vibration, Alert, Linking, Pressable, Share } from 'react-native';
@@ -30,6 +31,32 @@ export default function ShopScreen() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState('');
+  const [isPremium, setIsPremium] = useState(false);
+
+  useEffect(() => {
+    checkPremiumStatus();
+  }, []);
+
+  const checkPremiumStatus = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data } = await supabase.from('clients').select('plan_type').eq('id', session.user.id).maybeSingle();
+      if (data && data.plan_type === 'Premium') setIsPremium(true);
+    }
+  };
+
+  const handleOpenProduct = async (prod: any) => {
+    setSelectedProduct(prod);
+    setIsModalVisible(true);
+    if (prod.id) {
+      try {
+        const newViews = (prod.views || 0) + 1;
+        await supabase.from('nutrition_products').update({ views: newViews }).eq('id', prod.id);
+      } catch (e) {
+        console.error("View count update failed", e);
+      }
+    }
+  };
 
 
   const cartItemCount = shopCart.reduce((acc, item) => acc + item.quantity, 0);
@@ -170,7 +197,8 @@ export default function ShopScreen() {
   const similarProducts = selectedProduct ? products.filter(p => p.categorie_nom === selectedProduct.categorie_nom && p.id !== selectedProduct.id).slice(0, 3) : [];
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans">
+    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
+      <GlobalHeader />
       <ScrollView className="flex-1 px-4 pt-4 pb-28" showsVerticalScrollIndicator={false}>
 
 
@@ -183,7 +211,7 @@ export default function ShopScreen() {
           />
           <View className="flex-row justify-between items-start">
             <View>
-              <Text className="text-white text-3xl font-black">Essentiels{'\n'}Nutrition</Text>
+              <Text className="text-white text-3xl" style={{ fontFamily: "Poppins_900Black" }}>Essentiels{'\n'}Nutrition</Text>
               <Text className="text-[#39FF14] text-sm font-bold mt-1">Atteignez vos objectifs plus vite.</Text>
             </View>
             <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className="w-10 h-10 bg-white/20 rounded-full items-center justify-center relative backdrop-blur-md">
@@ -207,11 +235,11 @@ export default function ShopScreen() {
           {!scratched ? (
             <View className="items-center">
                <View className="w-full h-full absolute bg-zinc-800/80 rounded-2xl" />
-               <Text className="text-white font-bold text-center">Appuyez {3 - scratchCount} fois pour gratter et révéler votre cadeau !</Text>
+               <Text className="text-white text-center" style={{ fontFamily: "Poppins_700Bold" }}>Appuyez {3 - scratchCount} fois pour gratter et révéler votre cadeau !</Text>
             </View>
           ) : (
             <View className="items-center">
-              <Text className="text-white text-sm font-bold mb-1">Félicitations !</Text>
+              <Text className="text-white text-sm mb-1" style={{ fontFamily: "Poppins_700Bold" }}>Félicitations !</Text>
               <Text className="text-[#39FF14] text-3xl font-black tracking-widest">CODE10</Text>
               <Text className="text-gray-400 text-xs mt-1">-10% de réduction immédiate</Text>
             </View>
@@ -220,10 +248,10 @@ export default function ShopScreen() {
 
         {/* C. Nouveautés */}
         <View className="mb-8">
-          <Text className="text-black dark:text-white text-lg font-bold mb-4">Nouveautés de la semaine</Text>
+          <Text className="text-black dark:text-white text-lg mb-4" style={{ fontFamily: "Poppins_700Bold" }}>Nouveautés de la semaine</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
             {displayProducts.slice(0, 3).map(prod => (
-              <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => { setSelectedProduct(prod); setIsModalVisible(true); }} className="w-32 mr-4">
+              <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => handleOpenProduct(prod)} className="w-32 mr-4">
                 <View className="w-32 h-32 bg-zinc-100 dark:bg-zinc-900 rounded-2xl mb-2 p-2 relative">
                   <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
                   {prod.isNew && (
@@ -237,7 +265,7 @@ export default function ShopScreen() {
                     </View>
                   )}
                 </View>
-                <Text className="text-black dark:text-white text-xs font-bold" numberOfLines={1}>{prod.name}</Text>
+                <Text className="text-black dark:text-white text-xs" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={1}>{prod.name}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -275,7 +303,7 @@ export default function ShopScreen() {
           {filteredProducts.map(prod => {
             const isSaved = savedProductIds.includes(prod.id);
             return (
-              <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => { setSelectedProduct(prod); setIsModalVisible(true); }} className="w-[48%]">
+              <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => handleOpenProduct(prod)} className="w-[48%]">
                 <View className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-3xl p-3 mb-3 relative">
                   <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
 
@@ -286,7 +314,7 @@ export default function ShopScreen() {
                     <Heart size={16} color={isSaved ? '#EF4444' : (isDark ? '#FFF' : '#000')} fill={isSaved ? '#EF4444' : 'transparent'} />
                   </TouchableOpacity>
                 </View>
-                <Text className="text-black dark:text-white text-sm font-bold mb-1" numberOfLines={2}>{prod.name}</Text>
+                <Text className="text-black dark:text-white text-sm mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{prod.name}</Text>
 
 
                 {prod.rating && (
@@ -314,9 +342,9 @@ export default function ShopScreen() {
         {/* F. Footer Blog */}
         <View className="bg-zinc-900 rounded-3xl p-5 mb-6 border border-zinc-800">
           <Text className="text-[#39FF14] text-xs font-bold uppercase mb-2">Conseil Bien-être</Text>
-          <Text className="text-white text-base font-bold mb-4">Pourquoi le Fonio est indispensable à votre régime ?</Text>
+          <Text className="text-white text-base mb-4" style={{ fontFamily: "Poppins_700Bold" }}>Pourquoi le Fonio est indispensable à votre régime ?</Text>
           <TouchableOpacity className="bg-white/10 self-start px-4 py-2 rounded-xl">
-             <Text className="text-white text-xs font-bold">Lire l'article</Text>
+             <Text className="text-white text-xs" style={{ fontFamily: "Poppins_700Bold" }}>Lire l'article</Text>
           </TouchableOpacity>
         </View>
 
@@ -327,13 +355,13 @@ export default function ShopScreen() {
         <View className="flex-1 bg-black/80 justify-end">
           <View className="bg-white dark:bg-zinc-950 rounded-t-[2.5rem] p-6 h-[80%]">
             <TouchableOpacity onPress={() => { setIsModalVisible(false); setSelectedProduct(null); }} className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-full items-center justify-center self-end mb-4">
-               <Text className="text-black dark:text-white font-bold text-lg">✕</Text>
+               <Text className="text-black dark:text-white text-lg" style={{ fontFamily: "Poppins_700Bold" }}>✕</Text>
             </TouchableOpacity>
 
             {selectedProduct ? (
               <ScrollView showsVerticalScrollIndicator={false}>
                 <Image source={{ uri: selectedProduct.image_url }} className="w-full h-48 resize-contain mb-6" />
-                <Text className="text-black dark:text-white text-2xl font-black mb-1">{selectedProduct.nom || selectedProduct.name}</Text>
+                <Text className="text-black dark:text-white text-2xl mb-1" style={{ fontFamily: "Poppins_900Black" }}>{selectedProduct.nom || selectedProduct.name}</Text>
                 {selectedProduct.description && <Text className="text-gray-500 mb-4">{selectedProduct.description}</Text>}
                 <View className="flex-row items-center mb-6">
                   <Text className="text-[#39FF14] text-2xl font-black mr-3">{Number(selectedProduct?.prix_standard || selectedProduct?.prix_premium || selectedProduct?.prix || selectedProduct?.price || 0).toLocaleString('fr-FR')} FCFA</Text>
@@ -345,7 +373,7 @@ export default function ShopScreen() {
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={() => {
-                      addToCart(selectedProduct);
+                      addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
                       Alert.alert(
                         "Produit ajouté !",
                         "Que souhaitez-vous faire ?",
@@ -357,7 +385,7 @@ export default function ShopScreen() {
                     }}
                     className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
                   >
-                    <Text className="text-black font-black text-lg">AJOUTER AU PANIER</Text>
+                    <Text className="text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
                   </TouchableOpacity>
 
                   {/* Bouton Partage */}
@@ -373,7 +401,7 @@ export default function ShopScreen() {
 
                 {similarProducts.length > 0 && (
                   <View>
-                    <Text className="text-gray-500 dark:text-gray-400 font-bold mb-4 uppercase">Souvent acheté ensemble</Text>
+                    <Text className="text-gray-500 dark:text-gray-400 mb-4 uppercase" style={{ fontFamily: "Poppins_700Bold" }}>Souvent acheté ensemble</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
                       {similarProducts.map(p => (
                         <TouchableOpacity key={p.id} className="w-24 mr-4" onPress={() => setSelectedProduct(p)}>
@@ -389,20 +417,20 @@ export default function ShopScreen() {
               </ScrollView>
             ) : (
               <View className="flex-1">
-                <Text className="text-black dark:text-white text-2xl font-black mb-6">Mon Panier</Text>
+                <Text className="text-black dark:text-white text-2xl mb-6" style={{ fontFamily: "Poppins_900Black" }}>Mon Panier</Text>
                 {shopCart.length > 0 ? (
                   <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
                     {shopCart.map(item => (
                       <View key={item.id} className="flex-row items-center justify-between mb-4 bg-zinc-100 dark:bg-zinc-900 p-3 rounded-2xl">
                          <View className="flex-1 pr-2">
-                           <Text className="text-black dark:text-white font-bold" numberOfLines={1}>{item.name}</Text>
+                           <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={1}>{item.name}</Text>
                            <Text className="text-[#39FF14] font-bold">{item.price.toLocaleString('fr-FR')} FCFA</Text>
                          </View>
                          <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1 ml-2">
                            <TouchableOpacity onPress={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeFromCart(item.id)}>
                              <Text className="text-white dark:text-black px-2">-</Text>
                            </TouchableOpacity>
-                           <Text className="text-white dark:text-black font-bold px-2">{item.quantity}</Text>
+                           <Text className="text-white dark:text-black px-2" style={{ fontFamily: "Poppins_700Bold" }}>{item.quantity}</Text>
                            <TouchableOpacity onPress={() => updateQuantity(item.id, item.quantity + 1)}>
                              <Text className="text-white dark:text-black px-2">+</Text>
                            </TouchableOpacity>
@@ -421,7 +449,7 @@ export default function ShopScreen() {
                   <View className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
                     <View className="flex-row justify-between items-center mb-4">
                       <Text className="text-gray-500">Total :</Text>
-                      <Text className="text-black dark:text-white text-2xl font-black">{calculatedTotal.toLocaleString('fr-FR')} FCFA</Text>
+                      <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{calculatedTotal.toLocaleString('fr-FR')} FCFA</Text>
                     </View>
 
                     <TouchableOpacity
@@ -429,7 +457,7 @@ export default function ShopScreen() {
                       onPress={handleCheckout}
                       className="bg-black dark:bg-[#39FF14] w-full py-4 rounded-2xl items-center"
                     >
-                      <Text className="text-white dark:text-black font-black text-lg">VALIDER LA COMMANDE</Text>
+                      <Text className="text-white dark:text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>VALIDER LA COMMANDE</Text>
                     </TouchableOpacity>
                   </View>
                 )}
