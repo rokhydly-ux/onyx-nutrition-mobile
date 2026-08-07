@@ -602,6 +602,12 @@ export default function DiagnosticScreen() {
   };
 
   const Step12 = () => {
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 4000);
+      return () => clearTimeout(timer);
+    }, []);
 
     return (
       <View className="flex-1 bg-white -m-6 p-6 justify-center items-center" style={{ borderTopWidth: 8, borderTopColor: '#39FF14' }}>
@@ -781,11 +787,9 @@ export default function DiagnosticScreen() {
       setStep(12);
       setIsSubmitting(false);
     } else {
-      setChatMessage("Une erreur est survenue lors de la création. Veuillez réessayer.");
-      setTimeout(() => {
-        setStep(9);
-        setIsSubmitting(false);
-      }, 3000);
+      // NEVER go backwards. Alert the user and let them retry without changing the step.
+      alert("Erreur critique: Impossible de créer le compte. Veuillez vérifier votre connexion ou vos identifiants.");
+      setIsSubmitting(false);
     }
   };
 
