@@ -28,9 +28,9 @@ export const useShopStore = create<ShopStore>((set) => ({
         ),
       };
     }
-    const rawPrice = product?.prix || product?.price || product?.prix_standard || 0;
+    const rawPrice = product?.prix_standard || product?.prix_premium || product?.prix || product?.price || 0;
     return {
-      shopCart: [...state.shopCart, { ...product, price: Number(rawPrice), quantity: 1 }]
+      shopCart: [...state.shopCart, { ...product, name: product.nom || product.name || 'Produit sans nom', price: Number(rawPrice), quantity: 1 }]
     };
   }),
   removeFromCart: (productId) => set((state) => ({

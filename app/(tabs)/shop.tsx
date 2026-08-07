@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Heart } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { useColorScheme } from 'nativewind';
-import { Modal, Vibration, Alert, Linking, Pressable } from 'react-native';
+import { Modal, Vibration, Alert, Linking, Pressable, Share } from 'react-native';
 import { useShopStore } from '../../lib/store';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -150,6 +150,16 @@ export default function ShopScreen() {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Découvre ${selectedProduct?.nom || selectedProduct?.name} sur l'application Onyx Nutrition !`,
+      });
+    } catch (error: any) {
+      console.error(error.message);
+    }
+  };
+
   const similarProducts = selectedProduct ? products.filter(p => p.categorie_nom === selectedProduct.categorie_nom && p.id !== selectedProduct.id).slice(0, 3) : [];
 
   return (
@@ -275,7 +285,7 @@ export default function ShopScreen() {
 
                 <View className="flex-row items-end flex-wrap">
                   <Text className="text-[#39FF14] text-base font-black mr-2">
-                    {Number(prod?.prix || prod?.price || prod?.prix_standard || 0).toLocaleString('fr-FR')} FCFA
+                    {Number(prod?.prix_standard || prod?.prix_premium || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} FCFA
                   </Text>
                   {prod.old_price && (
                     <Text className="text-gray-400 text-xs line-through mb-0.5">
@@ -310,16 +320,41 @@ export default function ShopScreen() {
             {selectedProduct ? (
               <ScrollView showsVerticalScrollIndicator={false}>
                 <Image source={{ uri: selectedProduct.image_url }} className="w-full h-48 resize-contain mb-6" />
-                <Text className="text-black dark:text-white text-2xl font-black mb-2">{selectedProduct.name}</Text>
-                <Text className="text-[#39FF14] text-xl font-bold mb-4">{Number(selectedProduct?.prix || selectedProduct?.price || 0).toLocaleString('fr-FR')} FCFA</Text>
+                <Text className="text-black dark:text-white text-2xl font-black mb-1">{selectedProduct.nom || selectedProduct.name}</Text>
+                {selectedProduct.description && <Text className="text-gray-500 mb-4">{selectedProduct.description}</Text>}
+                <View className="flex-row items-center mb-6">
+                  <Text className="text-[#39FF14] text-2xl font-black mr-3">{Number(selectedProduct?.prix_standard || selectedProduct?.prix_premium || selectedProduct?.prix || selectedProduct?.price || 0).toLocaleString('fr-FR')} FCFA</Text>
+                  {selectedProduct.old_price && <Text className="text-gray-400 line-through text-sm">{Number(selectedProduct.old_price).toLocaleString('fr-FR')} FCFA</Text>}
+                </View>
 
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => addToCart(selectedProduct)}
-                  className="bg-[#39FF14] w-full py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mb-8"
-                >
-                  <Text className="text-black font-black text-lg">AJOUTER AU PANIER</Text>
-                </TouchableOpacity>
+                                <View className="flex-row items-center justify-between mb-8 space-x-2">
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      addToCart(selectedProduct);
+                      Alert.alert(
+                        "Produit ajouté !",
+                        "Que souhaitez-vous faire ?",
+                        [
+                          { text: "Continuer mes achats", style: "cancel", onPress: () => setIsModalVisible(false) },
+                          { text: "🛒 Voir mon panier", onPress: () => setSelectedProduct(null) } // Setting product null shows the cart view
+                        ]
+                      );
+                    }}
+                    className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
+                  >
+                    <Text className="text-black font-black text-lg">AJOUTER AU PANIER</Text>
+                  </TouchableOpacity>
+
+                  {/* Bouton Partage */}
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={handleShare}
+                    className="bg-zinc-200 dark:bg-zinc-800 w-14 h-14 rounded-2xl items-center justify-center"
+                  >
+                    <Text className="text-xl">↗️</Text>
+                  </TouchableOpacity>
+                </View>
 
                 {similarProducts.length > 0 && (
                   <View>
