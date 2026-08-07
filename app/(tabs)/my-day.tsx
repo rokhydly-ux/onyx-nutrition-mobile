@@ -184,6 +184,7 @@ export default function MyDayScreen() {
 
         await supabase
           .from('nutrition_daily_logs')
+
           .update({
             calories_consumed: updatedCalories,
             protein_consumed: updatedProtein,
@@ -191,6 +192,7 @@ export default function MyDayScreen() {
             fats_consumed: updatedFats,
           })
           .eq('id', existingLog.id);
+
 
         setDailyStats(prev => ({
           ...prev,
@@ -229,6 +231,7 @@ export default function MyDayScreen() {
       if (existingLog) {
         await supabase
           .from('nutrition_daily_logs')
+
           .update({
             calories_consumed: updatedCalories,
             protein_consumed: updatedProtein,
@@ -248,6 +251,7 @@ export default function MyDayScreen() {
             fats_consumed: updatedFats,
           });
       }
+
 
       setDailyStats(prev => ({
         ...prev,
@@ -285,6 +289,7 @@ export default function MyDayScreen() {
       )}
       <ScrollView className="flex-1 px-4 pt-12 pb-24" showsVerticalScrollIndicator={false}>
 
+
         {/* 1. EN-TÊTE DE PAGE */}
         <View className="mb-6">
           <TouchableOpacity onPress={() => router.back()} className="flex-row items-center mb-4">
@@ -296,6 +301,7 @@ export default function MyDayScreen() {
             <View className="flex-1">
               <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-row items-center">
+
                   <Image
                     source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535958/A_cute__highly_detailed_3D_202606151505_2_akqmx4.jpg' }}
                     className="w-10 h-10 rounded-xl mr-3"
@@ -308,11 +314,13 @@ export default function MyDayScreen() {
             </View>
 
             <View className="bg-zinc-100 dark:bg-zinc-900 rounded-full p-1 flex-row mt-2">
+
               <TouchableOpacity
                 onPress={() => setMode('guided')}
                 className={`px-3 py-1.5 rounded-full ${mode === 'guided' ? 'bg-black dark:bg-[#39FF14]' : 'bg-transparent'}`}>
                 <Text className={`text-xs font-bold ${mode === 'guided' ? (isDark ? 'text-black' : 'text-white') : 'text-gray-500 dark:text-gray-400'}`}>Mode Guidé</Text>
               </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={() => setMode('free')}
                 className={`px-3 py-1.5 rounded-full ${mode === 'free' ? 'bg-black dark:bg-[#39FF14]' : 'bg-transparent'}`}>
@@ -339,6 +347,7 @@ export default function MyDayScreen() {
               </CircularProgress>
           </View>
 
+
           <View className="w-full">
             <MacroBar label="Protéines" current={dailyStats.protein_consumed} max={profile.protein_goal} color="#3B82F6" />
             <MacroBar label="Glucides" current={dailyStats.carbs_consumed} max={profile.carbs_goal} color="#EAB308" />
@@ -359,6 +368,7 @@ export default function MyDayScreen() {
                     <Text className="text-gray-500 dark:text-gray-400 text-xs font-medium font-poppins-medium">
                       {meal.calories} kcal • {meal.p}g • {meal.c}g • {meal.f}g
                     </Text>
+
                     <TouchableOpacity
                       onPress={() => handleLogMeal(meal)}
                       activeOpacity={0.7}
@@ -371,6 +381,7 @@ export default function MyDayScreen() {
               </View>
             ))}
 
+
             {mode === 'free' && (
               <View>
                 <TouchableOpacity
@@ -379,6 +390,7 @@ export default function MyDayScreen() {
                   className="border-2 border-dashed border-[#39FF14] p-4 rounded-2xl items-center mt-4 mb-2 flex-row justify-center">
                   <Text className="text-[#39FF14] text-xs font-bold uppercase mr-2" style={{ fontFamily: 'Poppins_700Bold' }}>+ Ajouter un aliment</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   activeOpacity={0.7}
                   className="bg-zinc-800 p-4 rounded-2xl items-center flex-row justify-center opacity-50">
@@ -390,6 +402,7 @@ export default function MyDayScreen() {
 
         {/* 4. LES 3 WIDGETS DU BAS */}
         <View className="space-y-4 mb-24">
+
 
           {/* A. Widget Hydratation */}
           <TouchableOpacity activeOpacity={0.9} className="rounded-[2rem] overflow-hidden bg-zinc-900">
@@ -403,6 +416,7 @@ export default function MyDayScreen() {
                 <Text className="text-white text-lg font-black font-poppins-bold">{dailyStats.water_glasses} <Text className="text-gray-300 text-sm">/ 8 verres</Text></Text>
               </View>
               <Text className="text-gray-300 text-xs mb-6 font-poppins">L'eau booste votre métabolisme de 30% en 10 min</Text>
+
 
               <View className="flex-row flex-wrap justify-between gap-y-4 px-2">
                  {Array(8).fill(0).map((_, idx) => (
@@ -423,6 +437,7 @@ export default function MyDayScreen() {
           </TouchableOpacity>
 
           {/* B. Widget Refaire mon diagnostic */}
+
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() => router.push('/diagnostic')}
@@ -441,6 +456,7 @@ export default function MyDayScreen() {
           </TouchableOpacity>
 
           {/* C. Widget BILAN DU JOUR */}
+
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() => console.log('Open Daily Report Modal')}
@@ -458,12 +474,14 @@ export default function MyDayScreen() {
               <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">Sélection 100% naturelle personnalisée selon votre métabolisme</Text>
             </View>
 
+
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}>
               {(products.length > 0 ? products : [
                 { id: '1', name: 'Thé Détox Minceur', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png', price: 15000 },
                 { id: '2', name: 'Graines de Chia Bio', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png', price: 8000 },
                 { id: '3', name: 'Infusion Sommeil', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png', price: 12000 }
               ]).map(product => (
+
                 <Pressable
                   key={product.id}
                   className="w-44 bg-white dark:bg-zinc-900 rounded-3xl p-3 border border-zinc-100 dark:border-zinc-800 flex-col justify-between shadow-sm"

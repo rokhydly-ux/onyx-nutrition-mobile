@@ -119,6 +119,7 @@ export default function DiagnosticScreen() {
 
   const step9Scale = useRef(new Animated.Value(1)).current;
 
+
   const step10Card1Anim = useRef(new Animated.Value(0)).current;
   const step10Card2Anim = useRef(new Animated.Value(0)).current;
   const step10Card3Anim = useRef(new Animated.Value(0)).current;
@@ -459,6 +460,7 @@ export default function DiagnosticScreen() {
         <View className="absolute inset-0 bg-black/60 dark:bg-black/80" />
 
         <Animated.View style={{ transform: [{ scale }] }} className="w-32 h-32 rounded-full shadow-lg shadow-[#39FF14]/50 mb-8 items-center justify-center bg-gray-900 overflow-visible">
+
            <Image
              source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1784209735/557516971_10235324002253110_1070574324835198049_n_ch9we7.jpg" }}
              style={{ width: 128, height: 128, borderRadius: 64, borderWidth: 4, borderColor: '#39FF14' }}
@@ -683,6 +685,7 @@ export default function DiagnosticScreen() {
         const authEmail = cleanPhone.includes('@') ? cleanPhone : `${cleanPhone}@clients.onyxcrm.com`;
         const defaultPassword = cleanPhone.slice(-8).padStart(8, '0');
 
+
         let userId = null;
 
         // ÉTAPE A : Tentative de connexion (Si le compte existe déjà)
@@ -712,6 +715,7 @@ export default function DiagnosticScreen() {
           });
 
           const apiResult = await response.json();
+
 
           if (!response.ok) {
             throw new Error(apiResult.message || "Erreur lors de la création du compte via API");
@@ -751,6 +755,7 @@ export default function DiagnosticScreen() {
               message: `Objectif: ${calories} kcal`
             }
           ]);
+
 
         if (leadsError) console.error("Erreur insertion Lead:", leadsError);
 

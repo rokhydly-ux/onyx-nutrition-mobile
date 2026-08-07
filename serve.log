@@ -1,0 +1,94 @@
+npm warn exec The following package was not found and will be installed: serve@14.2.6
+ INFO  Accepting connections at http://localhost:3000
+ HTTP  8/5/2026 4:48:21 PM ::1 GET /
+ HTTP  8/5/2026 4:48:21 PM ::1 Returned 200 in 286 ms
+ HTTP  8/5/2026 4:48:22 PM ::1 GET /_expo/static/css/web-f4aece2771d8646d4fc9d1fce7daa885.css
+ HTTP  8/5/2026 4:48:22 PM ::1 GET /_expo/static/js/web/entry-e2cef4800da11dca606b5d8ec7704363.js
+ HTTP  8/5/2026 4:48:22 PM ::1 Returned 200 in 7 ms
+ HTTP  8/5/2026 4:48:22 PM ::1 Returned 200 in 36 ms
+ HTTP  8/5/2026 4:48:22 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/400Regular/Poppins_400Regular.093ee89be9ede30383f39a899c485a82.ttf
+ HTTP  8/5/2026 4:48:22 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/500Medium/Poppins_500Medium.bf59c687bc6d3a70204d3944082c5cc0.ttf
+ HTTP  8/5/2026 4:48:22 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/600SemiBold/Poppins_600SemiBold.6f1520d107205975713ba09df778f93f.ttf
+ HTTP  8/5/2026 4:48:22 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/700Bold/Poppins_700Bold.08c20a487911694291bd8c5de41315ad.ttf
+ HTTP  8/5/2026 4:48:22 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/800ExtraBold/Poppins_800ExtraBold.d45bdbc2d4a98c1ecb17821a1dbbd3a4.ttf
+ HTTP  8/5/2026 4:48:22 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/900Black/Poppins_900Black.14d00dab1f6802e787183ecab5cce85e.ttf
+ HTTP  8/5/2026 4:48:22 PM ::1 Returned 200 in 12 ms
+ HTTP  8/5/2026 4:48:22 PM ::1 Returned 200 in 11 ms
+ HTTP  8/5/2026 4:48:22 PM ::1 Returned 200 in 11 ms
+ HTTP  8/5/2026 4:48:22 PM ::1 Returned 200 in 11 ms
+ HTTP  8/5/2026 4:48:22 PM ::1 Returned 200 in 11 ms
+ HTTP  8/5/2026 4:48:22 PM ::1 Returned 200 in 12 ms
+ HTTP  8/5/2026 4:48:54 PM ::1 GET /menu
+ HTTP  8/5/2026 4:48:54 PM ::1 Returned 200 in 3 ms
+ HTTP  8/5/2026 4:48:54 PM ::1 GET /_expo/static/css/web-f4aece2771d8646d4fc9d1fce7daa885.css
+ HTTP  8/5/2026 4:48:54 PM ::1 Returned 304 in 1 ms
+ HTTP  8/5/2026 4:48:54 PM ::1 GET /_expo/static/js/web/entry-e2cef4800da11dca606b5d8ec7704363.js
+ HTTP  8/5/2026 4:48:54 PM ::1 Returned 304 in 2 ms
+ HTTP  8/5/2026 4:48:55 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/400Regular/Poppins_400Regular.093ee89be9ede30383f39a899c485a82.ttf
+ HTTP  8/5/2026 4:48:55 PM ::1 Returned 304 in 1 ms
+ HTTP  8/5/2026 4:48:55 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/500Medium/Poppins_500Medium.bf59c687bc6d3a70204d3944082c5cc0.ttf
+ HTTP  8/5/2026 4:48:55 PM ::1 Returned 304 in 0 ms
+ HTTP  8/5/2026 4:48:55 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/600SemiBold/Poppins_600SemiBold.6f1520d107205975713ba09df778f93f.ttf
+ HTTP  8/5/2026 4:48:55 PM ::1 Returned 304 in 1 ms
+ HTTP  8/5/2026 4:48:55 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/700Bold/Poppins_700Bold.08c20a487911694291bd8c5de41315ad.ttf
+ HTTP  8/5/2026 4:48:55 PM ::1 Returned 304 in 1 ms
+ HTTP  8/5/2026 4:48:55 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/800ExtraBold/Poppins_800ExtraBold.d45bdbc2d4a98c1ecb17821a1dbbd3a4.ttf
+ HTTP  8/5/2026 4:48:55 PM ::1 Returned 304 in 1 ms
+ HTTP  8/5/2026 4:48:55 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/900Black/Poppins_900Black.14d00dab1f6802e787183ecab5cce85e.ttf
+ HTTP  8/5/2026 4:48:55 PM ::1 Returned 304 in 0 ms
+ HTTP  8/6/2026 5:10:33 PM ::1 GET /
+ HTTP  8/6/2026 5:10:33 PM ::1 Returned 200 in 71 ms
+ HTTP  8/6/2026 5:10:33 PM ::1 GET /_expo/static/css/web-f4aece2771d8646d4fc9d1fce7daa885.css
+ HTTP  8/6/2026 5:10:33 PM ::1 GET /_expo/static/js/web/entry-ea4745d5853007d771a3a52abd7f7d37.js
+ HTTP  8/6/2026 5:10:33 PM ::1 Returned 200 in 10 ms
+ HTTP  8/6/2026 5:10:33 PM ::1 Returned 200 in 172 ms
+ HTTP  8/6/2026 5:10:35 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/400Regular/Poppins_400Regular.093ee89be9ede30383f39a899c485a82.ttf
+ HTTP  8/6/2026 5:10:35 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/500Medium/Poppins_500Medium.bf59c687bc6d3a70204d3944082c5cc0.ttf
+ HTTP  8/6/2026 5:10:35 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/600SemiBold/Poppins_600SemiBold.6f1520d107205975713ba09df778f93f.ttf
+ HTTP  8/6/2026 5:10:35 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/700Bold/Poppins_700Bold.08c20a487911694291bd8c5de41315ad.ttf
+ HTTP  8/6/2026 5:10:35 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/800ExtraBold/Poppins_800ExtraBold.d45bdbc2d4a98c1ecb17821a1dbbd3a4.ttf
+ HTTP  8/6/2026 5:10:35 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/900Black/Poppins_900Black.14d00dab1f6802e787183ecab5cce85e.ttf
+ HTTP  8/6/2026 5:10:35 PM ::1 Returned 200 in 13 ms
+ HTTP  8/6/2026 5:10:35 PM ::1 Returned 200 in 15 ms
+ HTTP  8/6/2026 5:10:35 PM ::1 Returned 200 in 15 ms
+ HTTP  8/6/2026 5:10:35 PM ::1 Returned 200 in 18 ms
+ HTTP  8/6/2026 5:10:35 PM ::1 Returned 200 in 19 ms
+ HTTP  8/6/2026 5:10:35 PM ::1 Returned 200 in 17 ms
+ HTTP  8/6/2026 5:11:06 PM ::1 GET /menu
+ HTTP  8/6/2026 5:11:06 PM ::1 Returned 200 in 3 ms
+ HTTP  8/6/2026 5:11:06 PM ::1 GET /_expo/static/css/web-f4aece2771d8646d4fc9d1fce7daa885.css
+ HTTP  8/6/2026 5:11:06 PM ::1 Returned 304 in 1 ms
+ HTTP  8/6/2026 5:11:06 PM ::1 GET /_expo/static/js/web/entry-ea4745d5853007d771a3a52abd7f7d37.js
+ HTTP  8/6/2026 5:11:06 PM ::1 Returned 304 in 0 ms
+ HTTP  8/6/2026 5:11:07 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/400Regular/Poppins_400Regular.093ee89be9ede30383f39a899c485a82.ttf
+ HTTP  8/6/2026 5:11:07 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/500Medium/Poppins_500Medium.bf59c687bc6d3a70204d3944082c5cc0.ttf
+ HTTP  8/6/2026 5:11:07 PM ::1 Returned 304 in 2 ms
+ HTTP  8/6/2026 5:11:07 PM ::1 Returned 304 in 3 ms
+ HTTP  8/6/2026 5:11:07 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/600SemiBold/Poppins_600SemiBold.6f1520d107205975713ba09df778f93f.ttf
+ HTTP  8/6/2026 5:11:07 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/700Bold/Poppins_700Bold.08c20a487911694291bd8c5de41315ad.ttf
+ HTTP  8/6/2026 5:11:07 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/800ExtraBold/Poppins_800ExtraBold.d45bdbc2d4a98c1ecb17821a1dbbd3a4.ttf
+ HTTP  8/6/2026 5:11:07 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/900Black/Poppins_900Black.14d00dab1f6802e787183ecab5cce85e.ttf
+ HTTP  8/6/2026 5:11:07 PM ::1 Returned 304 in 4 ms
+ HTTP  8/6/2026 5:11:07 PM ::1 Returned 304 in 1 ms
+ HTTP  8/6/2026 5:11:07 PM ::1 Returned 304 in 2 ms
+ HTTP  8/6/2026 5:11:07 PM ::1 Returned 304 in 1 ms
+ HTTP  8/6/2026 6:04:28 PM ::1 GET /
+ HTTP  8/6/2026 6:04:28 PM ::1 Returned 200 in 111 ms
+ HTTP  8/6/2026 6:05:00 PM ::1 GET /menu
+ HTTP  8/6/2026 6:05:00 PM ::1 Returned 200 in 11 ms
+ HTTP  8/6/2026 6:05:00 PM ::1 GET /_expo/static/css/web-50595d508c0a9e2fb152a0441ee5a1e2.css
+ HTTP  8/6/2026 6:05:00 PM ::1 GET /_expo/static/js/web/entry-862513076cea133b4a4786e3617617cb.js
+ HTTP  8/6/2026 6:05:00 PM ::1 Returned 200 in 7 ms
+ HTTP  8/6/2026 6:05:00 PM ::1 Returned 200 in 164 ms
+ HTTP  8/6/2026 6:05:01 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/400Regular/Poppins_400Regular.093ee89be9ede30383f39a899c485a82.ttf
+ HTTP  8/6/2026 6:05:01 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/500Medium/Poppins_500Medium.bf59c687bc6d3a70204d3944082c5cc0.ttf
+ HTTP  8/6/2026 6:05:01 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/600SemiBold/Poppins_600SemiBold.6f1520d107205975713ba09df778f93f.ttf
+ HTTP  8/6/2026 6:05:01 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/700Bold/Poppins_700Bold.08c20a487911694291bd8c5de41315ad.ttf
+ HTTP  8/6/2026 6:05:01 PM ::1 Returned 200 in 11 ms
+ HTTP  8/6/2026 6:05:01 PM ::1 Returned 200 in 11 ms
+ HTTP  8/6/2026 6:05:01 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/800ExtraBold/Poppins_800ExtraBold.d45bdbc2d4a98c1ecb17821a1dbbd3a4.ttf
+ HTTP  8/6/2026 6:05:01 PM ::1 Returned 200 in 12 ms
+ HTTP  8/6/2026 6:05:01 PM ::1 Returned 200 in 11 ms
+ HTTP  8/6/2026 6:05:01 PM ::1 GET /assets/node_modules/@expo-google-fonts/poppins/900Black/Poppins_900Black.14d00dab1f6802e787183ecab5cce85e.ttf
+ HTTP  8/6/2026 6:05:01 PM ::1 Returned 200 in 17 ms
+ HTTP  8/6/2026 6:05:01 PM ::1 Returned 200 in 20 ms

@@ -17,6 +17,7 @@ export default function ShopScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+
   const [products, setProducts] = useState<any[]>([]);
   const [savedProductIds, setSavedProductIds] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState('Tous');
@@ -29,6 +30,7 @@ export default function ShopScreen() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState('');
+
 
   const cartItemCount = shopCart.reduce((acc, item) => acc + item.quantity, 0);
   const calculatedTotal = shopCart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -61,6 +63,7 @@ export default function ShopScreen() {
 
   const toggleSaveProduct = async (productId: string) => {
     const isSaved = savedProductIds.includes(productId);
+
     const newSaved = isSaved
       ? savedProductIds.filter(id => id !== productId)
       : [...savedProductIds, productId];
@@ -97,6 +100,7 @@ export default function ShopScreen() {
     { id: '4', name: 'Farine de Fonio', image_url: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png', price: 4000 },
   ];
 
+
   const filteredProducts = activeFilter === '❤️ Sauvegardés'
     ? displayProducts.filter(p => savedProductIds.includes(p.id))
     : displayProducts;
@@ -105,10 +109,12 @@ export default function ShopScreen() {
   const handleCheckout = async () => {
     if (shopCart.length === 0) return;
 
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       const userId = session.user.id;
+
 
       const { data: profile } = await supabase
         .from('clients')
@@ -136,6 +142,7 @@ export default function ShopScreen() {
       if (appliedPromo) cartText += ` (Code ${appliedPromo} appliqué)`;
 
       const waURL = `whatsapp://send?phone=+221770000000&text=${encodeURIComponent(cartText)}`;
+
 
       Linking.openURL(waURL).catch(() => {
         Alert.alert("Erreur", "WhatsApp n'est pas installé sur cet appareil.");
@@ -166,6 +173,7 @@ export default function ShopScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans">
       <ScrollView className="flex-1 px-4 pt-4 pb-28" showsVerticalScrollIndicator={false}>
 
+
         {/* A. Hero Section */}
         <View className="h-52 rounded-[2.5rem] p-6 mb-6 overflow-hidden bg-zinc-900 justify-between">
           <ImageBackground
@@ -190,6 +198,7 @@ export default function ShopScreen() {
         </View>
 
         {/* B. Ticket à Gratter */}
+
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={handleScratch}
@@ -237,6 +246,7 @@ export default function ShopScreen() {
         {/* D. Filtres & Recherche */}
         <View className="flex-row items-center bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-3 mb-4">
           <Search color={isDark ? '#9CA3AF' : '#6B7280'} size={20} />
+
           <TextInput
             placeholder="Rechercher un produit..."
             placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
@@ -248,6 +258,7 @@ export default function ShopScreen() {
           {FILTERS.map(filter => {
             const isActive = activeFilter === filter;
             return (
+
               <TouchableOpacity
                 key={filter}
                 onPress={() => setActiveFilter(filter)}
@@ -267,6 +278,7 @@ export default function ShopScreen() {
               <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => { setSelectedProduct(prod); setIsModalVisible(true); }} className="w-[48%]">
                 <View className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-3xl p-3 mb-3 relative">
                   <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
+
                   <TouchableOpacity
                     onPress={() => toggleSaveProduct(prod.id)}
                     className="absolute top-3 right-3 w-8 h-8 bg-white dark:bg-black rounded-full items-center justify-center shadow-sm"
@@ -275,6 +287,7 @@ export default function ShopScreen() {
                   </TouchableOpacity>
                 </View>
                 <Text className="text-black dark:text-white text-sm font-bold mb-1" numberOfLines={2}>{prod.name}</Text>
+
 
                 {prod.rating && (
                   <View className="flex-row items-center mb-1">
@@ -327,6 +340,7 @@ export default function ShopScreen() {
                   {selectedProduct.old_price && <Text className="text-gray-400 line-through text-sm">{Number(selectedProduct.old_price).toLocaleString('fr-FR')} FCFA</Text>}
                 </View>
 
+
                                 <View className="flex-row items-center justify-between mb-8 space-x-2">
                   <TouchableOpacity
                     activeOpacity={0.8}
@@ -347,6 +361,7 @@ export default function ShopScreen() {
                   </TouchableOpacity>
 
                   {/* Bouton Partage */}
+
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={handleShare}
@@ -401,12 +416,14 @@ export default function ShopScreen() {
                   </View>
                 )}
 
+
                 {shopCart.length > 0 && (
                   <View className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
                     <View className="flex-row justify-between items-center mb-4">
                       <Text className="text-gray-500">Total :</Text>
                       <Text className="text-black dark:text-white text-2xl font-black">{calculatedTotal.toLocaleString('fr-FR')} FCFA</Text>
                     </View>
+
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={handleCheckout}

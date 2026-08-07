@@ -202,6 +202,7 @@ export default function HomeScreen() {
           .eq('client_id', userId)
           .maybeSingle();
 
+
         if (nutritionError) {
           console.error("RLS Error reading nutrition_profiles :", nutritionError);
         }
@@ -215,6 +216,7 @@ export default function HomeScreen() {
           .eq('log_date', todayDateString)
           .maybeSingle();
 
+
         if (todayLogError) {
           console.error("RLS Error reading nutrition_daily_logs :", todayLogError);
         }
@@ -227,11 +229,13 @@ export default function HomeScreen() {
           .order('log_date', { ascending: false })
           .limit(1);
 
+
         if (weightError) {
           console.error("RLS Error reading nutrition_weight_logs :", weightError);
         }
 
         // --- MAJ des États (State Mapping) ---
+
 
         const currentWeight = weightLogs?.[0]?.weight || nutritionData?.diagnostic_data?.currentWeight || "--";
         const firstName = profileData?.full_name || profileData?.name || profileData?.first_name || 'MEMBRE';
@@ -345,6 +349,7 @@ export default function HomeScreen() {
         {/* 4 Stat Cards Row */}
         <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(tabs)/my-day')} className="flex-row justify-between mb-6 space-x-2">
           {/* Poids */}
+
           <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/weight')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
             <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783280413/Woman_standing_on_scale_smiling_202607051938_e6h39p.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.25 }}>
               <View className="flex-row items-center justify-between mb-2">
@@ -416,12 +421,14 @@ export default function HomeScreen() {
                 </View>
                 <View className="flex-row flex-wrap justify-around gap-y-4 pt-3 px-2 mt-auto w-full">
                   {Array(8).fill(0).map((_, idx) => (
+
                     <TouchableOpacity
                       key={idx}
                       className="w-[20%]"
                       hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                       onPress={() => handleUpdateWater(idx + 1)}
                     >
+
                       <Image
                         source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675042/2_maewiy.png' }}
                         style={{ width: 16, height: 22, opacity: (idx + 1) <= dailyStats.water_glasses ? 1 : 0.4 }}
@@ -493,6 +500,7 @@ export default function HomeScreen() {
 
           {/* Buttons */}
           <View className="flex-row space-x-3">
+
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => router.push('/(tabs)/my-day')}
@@ -500,6 +508,7 @@ export default function HomeScreen() {
               <Coffee size={16} color={isDark ? '#A3A3A3' : '#6B7280'} />
               <Text className="text-gray-700 dark:text-gray-300 text-xs font-bold ml-2 uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>LOGUER REPAS</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => router.push('/(tabs)/my-day?openReport=true')}
@@ -523,6 +532,7 @@ export default function HomeScreen() {
 
             {meals.length > 0 ? meals.map((meal, index) => {
                // Assign default images alternatively for demo purposes based on index or meal type
+
                const imageUri = index % 2 === 0
                  ? 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg'
                  : 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg';

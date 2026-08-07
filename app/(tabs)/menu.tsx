@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { View, Text, ActivityIndicator, Dimensions, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
@@ -16,6 +17,7 @@ export default function MenuScreen() {
       setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
+
 
       // Attempt to fetch menu
       const { data } = await supabase
@@ -44,6 +46,7 @@ export default function MenuScreen() {
   }
 
   return (
+
     <SafeAreaView className="flex-1 bg-white dark:bg-black p-4">
       <Text className="text-black dark:text-white text-2xl mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>Sama Menu</Text>
       {menu ? (
