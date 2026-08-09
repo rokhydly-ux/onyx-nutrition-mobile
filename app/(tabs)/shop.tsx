@@ -5,7 +5,7 @@ import { Search, Heart } from 'lucide-react-native';
 import GlobalHeader from '../../components/GlobalHeader';
 import { supabase } from '../../lib/supabase';
 import { useColorScheme } from 'nativewind';
-import { Modal, Vibration, Alert, Linking, Pressable, Share } from 'react-native';
+import { Modal, Vibration, Alert, Linking, Pressable, Share, FlatList } from 'react-native';
 import { useShopStore } from '../../lib/store';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -340,6 +340,11 @@ export default function ShopScreen() {
               <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => handleOpenProduct(prod)} className="w-[48%]">
                 <View className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-3xl p-3 mb-3 relative">
                   <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
+                  {prod.stock <= 10 && (
+                    <View className="absolute top-3 left-3 bg-red-500 rounded-md px-2 py-1">
+                      <Text className="text-white text-[8px] font-bold uppercase">Quantité Limitée</Text>
+                    </View>
+                  )}
 
                   <TouchableOpacity
                     onPress={() => toggleSaveProduct(prod.id)}
@@ -396,7 +401,7 @@ export default function ShopScreen() {
               <ScrollView showsVerticalScrollIndicator={false}>
                 <Image source={{ uri: selectedProduct.image_url }} className="w-full h-48 resize-contain mb-6" />
                 <Text className="text-black dark:text-white text-2xl mb-1" style={{ fontFamily: "Poppins_900Black" }}>{selectedProduct.nom || selectedProduct.name}</Text>
-                {selectedProduct.description && <Text className="text-gray-500 mb-4">{selectedProduct.description}</Text>}
+                {(selectedProduct.description_courte || selectedProduct.description) && <Text className="text-gray-500 mb-4">{(selectedProduct.description_courte || selectedProduct.description)}</Text>}
                 <View className="flex-row items-center mb-6">
                   <Text className="text-[#39FF14] text-2xl font-black mr-3">{Number(selectedProduct?.prix_standard || selectedProduct?.prix_premium || selectedProduct?.prix || selectedProduct?.price || 0).toLocaleString('fr-FR')} FCFA</Text>
                   {selectedProduct.old_price && <Text className="text-gray-400 line-through text-sm">{Number(selectedProduct.old_price).toLocaleString('fr-FR')} FCFA</Text>}
@@ -436,16 +441,20 @@ export default function ShopScreen() {
                 {similarProducts.length > 0 && (
                   <View>
                     <Text className="text-gray-500 dark:text-gray-400 mb-4 uppercase" style={{ fontFamily: "Poppins_700Bold" }}>Souvent acheté ensemble</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-                      {similarProducts.map(p => (
-                        <TouchableOpacity key={p.id} className="w-24 mr-4" onPress={() => setSelectedProduct(p)}>
+                    <FlatList
+                      data={similarProducts}
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      keyExtractor={item => item.id}
+                      renderItem={({ item: p }) => (
+                        <TouchableOpacity className="w-24 mr-4" onPress={() => setSelectedProduct(p)}>
                           <View className="w-24 h-24 bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-2 mb-2">
                              <Image source={{ uri: p.image_url }} className="w-full h-full resize-contain" />
                           </View>
                           <Text className="text-black dark:text-white text-[10px]" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{p.nom || p.name}</Text>
                         </TouchableOpacity>
-                      ))}
-                    </ScrollView>
+                      )}
+                    />
                   </View>
                 )}
               </ScrollView>
