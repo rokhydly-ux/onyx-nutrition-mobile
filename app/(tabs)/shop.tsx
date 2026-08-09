@@ -33,6 +33,9 @@ export default function ShopScreen() {
   const [appliedPromo, setAppliedPromo] = useState('');
   const [isPremium, setIsPremium] = useState(false);
 
+  const [showAddSuccess, setShowAddSuccess] = useState(false);
+  const [showCheckoutOptions, setShowCheckoutOptions] = useState(false);
+
   useEffect(() => {
     checkPremiumStatus();
   }, []);
@@ -156,56 +159,7 @@ export default function ShopScreen() {
       cartText += `\nTotal: ${finalTotal.toLocaleString('fr-FR')} FCFA`;
       if (appliedPromo) cartText += ` (Code ${appliedPromo} appliqué)`;
 
-      Alert.alert(
-        "Validation du Panier",
-        "Comment souhaitez-vous procéder ?",
-        [
-          {
-            text: "Commander Classiquement",
-            onPress: async () => {
-               // Update client address if collected (stub since UI isn't asking yet)
-               await supabase.from('clients').update({ address: 'A configurer' }).eq('id', userId);
-
-               await supabase.from('nutrition_orders').insert([{
-                 client_id: userId,
-                 client_name: profile?.full_name || 'Inconnu',
-                 phone: profile?.phone || '',
-                 items: shopCart,
-                 total: finalTotal,
-                 status: 'Nouveau',
-                 promo_code: appliedPromo
-               }]);
-               clearCart();
-               setIsModalVisible(false);
-               setSelectedProduct(null);
-               Alert.alert("Succès", "Votre commande a été enregistrée.");
-            }
-          },
-          {
-            text: "M'envoyer mon panier (WhatsApp)",
-            onPress: async () => {
-               await supabase.from('leads').insert([{
-                 full_name: profile?.full_name || 'Inconnu',
-                 phone: profile?.phone || '',
-                 intent: 'Sauvegarde Panier WhatsApp',
-                 status: 'Nouveau',
-                 message: cartText,
-                 saas: "Nutrition à l'Africaine"
-               }]);
-
-               const waURL = `whatsapp://send?phone=+221770000000&text=${encodeURIComponent(cartText)}`;
-               Linking.openURL(waURL).catch(() => {
-                 Alert.alert("Erreur", "WhatsApp n'est pas installé sur cet appareil.");
-               });
-
-               clearCart();
-               setIsModalVisible(false);
-               setSelectedProduct(null);
-            }
-          },
-          { text: "Annuler", style: "cancel" }
-        ]
-      );
+      setShowCheckoutOptions(true);
 
     } catch(err) {
       console.error(err);
@@ -220,6 +174,74 @@ export default function ShopScreen() {
       });
     } catch (error: any) {
       console.error(error.message);
+    }
+  };
+
+
+  const executeClassicCheckout = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+      const { data: profile } = await supabase.from('clients').select('full_name, phone').eq('id', userId).maybeSingle();
+      const finalTotal = appliedPromo ? calculatedTotal * 0.9 : calculatedTotal;
+
+      await supabase.from('clients').update({ address: 'A configurer' }).eq('id', userId);
+      await supabase.from('nutrition_orders').insert([{
+        client_id: userId,
+        client_name: profile?.full_name || 'Inconnu',
+        phone: profile?.phone || '',
+        items: shopCart,
+        total: finalTotal,
+        status: 'Nouveau',
+        promo_code: appliedPromo
+      }]);
+
+      clearCart();
+      setIsModalVisible(false);
+      setSelectedProduct(null);
+      setShowCheckoutOptions(false);
+      Alert.alert("Succès", "Votre commande a été enregistrée.");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const executeWhatsappCheckout = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+      const { data: profile } = await supabase.from('clients').select('full_name, phone').eq('id', userId).maybeSingle();
+      const finalTotal = appliedPromo ? calculatedTotal * 0.9 : calculatedTotal;
+
+      let cartText = `Nouvelle Commande :\n`;
+      shopCart.forEach(item => {
+        cartText += `- ${item.quantity}x ${item.name}\n`;
+      });
+      cartText += `\nTotal: ${finalTotal.toLocaleString('fr-FR')} FCFA`;
+      if (appliedPromo) cartText += ` (Code ${appliedPromo} appliqué)`;
+
+      await supabase.from('leads').insert([{
+        full_name: profile?.full_name || 'Inconnu',
+        phone: profile?.phone || '',
+        intent: 'Sauvegarde Panier WhatsApp',
+        status: 'Nouveau',
+        message: cartText,
+        saas: "Nutrition à l'Africaine"
+      }]);
+
+      const waURL = `whatsapp://send?phone=+221770000000&text=${encodeURIComponent(cartText)}`;
+      Linking.openURL(waURL).catch(() => {
+        Alert.alert("Erreur", "WhatsApp n'est pas installé sur cet appareil.");
+      });
+
+      clearCart();
+      setIsModalVisible(false);
+      setSelectedProduct(null);
+      setShowCheckoutOptions(false);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -413,14 +435,7 @@ export default function ShopScreen() {
                     activeOpacity={0.8}
                     onPress={() => {
                       addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
-                      Alert.alert(
-                        "Produit ajouté !",
-                        "Que souhaitez-vous faire ?",
-                        [
-                          { text: "Continuer mes achats", style: "cancel", onPress: () => setIsModalVisible(false) },
-                          { text: "🛒 Voir mon panier", onPress: () => setSelectedProduct(null) } // Setting product null shows the cart view
-                        ]
-                      );
+                      setShowAddSuccess(true);
                     }}
                     className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
                   >
@@ -509,6 +524,55 @@ export default function ShopScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Custom Add Success Modal */}
+      {showAddSuccess && (
+        <View className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 z-[100]" style={{ elevation: 100 }}>
+          <View className="bg-white dark:bg-zinc-900 rounded-3xl p-6 w-full items-center">
+             <Text className="text-black dark:text-white text-xl text-center mb-6" style={{ fontFamily: "Poppins_700Bold" }}>Produit ajouté !</Text>
+             <TouchableOpacity
+               onPress={() => { setShowAddSuccess(false); setSelectedProduct(null); }}
+               className="bg-[#39FF14] w-full py-4 rounded-xl mb-4 items-center"
+             >
+               <Text className="text-black" style={{ fontFamily: "Poppins_700Bold" }}>🛒 Voir mon panier</Text>
+             </TouchableOpacity>
+             <TouchableOpacity
+               onPress={() => { setShowAddSuccess(false); setIsModalVisible(false); }}
+               className="bg-zinc-200 dark:bg-zinc-800 w-full py-4 rounded-xl items-center"
+             >
+               <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }}>Continuer mes achats</Text>
+             </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Custom Checkout Options Modal */}
+      {showCheckoutOptions && (
+        <View className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 z-[100]" style={{ elevation: 100 }}>
+          <View className="bg-white dark:bg-zinc-900 rounded-3xl p-6 w-full items-center">
+             <Text className="text-black dark:text-white text-xl text-center mb-6" style={{ fontFamily: "Poppins_700Bold" }}>Validation du Panier</Text>
+             <TouchableOpacity
+               onPress={executeClassicCheckout}
+               className="bg-black dark:bg-[#39FF14] w-full py-4 rounded-xl mb-4 items-center"
+             >
+               <Text className="text-white dark:text-black" style={{ fontFamily: "Poppins_700Bold" }}>Commander Classiquement</Text>
+             </TouchableOpacity>
+             <TouchableOpacity
+               onPress={executeWhatsappCheckout}
+               className="bg-[#25D366] w-full py-4 rounded-xl mb-4 items-center"
+             >
+               <Text className="text-white" style={{ fontFamily: "Poppins_700Bold" }}>M'envoyer mon panier (WhatsApp)</Text>
+             </TouchableOpacity>
+             <TouchableOpacity
+               onPress={() => setShowCheckoutOptions(false)}
+               className="bg-zinc-200 dark:bg-zinc-800 w-full py-4 rounded-xl items-center"
+             >
+               <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }}>Annuler</Text>
+             </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
     </SafeAreaView>
   );
 }
