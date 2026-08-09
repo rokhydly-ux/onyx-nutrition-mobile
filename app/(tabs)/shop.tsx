@@ -163,6 +163,9 @@ export default function ShopScreen() {
           {
             text: "Commander Classiquement",
             onPress: async () => {
+               // Update client address if collected (stub since UI isn't asking yet)
+               await supabase.from('clients').update({ address: 'A configurer' }).eq('id', userId);
+
                await supabase.from('nutrition_orders').insert([{
                  client_id: userId,
                  client_name: profile?.full_name || 'Inconnu',
@@ -172,7 +175,6 @@ export default function ShopScreen() {
                  status: 'Nouveau',
                  promo_code: appliedPromo
                }]);
-               // Optional: Update address logic here if requested later, keeping it standard for now
                clearCart();
                setIsModalVisible(false);
                setSelectedProduct(null);
@@ -221,7 +223,12 @@ export default function ShopScreen() {
     }
   };
 
-  const similarProducts = selectedProduct ? products.filter(p => p.categorie_nom === selectedProduct.categorie_nom && p.id !== selectedProduct.id).slice(0, 3) : [];
+  const similarProducts = selectedProduct
+    ? products
+        .filter(p => p.categorie_nom === selectedProduct.categorie_nom && p.id !== selectedProduct.id && (p.stock === undefined || p.stock > 0))
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3)
+    : [];
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
@@ -288,7 +295,7 @@ export default function ShopScreen() {
                   )}
                   {prod.stock <= 10 && (
                     <View className="absolute top-2 right-2 bg-red-500 rounded-md px-1.5 py-0.5">
-                      <Text className="text-white text-[8px] font-bold uppercase">STOCK FAIBLE</Text>
+                      <Text className="text-white text-[8px] font-bold uppercase">Quantité Limitée</Text>
                     </View>
                   )}
                 </View>
@@ -435,7 +442,7 @@ export default function ShopScreen() {
                           <View className="w-24 h-24 bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-2 mb-2">
                              <Image source={{ uri: p.image_url }} className="w-full h-full resize-contain" />
                           </View>
-                          <Text className="text-black dark:text-white text-[10px] font-bold" numberOfLines={2}>{p.name}</Text>
+                          <Text className="text-black dark:text-white text-[10px]" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{p.nom || p.name}</Text>
                         </TouchableOpacity>
                       ))}
                     </ScrollView>
