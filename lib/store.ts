@@ -28,7 +28,8 @@ export const useShopStore = create<ShopStore>((set) => ({
         ),
       };
     }
-    const rawPrice = product?.prix_standard || product?.prix_premium || product?.prix || product?.price || 0;
+    const isPremium = product._isPremiumUser || false;
+    const rawPrice = isPremium && product.prix_premium ? product.prix_premium : (product?.prix_standard || product?.prix || product?.price || 0);
     return {
       shopCart: [...state.shopCart, { ...product, name: product.nom || product.name || 'Produit sans nom', price: Number(rawPrice), quantity: 1 }]
     };
