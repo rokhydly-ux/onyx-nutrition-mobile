@@ -136,12 +136,10 @@ export default function ShopScreen() {
   const handleCheckout = async () => {
     if (shopCart.length === 0) return;
 
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       const userId = session.user.id;
-
 
       const { data: profile } = await supabase
         .from('clients')
@@ -151,16 +149,6 @@ export default function ShopScreen() {
 
       const finalTotal = appliedPromo ? calculatedTotal * 0.9 : calculatedTotal;
 
-      await supabase.from('nutrition_orders').insert([{
-        client_id: userId,
-        client_name: profile?.full_name || 'Inconnu',
-        phone: profile?.phone || '',
-        items: shopCart,
-        total: finalTotal,
-        status: 'Nouveau',
-        promo_code: appliedPromo
-      }]);
-
       let cartText = `Nouvelle Commande :\n`;
       shopCart.forEach(item => {
         cartText += `- ${item.quantity}x ${item.name}\n`;
@@ -168,16 +156,55 @@ export default function ShopScreen() {
       cartText += `\nTotal: ${finalTotal.toLocaleString('fr-FR')} FCFA`;
       if (appliedPromo) cartText += ` (Code ${appliedPromo} appliqué)`;
 
-      const waURL = `whatsapp://send?phone=+221770000000&text=${encodeURIComponent(cartText)}`;
+      Alert.alert(
+        "Validation du Panier",
+        "Comment souhaitez-vous procéder ?",
+        [
+          {
+            text: "Commander Classiquement",
+            onPress: async () => {
+               await supabase.from('nutrition_orders').insert([{
+                 client_id: userId,
+                 client_name: profile?.full_name || 'Inconnu',
+                 phone: profile?.phone || '',
+                 items: shopCart,
+                 total: finalTotal,
+                 status: 'Nouveau',
+                 promo_code: appliedPromo
+               }]);
+               // Optional: Update address logic here if requested later, keeping it standard for now
+               clearCart();
+               setIsModalVisible(false);
+               setSelectedProduct(null);
+               Alert.alert("Succès", "Votre commande a été enregistrée.");
+            }
+          },
+          {
+            text: "M'envoyer mon panier (WhatsApp)",
+            onPress: async () => {
+               await supabase.from('leads').insert([{
+                 full_name: profile?.full_name || 'Inconnu',
+                 phone: profile?.phone || '',
+                 intent: 'Sauvegarde Panier WhatsApp',
+                 status: 'Nouveau',
+                 message: cartText,
+                 saas: "Nutrition à l'Africaine"
+               }]);
 
+               const waURL = `whatsapp://send?phone=+221770000000&text=${encodeURIComponent(cartText)}`;
+               Linking.openURL(waURL).catch(() => {
+                 Alert.alert("Erreur", "WhatsApp n'est pas installé sur cet appareil.");
+               });
 
-      Linking.openURL(waURL).catch(() => {
-        Alert.alert("Erreur", "WhatsApp n'est pas installé sur cet appareil.");
-      });
+               clearCart();
+               setIsModalVisible(false);
+               setSelectedProduct(null);
+            }
+          },
+          { text: "Annuler", style: "cancel" }
+        ]
+      );
 
-      clearCart();
-      setIsModalVisible(false);
-      setSelectedProduct(null);
     } catch(err) {
       console.error(err);
       Alert.alert("Erreur", "Impossible de valider la commande.");
