@@ -35,6 +35,9 @@ export default function ShopScreen() {
 
   const [showAddSuccess, setShowAddSuccess] = useState(false);
   const [showCheckoutOptions, setShowCheckoutOptions] = useState(false);
+  const [showExitIntent, setShowExitIntent] = useState(false);
+  const [hasSeenExitIntent, setHasSeenExitIntent] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState('');
 
   useEffect(() => {
     checkPremiumStatus();
@@ -186,7 +189,7 @@ export default function ShopScreen() {
       const { data: profile } = await supabase.from('clients').select('full_name, phone').eq('id', userId).maybeSingle();
       const finalTotal = appliedPromo ? calculatedTotal * 0.9 : calculatedTotal;
 
-      await supabase.from('clients').update({ address: 'A configurer' }).eq('id', userId);
+      await supabase.from('clients').update({ address: deliveryAddress }).eq('id', userId);
       await supabase.from('nutrition_orders').insert([{
         client_id: userId,
         client_name: profile?.full_name || 'Inconnu',
@@ -415,7 +418,17 @@ export default function ShopScreen() {
       <Modal visible={isModalVisible} animationType="slide" transparent>
         <View className="flex-1 bg-black/80 justify-end">
           <View className="bg-white dark:bg-zinc-950 rounded-t-[2.5rem] p-6 h-[80%]">
-            <TouchableOpacity onPress={() => { setIsModalVisible(false); setSelectedProduct(null); }} className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-full items-center justify-center self-end mb-4">
+
+            <TouchableOpacity onPress={() => {
+                if (!selectedProduct && shopCart.length > 0 && !hasSeenExitIntent && !appliedPromo) {
+                  setShowExitIntent(true);
+                  setHasSeenExitIntent(true);
+                } else {
+                  setIsModalVisible(false);
+                  setSelectedProduct(null);
+                }
+              }}
+              className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-full items-center justify-center self-end mb-4">
                <Text className="text-black dark:text-white text-lg" style={{ fontFamily: "Poppins_700Bold" }}>✕</Text>
             </TouchableOpacity>
 
@@ -447,9 +460,9 @@ export default function ShopScreen() {
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={handleShare}
-                    className="bg-zinc-200 dark:bg-zinc-800 w-14 h-14 rounded-2xl items-center justify-center"
+                    className="bg-zinc-200 dark:bg-zinc-800 px-4 py-4 rounded-2xl items-center justify-center"
                   >
-                    <Text className="text-xl">↗️</Text>
+                    <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }}>Partager</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -505,6 +518,17 @@ export default function ShopScreen() {
 
                 {shopCart.length > 0 && (
                   <View className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+
+                    <View className="mb-4">
+                      <TextInput
+                        placeholder="Adresse de livraison complète"
+                        placeholderTextColor="gray"
+                        value={deliveryAddress}
+                        onChangeText={setDeliveryAddress}
+                        className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl text-black dark:text-white"
+                        style={{ fontFamily: 'Poppins_400Regular' }}
+                      />
+                    </View>
                     <View className="flex-row justify-between items-center mb-4">
                       <Text className="text-gray-500">Total :</Text>
                       <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{calculatedTotal.toLocaleString('fr-FR')} FCFA</Text>
@@ -541,6 +565,34 @@ export default function ShopScreen() {
                className="bg-zinc-200 dark:bg-zinc-800 w-full py-4 rounded-xl items-center"
              >
                <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }}>Continuer mes achats</Text>
+             </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+
+      {/* Exit Intent Modal */}
+      {showExitIntent && (
+        <View className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 z-[100]" style={{ elevation: 100 }}>
+          <View className="bg-[#39FF14] rounded-3xl p-8 w-full items-center">
+             <Text className="text-black text-2xl text-center mb-2" style={{ fontFamily: "Poppins_900Black" }}>ATTENDEZ !</Text>
+             <Text className="text-black text-center mb-6" style={{ fontFamily: "Poppins_500Medium" }}>Ne partez pas les mains vides. Profitez de 10% de réduction immédiate sur votre panier.</Text>
+
+             <View className="bg-black rounded-xl py-3 px-6 mb-6">
+                <Text className="text-[#39FF14] text-3xl tracking-widest" style={{ fontFamily: "Poppins_900Black" }}>CODE10</Text>
+             </View>
+
+             <TouchableOpacity
+               onPress={() => { setAppliedPromo('CODE10'); setShowExitIntent(false); }}
+               className="bg-black w-full py-4 rounded-xl mb-4 items-center"
+             >
+               <Text className="text-white" style={{ fontFamily: "Poppins_700Bold" }}>Appliquer le code</Text>
+             </TouchableOpacity>
+             <TouchableOpacity
+               onPress={() => { setShowExitIntent(false); setIsModalVisible(false); setSelectedProduct(null); }}
+               className="w-full py-4 rounded-xl items-center"
+             >
+               <Text className="text-black/60 underline" style={{ fontFamily: "Poppins_700Bold" }}>Non merci, je quitte le panier</Text>
              </TouchableOpacity>
           </View>
         </View>
