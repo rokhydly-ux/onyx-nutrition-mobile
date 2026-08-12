@@ -12,7 +12,14 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const FILTERS = ['Tous', '✨ Ventre Plat & Détox', '🔥 Énergie', '🍳 Cuisine Saine', '🥨 Snacks', '❤️ Sauvegardés'];
+const FILTERS = [
+  { id: 'Tous', name: 'Tous', image: null },
+  { id: 'Ventre Plat & Détox', name: 'Ventre Plat & Détox', image: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786461172/Ventre_Plat_fjkaxe.png' },
+  { id: 'Énergie', name: 'Énergie', image: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786461173/%C3%89nergie_xpt8ck.png' },
+  { id: 'Cuisine Saine', name: 'Cuisine Saine', image: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786461173/Cuisine_Saine_t5tmiy.png' },
+  { id: 'Snacks', name: 'Snacks', image: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786461172/Snacks_fjkjnw.png' },
+  { id: 'Sauvegardés', name: 'Favoris', image: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786461172/Sauvegard%C3%A9s_Favoris_a9ajyo.png' }
+];
 const PRICE_FILTERS = ['Tous', '- 3000 F', '3000 - 5000 F', '+ 5000 F'];
 
 const DAKAR_ZONES = [
@@ -76,6 +83,9 @@ export default function ShopScreen() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("Produit ajouté avec succès ✅");
   const [showCheckoutOptions, setShowCheckoutOptions] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [userName, setUserName] = useState('');
+  const router = require('expo-router').useRouter();
   const [showExitIntent, setShowExitIntent] = useState(false);
   const [hasSeenExitIntent, setHasSeenExitIntent] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -179,15 +189,16 @@ export default function ShopScreen() {
   ];
 
 
-  let filteredProducts = activeFilter === '❤️ Sauvegardés'
+  let filteredProducts = activeFilter === 'Sauvegardés'
     ? displayProducts.filter(p => savedProductIds.includes(p.id))
     : displayProducts;
 
-  if (activeFilter !== 'Tous' && activeFilter !== '❤️ Sauvegardés') {
-    // Simple mock category filtering. We can enhance if we have actual categories in DB.
-    // For now, if the user explicitly wants category filtering to work, and we don't have tags on products,
-    // we can filter based on product name/description matching the filter loosely, or assume products have 'categorie' property.
-    filteredProducts = filteredProducts.filter(p => p.categorie?.includes(activeFilter) || p.nom?.includes(activeFilter.replace(/✨|🔥|🍳|🥨|❤️/g, '').trim()) || p.name?.includes(activeFilter.replace(/✨|🔥|🍳|🥨|❤️/g, '').trim()));
+  if (activeFilter !== 'Tous' && activeFilter !== 'Sauvegardés') {
+    const filterClean = activeFilter.toLowerCase().trim();
+    filteredProducts = filteredProducts.filter(p => {
+      const cat = p.category || p.categorie;
+      return cat?.toLowerCase().trim() === filterClean;
+    });
   }
 
   if (activePriceFilter !== 'Tous') {
@@ -269,7 +280,8 @@ export default function ShopScreen() {
       const userId = session.user.id;
       const { data: profile } = await supabase.from('clients').select('full_name, phone').eq('id', userId).maybeSingle();
       const baseTotal = appliedPromo ? calculatedTotal * 0.9 : calculatedTotal;
-      const finalTotal = baseTotal + deliveryFee;
+      const actualDeliveryFee = calculatedTotal >= 30000 ? 0 : deliveryFee;
+      const finalTotal = baseTotal + actualDeliveryFee;
 
       await supabase.from('clients').update({ address: deliveryAddress }).eq('id', userId);
       await supabase.from('nutrition_orders').insert([{
@@ -281,7 +293,7 @@ export default function ShopScreen() {
         status: 'Nouveau',
         promo_code: appliedPromo,
         delivery_address: deliveryAddress,
-        delivery_fee: deliveryFee,
+        delivery_fee: actualDeliveryFee,
         total_amount: finalTotal
       }]);
 
@@ -291,7 +303,8 @@ export default function ShopScreen() {
       setIsModalVisible(false);
       setSelectedProduct(null);
       setShowCheckoutOptions(false);
-      Alert.alert("Succès", "Votre commande a été enregistrée.");
+      setUserName(profile?.full_name || 'Inconnu');
+      setShowSuccessModal(true);
     } catch (e) {
       console.error(e);
     }
@@ -304,14 +317,15 @@ export default function ShopScreen() {
       const userId = session.user.id;
       const { data: profile } = await supabase.from('clients').select('full_name, phone').eq('id', userId).maybeSingle();
       const baseTotal = appliedPromo ? calculatedTotal * 0.9 : calculatedTotal;
-      const finalTotal = baseTotal + deliveryFee;
+      const actualDeliveryFee = calculatedTotal >= 30000 ? 0 : deliveryFee;
+      const finalTotal = baseTotal + actualDeliveryFee;
 
       let cartText = `Nouvelle Commande :\n`;
       shopCart.forEach(item => {
         cartText += `- ${item.quantity}x ${item.name}\n`;
       });
       cartText += `\nAdresse de livraison: ${deliveryAddress}`;
-      cartText += `\nFrais de livraison: ${deliveryFee} FCFA`;
+      cartText += `\nFrais de livraison: ${actualDeliveryFee} FCFA`;
       cartText += `\nTotal: ${finalTotal.toLocaleString('fr-FR')} FCFA`;
       if (appliedPromo) cartText += ` (Code ${appliedPromo} appliqué)`;
 
@@ -365,11 +379,11 @@ export default function ShopScreen() {
               <Text className="text-white text-3xl" style={{ fontFamily: "Poppins_900Black" }}>Essentiels{'\n'}Nutrition</Text>
               <Text className="text-[#39FF14] text-sm font-bold mt-1">Atteignez vos objectifs plus vite.</Text>
             </View>
-            <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className="w-10 h-10 bg-white/20 rounded-full items-center justify-center relative backdrop-blur-md">
-              <ShoppingBagIcon color="white" size={20} />
+            <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className={`w-10 h-10 rounded-full items-center justify-center relative backdrop-blur-md ${cartItemCount > 0 ? 'bg-[#39FF14] animate-pulse' : 'bg-white/20'}`}>
+              <ShoppingBagIcon color={cartItemCount > 0 ? "black" : "white"} size={20} />
               {cartItemCount > 0 && (
-              <View className="absolute -top-1 -right-1 bg-[#39FF14] w-4 h-4 rounded-full items-center justify-center">
-                <Text className="text-black text-[9px] font-black">{cartItemCount}</Text>
+              <View className="absolute -top-1 -right-1 bg-black w-4 h-4 rounded-full items-center justify-center">
+                <Text className="text-white text-[9px] font-black">{cartItemCount}</Text>
               </View>
             )}
             </TouchableOpacity>
@@ -435,15 +449,30 @@ export default function ShopScreen() {
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row mb-4">
           {FILTERS.map(filter => {
-            const isActive = activeFilter === filter;
-            return (
+            const isActive = activeFilter === filter.id;
 
+            if (filter.id === 'Tous') {
+              return (
+                <TouchableOpacity
+                  key={filter.id}
+                  onPress={() => setActiveFilter(filter.id)}
+                  className={`px-4 py-3 rounded-full mr-3 border justify-center items-center shadow-sm ${isActive ? 'bg-[#39FF14] border-[#39FF14]' : 'bg-black border-black'}`}
+                >
+                  <Text className={`text-sm ${isActive ? 'text-black font-black' : 'text-white font-bold'}`} style={{ fontFamily: isActive ? 'Poppins_900Black' : 'Poppins_700Bold' }}>{filter.name}</Text>
+                </TouchableOpacity>
+              );
+            }
+
+            return (
               <TouchableOpacity
-                key={filter}
-                onPress={() => setActiveFilter(filter)}
-                className={`px-4 py-2 rounded-full mr-2 border ${isActive ? 'bg-[#39FF14] border-[#39FF14]' : 'bg-transparent border-zinc-200 dark:border-zinc-800'}`}
+                key={filter.id}
+                onPress={() => setActiveFilter(isActive ? 'Tous' : filter.id)}
+                className={`mr-3 items-center`}
               >
-                <Text className={`text-xs font-bold ${isActive ? 'text-black' : 'text-gray-600 dark:text-gray-300'}`}>{filter}</Text>
+                <View className={`w-16 h-16 rounded-3xl mb-1 items-center justify-center ${isActive ? 'border-2 border-[#39FF14] bg-[#39FF14]/10' : 'bg-transparent'}`}>
+                  <Image source={{ uri: filter.image as string }} className="w-12 h-12" resizeMode="contain" />
+                </View>
+                <Text className={`text-[10px] text-center ${isActive ? 'text-[#39FF14]' : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: isActive ? 'Poppins_900Black' : 'Poppins_500Medium' }}>{filter.name}</Text>
               </TouchableOpacity>
             );
           })}
@@ -600,7 +629,26 @@ export default function ShopScreen() {
               </ScrollView>
             ) : (
               <View className="flex-1">
-                <Text className="text-black dark:text-white text-2xl mb-6" style={{ fontFamily: "Poppins_900Black" }}>Mon Panier</Text>
+                <Text className="text-black dark:text-white text-2xl mb-4" style={{ fontFamily: "Poppins_900Black" }}>Mon Panier</Text>
+
+                {/* Free Delivery Gauge */}
+                {shopCart.length > 0 && (
+                  <View className="mb-6 bg-zinc-100 dark:bg-zinc-900 p-4 rounded-2xl">
+                    <View className="flex-row justify-between mb-2">
+                      <Text className="text-black dark:text-white text-xs font-bold">Livraison gratuite</Text>
+                      <Text className="text-black dark:text-white text-xs font-bold">{Math.min(calculatedTotal, 30000).toLocaleString('fr-FR')} / 30 000 FCFA</Text>
+                    </View>
+                    <View className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <View className="h-full bg-[#39FF14] rounded-full" style={{ width: `${Math.min((calculatedTotal / 30000) * 100, 100)}%` }} />
+                    </View>
+                    {calculatedTotal < 30000 ? (
+                      <Text className="text-gray-500 text-[10px] mt-2 text-center">Plus que {(30000 - calculatedTotal).toLocaleString('fr-FR')} FCFA pour la livraison gratuite !</Text>
+                    ) : (
+                      <Text className="text-[#39FF14] text-[10px] mt-2 text-center font-bold">Félicitations, livraison offerte ! 🎉</Text>
+                    )}
+                  </View>
+                )}
+
                 {shopCart.length > 0 ? (
                   <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
                     {shopCart.map(item => (
@@ -674,11 +722,11 @@ export default function ShopScreen() {
                     </View>
                     <View className="flex-row justify-between items-center mb-2">
                       <Text className="text-gray-500">Livraison :</Text>
-                      <Text className="text-black dark:text-white">{deliveryFee > 0 ? `${deliveryFee.toLocaleString('fr-FR')} FCFA` : '--'}</Text>
+                      <Text className="text-black dark:text-white">{calculatedTotal >= 30000 ? 'Gratuite' : (deliveryFee > 0 ? `${deliveryFee.toLocaleString('fr-FR')} FCFA` : '--')}</Text>
                     </View>
                     <View className="flex-row justify-between items-center mb-4">
                       <Text className="text-gray-500">Total :</Text>
-                      <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{(calculatedTotal + deliveryFee).toLocaleString('fr-FR')} FCFA</Text>
+                      <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{(calculatedTotal + (calculatedTotal >= 30000 ? 0 : deliveryFee)).toLocaleString('fr-FR')} FCFA</Text>
                     </View>
 
                     <TouchableOpacity
@@ -753,6 +801,23 @@ export default function ShopScreen() {
                className="bg-zinc-200 dark:bg-zinc-800 w-full py-4 rounded-xl items-center"
              >
                <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }}>Annuler</Text>
+             </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+
+      {/* Checkout Success Modal */}
+      {showSuccessModal && (
+        <View className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 z-[100]" style={{ elevation: 100 }}>
+          <View className="bg-white dark:bg-zinc-900 rounded-3xl p-6 w-full items-center">
+             <Image source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786461202/Succes_commandes_awovvw.png' }} className="w-32 h-32 mb-6 resize-contain" />
+             <Text className="text-black dark:text-white text-xl text-center mb-6" style={{ fontFamily: "Poppins_700Bold" }}>Félicitations {userName}, votre commande est validée !</Text>
+             <TouchableOpacity
+               onPress={() => { setShowSuccessModal(false); router.push('/orders'); }}
+               className="bg-[#39FF14] w-full py-4 rounded-xl mb-4 items-center"
+             >
+               <Text className="text-black" style={{ fontFamily: "Poppins_900Black" }}>SUIVRE MA COMMANDE</Text>
              </TouchableOpacity>
           </View>
         </View>
