@@ -4,7 +4,7 @@ require('dotenv').config();
 const supabase = createClient(process.env.EXPO_PUBLIC_SUPABASE_URL, process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
 
 async function test() {
-  const pin = '80000056'; // fallback auth logic from memory: last 8 digits of phone number
+  const pin = 'central2026'; // this is 11 chars! Let's re-run this with the un-truncated pin
   const phone = '+221780000056';
   const cleanIdentifier = phone.replace(/\s+/g, '');
   const authEmail = cleanIdentifier.includes('@')
