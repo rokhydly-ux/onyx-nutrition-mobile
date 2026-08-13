@@ -2,20 +2,19 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, CheckSquare, Square, Eye, EyeOff } from 'lucide-react-native';
+import { ArrowLeft, CheckSquare, Square } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { supabase } from '../lib/supabase';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [phone, setPhone] = useState('');
-  const [pin, setPin] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [keepLoggedIn, setKeepLoggedIn] = useState(true);
 
   const handleLogin = async () => {
-    if (!phone || !pin) return;
+    if (!phone) return;
+    const pin = phone.replace(/\s+/g, '').slice(-8).padStart(8, '0');
     setLoading(true);
 
     // 1. On supprime uniquement les espaces vides de l'identifiant saisi
@@ -94,26 +93,7 @@ export default function LoginScreen() {
                 </View>
               </View>
 
-              <View className="mb-6">
-                <Text className="text-gray-500 font-medium mb-2" style={{ fontFamily: 'Poppins_500Medium' }}>Mot de passe</Text>
-                <View className="border-b border-gray-300 pb-2 flex-row items-center justify-between">
-                  <TextInput
-                    value={pin}
-                    onChangeText={setPin}
-                    placeholder="Votre mot de passe"
-                    placeholderTextColor="#9CA3AF"
-                    secureTextEntry={!showPassword}
-                    keyboardType="default"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    className="text-black text-lg p-0 m-0 flex-1"
-                    style={{ fontFamily: 'Poppins_400Regular' }}
-                  />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="p-2">
-                    {showPassword ? <EyeOff size={20} color="#9CA3AF" /> : <Eye size={20} color="#9CA3AF" />}
-                  </TouchableOpacity>
-                </View>
-              </View>
+
 
               {/* Keep Me Logged In Checkbox (Visual Only) */}
               <TouchableOpacity

@@ -196,8 +196,8 @@ export default function ShopScreen() {
   if (activeFilter !== 'Tous' && activeFilter !== 'Sauvegardés') {
     const filterClean = activeFilter.toLowerCase().trim();
     filteredProducts = filteredProducts.filter(p => {
-      const cat = p.category || p.categorie;
-      return cat?.toLowerCase().trim() === filterClean;
+      const cat = p.category || p.categorie || p.categorie_nom || p.tags;
+      return cat?.toLowerCase().trim() === filterClean || cat?.toLowerCase().includes(filterClean) || (p.nom || p.name || '').toLowerCase().includes(filterClean);
     });
   }
 
