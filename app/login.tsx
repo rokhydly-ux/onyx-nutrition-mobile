@@ -29,7 +29,7 @@ export default function LoginScreen() {
     console.log("Email synchronisé PWA/Mobile envoyé à Supabase :", authEmail);
 
     // 3. Lancement de l'authentification
-    console.log("Payload envoyé :", { email: authEmail, pwdLength: pin.length });
+    console.log("Email :", authEmail, " | MDP brut envoyé : [", pin, "]");
     const { data, error } = await supabase.auth.signInWithPassword({
       email: authEmail,
       password: pin, // keyboardType is already "default"
@@ -101,6 +101,8 @@ export default function LoginScreen() {
                     placeholderTextColor="#9CA3AF"
                     secureTextEntry={!showPassword}
                     keyboardType="default"
+                    autoCapitalize="none"
+                    autoCorrect={false}
                     className="text-black text-lg p-0 m-0 flex-1"
                     style={{ fontFamily: 'Poppins_400Regular' }}
                   />
