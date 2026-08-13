@@ -29,10 +29,13 @@ export default function LoginScreen() {
     console.log("Email synchronisé PWA/Mobile envoyé à Supabase :", authEmail);
 
     // 3. Lancement de l'authentification
-    console.log("Email :", authEmail, " | MDP brut envoyé : [", pin, "]");
+    const finalEmail = authEmail.trim();
+    const finalPassword = pin.trim();
+
+    console.log(`Envoi strict API -> Email: '${finalEmail}' | Pass: '${finalPassword}'`);
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: authEmail,
-      password: pin, // keyboardType is already "default"
+      email: finalEmail,
+      password: finalPassword, // keyboardType is already "default"
     });
 
     setLoading(false);
