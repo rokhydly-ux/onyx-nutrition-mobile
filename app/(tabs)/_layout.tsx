@@ -1,13 +1,16 @@
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { StyleSheet, View } from 'react-native';
-import { Home, Calendar, Utensils, Users, User, ShoppingBag } from 'lucide-react-native';
+import { Home, Calendar, Utensils, Users, User, ShoppingBag, Package } from 'lucide-react-native';
 
 
-import { useColorScheme } from 'react-native';
+import { useColorScheme, Text } from 'react-native';
+import { useShopStore } from '../../lib/store';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const shopCart = useShopStore((state) => state.shopCart);
+  const cartCount = shopCart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <Tabs
@@ -45,6 +48,13 @@ export default function TabLayout() {
         ),
       }}>
       <Tabs.Screen
+        name="orders"
+        options={{
+          title: 'Commandes',
+          tabBarIcon: ({ color }) => <Package color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: 'Accueil',
@@ -74,7 +84,16 @@ export default function TabLayout() {
         name="shop"
         options={{
           title: 'Boutique',
-          tabBarIcon: ({ color }) => <ShoppingBag color={color} size={24} />,
+          tabBarIcon: ({ color }) => (
+            <View>
+              <ShoppingBag color={color} size={24} />
+              {cartCount > 0 && (
+                <View className="absolute -top-1 -right-2 bg-red-500 w-4 h-4 rounded-full flex items-center justify-center">
+                  <Text className="text-white text-[10px] font-bold">{cartCount}</Text>
+                </View>
+              )}
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
