@@ -194,10 +194,10 @@ export default function ShopScreen() {
     : displayProducts;
 
   if (activeFilter !== 'Tous' && activeFilter !== 'Sauvegardés') {
-    const filterClean = activeFilter.toLowerCase().trim();
+    const filterClean = activeFilter.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     filteredProducts = filteredProducts.filter(p => {
       const cat = p.category || p.categorie || p.categorie_nom || p.tags;
-      return cat?.toLowerCase().trim() === filterClean || cat?.toLowerCase().includes(filterClean) || (p.nom || p.name || '').toLowerCase().includes(filterClean);
+      return (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "") === filterClean || (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "").includes(filterClean) || (p.nom || p.name || '').toLowerCase().includes(filterClean);
     });
   }
 
