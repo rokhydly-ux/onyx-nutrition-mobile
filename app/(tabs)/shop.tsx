@@ -90,6 +90,8 @@ export default function ShopScreen() {
   const [showExitIntent, setShowExitIntent] = useState(false);
   const [hasSeenExitIntent, setHasSeenExitIntent] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [deliveryZone, setDeliveryZone] = useState('');
+  const [deliveryNotes, setDeliveryNotes] = useState('');
   const [showZoneAutocomplete, setShowZoneAutocomplete] = useState(false);
   const [deliveryFee, setDeliveryFee] = useState(0);
 
@@ -177,7 +179,7 @@ export default function ShopScreen() {
       Vibration.vibrate();
       LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
       setScratched(true);
-      setAppliedPromo('CODE10'); setPromoInput('CODE10'); setPromoInput('CODE10');
+      setAppliedPromo('CODE10'); setPromoInput('CODE10');
     }
   };
 
@@ -281,17 +283,20 @@ export default function ShopScreen() {
       const userId = session.user.id;
       const { data: profile } = await supabase.from('clients').select('full_name, phone').eq('id', userId).maybeSingle();
       const baseTotal = appliedPromo ? calculatedTotal * 0.9 : calculatedTotal;
-      const actualDeliveryFee = calculatedTotal >= 30000 ? 0 : deliveryFee;
+      const actualDeliveryFee = calculatedTotal >= 30000 ? Math.max(0, deliveryFee - 1500) : deliveryFee;
       const finalTotal = baseTotal + actualDeliveryFee;
 
       await supabase.from('clients').update({ address: deliveryAddress }).eq('id', userId);
       const { error: insertError } = await supabase.from('nutrition_orders').insert([{
         client_id: userId,
-        client_name: `${profile?.full_name || 'Inconnu'} (Livraison: ${deliveryAddress})`,
+        client_name: profile?.full_name || 'Inconnu',
         phone: profile?.phone || '',
         items: shopCart,
         total: finalTotal,
         status: 'Nouveau',
+        delivery_address: deliveryAddress,
+        delivery_zone: deliveryZone,
+        delivery_notes: deliveryNotes,
         delivery_fee: actualDeliveryFee,
         total_amount: finalTotal
       }]);
@@ -322,7 +327,7 @@ export default function ShopScreen() {
       const userId = session.user.id;
       const { data: profile } = await supabase.from('clients').select('full_name, phone').eq('id', userId).maybeSingle();
       const baseTotal = appliedPromo ? calculatedTotal * 0.9 : calculatedTotal;
-      const actualDeliveryFee = calculatedTotal >= 30000 ? 0 : deliveryFee;
+      const actualDeliveryFee = calculatedTotal >= 30000 ? Math.max(0, deliveryFee - 1500) : deliveryFee;
       const finalTotal = baseTotal + actualDeliveryFee;
 
       let cartText = `Nouvelle Commande :\n`;
@@ -337,11 +342,14 @@ export default function ShopScreen() {
       // 1. Insert into nutrition_orders FIRST (Database Source of Truth)
       const { error: insertError } = await supabase.from('nutrition_orders').insert([{
         client_id: userId,
-        client_name: `${profile?.full_name || 'Inconnu'} (Livraison: ${deliveryAddress})`,
+        client_name: profile?.full_name || 'Inconnu',
         phone: profile?.phone || '',
         items: shopCart,
         total: finalTotal,
         status: 'Nouveau',
+        delivery_address: deliveryAddress,
+        delivery_zone: deliveryZone,
+        delivery_notes: deliveryNotes,
         delivery_fee: actualDeliveryFee,
         total_amount: finalTotal
       }]);
@@ -663,7 +671,17 @@ export default function ShopScreen() {
               </ScrollView>
             ) : (
               <View className="flex-1">
-                <Text className="text-black dark:text-white text-2xl mb-4" style={{ fontFamily: "Poppins_900Black" }}>Mon Panier</Text>
+                <View className="flex-row items-center mb-4 flex-wrap">
+                  <Text className="text-black dark:text-white text-2xl mr-4" style={{ fontFamily: "Poppins_900Black" }}>Mon Panier</Text>
+                  {shopCart.length > 0 && (
+                    <View className="bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 rounded-full flex-row items-center border border-zinc-200 dark:border-zinc-800">
+                      <Text className="text-[10px] text-gray-500 mr-2">Subvention livraison:</Text>
+                      <Text className="text-[10px] font-bold text-[#39FF14]">
+                        {calculatedTotal >= 30000 ? "Active (-1500F)" : `${(30000 - calculatedTotal).toLocaleString('fr-FR')}F restants`}
+                      </Text>
+                    </View>
+                  )}
+                </View>
 
 
 
@@ -706,23 +724,7 @@ export default function ShopScreen() {
 
                 {shopCart.length > 0 && (
                   <View className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                    {/* Free Delivery Gauge */}
-                {shopCart.length > 0 && (
-                  <View className="mb-6 bg-zinc-100 dark:bg-zinc-900 p-4 rounded-2xl">
-                    <View className="flex-row justify-between mb-2">
-                      <Text className="text-black dark:text-white text-xs font-bold">Livraison gratuite</Text>
-                      <Text className="text-black dark:text-white text-xs font-bold">{Math.min(calculatedTotal, 30000).toLocaleString('fr-FR')} / 30 000 FCFA</Text>
-                    </View>
-                    <View className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <View className="h-full bg-[#39FF14] rounded-full" style={{ width: `${Math.min((calculatedTotal / 30000) * 100, 100)}%` }} />
-                    </View>
-                    {calculatedTotal < 30000 ? (
-                      <Text className="text-gray-500 text-[10px] mt-2 text-center">Plus que {(30000 - calculatedTotal).toLocaleString('fr-FR')} FCFA pour la livraison gratuite !</Text>
-                    ) : (
-                      <Text className="text-[#39FF14] text-[10px] mt-2 text-center font-bold">Félicitations, livraison offerte ! 🎉</Text>
-                    )}
-                  </View>
-                )}
+
 
 
                     <View className="mb-4 relative z-50">
@@ -748,6 +750,7 @@ export default function ShopScreen() {
                                 className="p-4 border-b border-zinc-100 dark:border-zinc-800"
                                 onPress={() => {
                                   setDeliveryAddress(`${z.name} (Zone ${z.zone})`);
+                                  setDeliveryZone(z.name);
                                   setDeliveryFee(z.fee);
                                   setShowZoneAutocomplete(false);
                                 }}
@@ -761,6 +764,17 @@ export default function ShopScreen() {
                           </ScrollView>
                         </View>
                       )}
+                    </View>
+                    <View className="mb-4 relative z-40">
+                      <TextInput
+                        placeholder="Infos complémentaires (facultatif)"
+                        placeholderTextColor="gray"
+                        value={deliveryNotes !== undefined && deliveryNotes !== null ? String(deliveryNotes) : ''}
+                        onChangeText={setDeliveryNotes}
+                        multiline
+                        className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl text-black dark:text-white"
+                        style={{ fontFamily: 'Poppins_400Regular', minHeight: 80, textAlignVertical: 'top' }}
+                      />
                     </View>
                     <View className="mb-4 flex-row items-center border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 pr-2">
                       <TextInput
@@ -785,11 +799,11 @@ export default function ShopScreen() {
                     </View>
                     <View className="flex-row justify-between items-center mb-2">
                       <Text className="text-gray-500">Livraison :</Text>
-                      <Text className="text-black dark:text-white">{calculatedTotal >= 30000 ? 'Gratuite' : (deliveryFee > 0 ? `${deliveryFee.toLocaleString('fr-FR')} FCFA` : '--')}</Text>
+                      <Text className="text-black dark:text-white">{calculatedTotal >= 30000 ? (Math.max(0, deliveryFee - 1500) > 0 ? `${Math.max(0, deliveryFee - 1500).toLocaleString('fr-FR')} FCFA` : 'Gratuite') : (deliveryFee > 0 ? `${deliveryFee.toLocaleString('fr-FR')} FCFA` : '--')}</Text>
                     </View>
                     <View className="flex-row justify-between items-center mb-4">
                       <Text className="text-gray-500">Total :</Text>
-                      <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{((appliedPromo === 'CODE10' ? calculatedTotal * 0.9 : calculatedTotal) + (calculatedTotal >= 30000 ? 0 : deliveryFee)).toLocaleString('fr-FR')} FCFA</Text>
+                      <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{((appliedPromo === 'CODE10' ? calculatedTotal * 0.9 : calculatedTotal) + (calculatedTotal >= 30000 ? Math.max(0, deliveryFee - 1500) : deliveryFee)).toLocaleString('fr-FR')} FCFA</Text>
                     </View>
 
                     <TouchableOpacity
