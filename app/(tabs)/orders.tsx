@@ -194,7 +194,9 @@ export default function OrdersScreen() {
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => {
-                const message = `Bonjour, je vous contacte au sujet de ma commande N°${selectedOrder.id?.toString().slice(0, 8)}.`;
+                const dateStr = new Date(selectedOrder.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+                const total = Number(selectedOrder.total_amount || selectedOrder.total || 0).toLocaleString('fr-FR');
+                const message = `Bonjour, je vous contacte au sujet de ma commande N°${selectedOrder.id?.toString().slice(0, 8)} passée le ${dateStr} d'un montant de ${total} FCFA. \n\n (Lien Admin : https://nutriafro.app/admin/orders/${selectedOrder.id})`;
                 Linking.openURL(`https://wa.me/221770000000?text=${encodeURIComponent(message)}`);
               }}
               className="absolute bottom-6 right-6 flex-row items-center bg-white dark:bg-zinc-800 pl-4 pr-2 py-2 rounded-full shadow-lg"
