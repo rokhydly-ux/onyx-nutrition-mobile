@@ -15,7 +15,11 @@ export default function OrdersScreen() {
   const fetchOrders = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.error('Missing session or failed query/RLS error');
+        return;
+      }
+      console.log('Active session user ID:', session.user.id);
       const { data, error } = await supabase
         .from('nutrition_orders')
         .select('*')
