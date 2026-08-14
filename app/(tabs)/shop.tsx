@@ -336,28 +336,45 @@ export default function ShopScreen() {
       cartText += `\nTotal: ${finalTotal.toLocaleString('fr-FR')} FCFA`;
       if (appliedPromo) cartText += ` (Code ${appliedPromo} appliqué)`;
 
-      await supabase.from('leads').insert([{
-        full_name: profile?.full_name || 'Inconnu',
+      // 1. Insert into nutrition_orders FIRST (Database Source of Truth)
+      const { error: insertError } = await supabase.from('nutrition_orders').insert([{
+        client_id: userId,
+        client_name: profile?.full_name || 'Inconnu',
         phone: profile?.phone || '',
-        intent: 'Sauvegarde Panier WhatsApp',
+        items: shopCart,
+        total: finalTotal,
         status: 'Nouveau',
-        message: cartText,
-        saas: "Nutrition à l'Africaine"
+        promo_code: appliedPromo,
+        delivery_address: deliveryAddress,
+        delivery_fee: actualDeliveryFee,
+        total_amount: finalTotal
       }]);
 
-      const waURL = `whatsapp://send?phone=+221770000000&text=${encodeURIComponent(cartText)}`;
-      Linking.openURL(waURL).catch(() => {
-        Alert.alert("Erreur", "WhatsApp n'est pas installé sur cet appareil.");
-      });
+      if (insertError) {
+        console.error('Failed to insert order:', insertError);
+        Alert.alert("Erreur", "La commande n'a pas pu être enregistrée.");
+        return;
+      }
 
+      // 2. Clear state and show Success Modal
       clearCart();
       setDeliveryAddress('');
       setDeliveryFee(0);
       setIsModalVisible(false);
       setSelectedProduct(null);
       setShowCheckoutOptions(false);
+      setUserName(profile?.full_name || 'Inconnu');
+      setShowSuccessModal(true);
+
+      // 3. Open WhatsApp link (UX requirement)
+      const waURL = `whatsapp://send?phone=+221770000000&text=${encodeURIComponent(cartText)}`;
+      Linking.openURL(waURL).catch(() => {
+        Alert.alert("Attention", "WhatsApp n'est pas installé, mais votre commande est validée !");
+      });
+
     } catch (e) {
       console.error(e);
+      Alert.alert("Erreur", "Une erreur inattendue est survenue.");
     }
   };
 
@@ -737,7 +754,7 @@ export default function ShopScreen() {
                       <TextInput
                         placeholder="Code promo (ex: CODE10)"
                         placeholderTextColor="gray"
-                        value={promoInput}
+                        value={promoInput !== undefined && promoInput !== null ? String(promoInput) : ''}
                         onChangeText={setPromoInput}
                         autoCapitalize="characters"
                         className="flex-1 p-4 text-black dark:text-white"
