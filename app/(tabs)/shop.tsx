@@ -287,13 +287,11 @@ export default function ShopScreen() {
       await supabase.from('clients').update({ address: deliveryAddress }).eq('id', userId);
       const { error: insertError } = await supabase.from('nutrition_orders').insert([{
         client_id: userId,
-        client_name: profile?.full_name || 'Inconnu',
+        client_name: `${profile?.full_name || 'Inconnu'} (Livraison: ${deliveryAddress})`,
         phone: profile?.phone || '',
         items: shopCart,
         total: finalTotal,
         status: 'Nouveau',
-        promo_code: appliedPromo,
-        delivery_address: deliveryAddress,
         delivery_fee: actualDeliveryFee,
         total_amount: finalTotal
       }]);
@@ -339,13 +337,11 @@ export default function ShopScreen() {
       // 1. Insert into nutrition_orders FIRST (Database Source of Truth)
       const { error: insertError } = await supabase.from('nutrition_orders').insert([{
         client_id: userId,
-        client_name: profile?.full_name || 'Inconnu',
+        client_name: `${profile?.full_name || 'Inconnu'} (Livraison: ${deliveryAddress})`,
         phone: profile?.phone || '',
         items: shopCart,
         total: finalTotal,
         status: 'Nouveau',
-        promo_code: appliedPromo,
-        delivery_address: deliveryAddress,
         delivery_fee: actualDeliveryFee,
         total_amount: finalTotal
       }]);
@@ -375,6 +371,20 @@ export default function ShopScreen() {
     } catch (e) {
       console.error(e);
       Alert.alert("Erreur", "Une erreur inattendue est survenue.");
+    }
+  };
+
+
+  const handleApplyPromo = () => {
+    const code = promoInput !== undefined && promoInput !== null ? String(promoInput).trim().toUpperCase() : '';
+    if (code === 'CODE10') {
+      setAppliedPromo('CODE10');
+      setToastMessage("Code appliqué ! -10% de réduction ✅");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } else {
+      setAppliedPromo('');
+      Alert.alert("Code Invalide", "Ce code promo n'existe pas ou a expiré.");
     }
   };
 
@@ -580,7 +590,7 @@ export default function ShopScreen() {
           <View className="bg-white dark:bg-zinc-950 rounded-t-[2.5rem] p-6 h-[80%]">
 
             <TouchableOpacity onPress={() => {
-                if (!selectedProduct && shopCart.length > 0 && !hasSeenExitIntent && !appliedPromo) {
+                if (!selectedProduct && shopCart.length > 0 && !hasSeenExitIntent && appliedPromo !== 'CODE10') {
                   setShowExitIntent(true);
                   setHasSeenExitIntent(true);
                 } else {
@@ -761,7 +771,7 @@ export default function ShopScreen() {
                         style={{ fontFamily: 'Poppins_400Regular' }}
                       />
                       <TouchableOpacity
-                        onPress={() => setAppliedPromo(promoInput.trim())}
+                        onPress={handleApplyPromo}
                         className="bg-[#39FF14] px-4 py-2 rounded-lg"
                       >
                         <Text className="text-black font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Appliquer</Text>
@@ -777,7 +787,7 @@ export default function ShopScreen() {
                     </View>
                     <View className="flex-row justify-between items-center mb-4">
                       <Text className="text-gray-500">Total :</Text>
-                      <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{(calculatedTotal + (calculatedTotal >= 30000 ? 0 : deliveryFee)).toLocaleString('fr-FR')} FCFA</Text>
+                      <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{((appliedPromo === 'CODE10' ? calculatedTotal * 0.9 : calculatedTotal) + (calculatedTotal >= 30000 ? 0 : deliveryFee)).toLocaleString('fr-FR')} FCFA</Text>
                     </View>
 
                     <TouchableOpacity
