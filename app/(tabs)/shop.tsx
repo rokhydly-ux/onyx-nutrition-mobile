@@ -603,7 +603,7 @@ export default function ShopScreen() {
             </TouchableOpacity>
 
             {selectedProduct ? (
-              <ScrollView showsVerticalScrollIndicator={false}>
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 <Image source={{ uri: selectedProduct.image_url }} className="w-full h-48 resize-contain mb-6" />
                 <Text className="text-black dark:text-white text-2xl mb-1" style={{ fontFamily: "Poppins_900Black" }}>{selectedProduct.nom || selectedProduct.name}</Text>
                 {selectedProduct.description_courte && <Text className="text-gray-400 mb-2 italic">{selectedProduct.description_courte}</Text>}
@@ -668,24 +668,8 @@ export default function ShopScreen() {
 
 
                 {shopCart.length > 0 ? (
-                  <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-                    {/* Free Delivery Gauge */}
-                {shopCart.length > 0 && (
-                  <View className="mb-6 bg-zinc-100 dark:bg-zinc-900 p-4 rounded-2xl">
-                    <View className="flex-row justify-between mb-2">
-                      <Text className="text-black dark:text-white text-xs font-bold">Livraison gratuite</Text>
-                      <Text className="text-black dark:text-white text-xs font-bold">{Math.min(calculatedTotal, 30000).toLocaleString('fr-FR')} / 30 000 FCFA</Text>
-                    </View>
-                    <View className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <View className="h-full bg-[#39FF14] rounded-full" style={{ width: `${Math.min((calculatedTotal / 30000) * 100, 100)}%` }} />
-                    </View>
-                    {calculatedTotal < 30000 ? (
-                      <Text className="text-gray-500 text-[10px] mt-2 text-center">Plus que {(30000 - calculatedTotal).toLocaleString('fr-FR')} FCFA pour la livraison gratuite !</Text>
-                    ) : (
-                      <Text className="text-[#39FF14] text-[10px] mt-2 text-center font-bold">Félicitations, livraison offerte ! 🎉</Text>
-                    )}
-                  </View>
-                )}
+                  <ScrollView showsVerticalScrollIndicator={false} className="flex-1" keyboardShouldPersistTaps="handled">
+
                     {shopCart.map(item => (
                       <View key={item.id} className="flex-row items-center justify-between mb-4 bg-zinc-100 dark:bg-zinc-900 p-3 rounded-2xl">
                          <TouchableOpacity
@@ -722,6 +706,24 @@ export default function ShopScreen() {
 
                 {shopCart.length > 0 && (
                   <View className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    {/* Free Delivery Gauge */}
+                {shopCart.length > 0 && (
+                  <View className="mb-6 bg-zinc-100 dark:bg-zinc-900 p-4 rounded-2xl">
+                    <View className="flex-row justify-between mb-2">
+                      <Text className="text-black dark:text-white text-xs font-bold">Livraison gratuite</Text>
+                      <Text className="text-black dark:text-white text-xs font-bold">{Math.min(calculatedTotal, 30000).toLocaleString('fr-FR')} / 30 000 FCFA</Text>
+                    </View>
+                    <View className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <View className="h-full bg-[#39FF14] rounded-full" style={{ width: `${Math.min((calculatedTotal / 30000) * 100, 100)}%` }} />
+                    </View>
+                    {calculatedTotal < 30000 ? (
+                      <Text className="text-gray-500 text-[10px] mt-2 text-center">Plus que {(30000 - calculatedTotal).toLocaleString('fr-FR')} FCFA pour la livraison gratuite !</Text>
+                    ) : (
+                      <Text className="text-[#39FF14] text-[10px] mt-2 text-center font-bold">Félicitations, livraison offerte ! 🎉</Text>
+                    )}
+                  </View>
+                )}
+
 
                     <View className="mb-4 relative z-50">
                       <TextInput
@@ -814,6 +816,7 @@ export default function ShopScreen() {
 
 
       {/* Exit Intent Modal */}
+      <Modal visible={showExitIntent} transparent animationType="fade">
       {showExitIntent && (
         <View className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 z-[100]" style={{ elevation: 100 }}>
           <View className="bg-[#39FF14] rounded-3xl p-8 w-full items-center">
@@ -839,8 +842,10 @@ export default function ShopScreen() {
           </View>
         </View>
       )}
+      </Modal>
 
       {/* Custom Checkout Options Modal */}
+      <Modal visible={showCheckoutOptions} transparent animationType="fade">
       {showCheckoutOptions && (
         <View className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 z-[100]" style={{ elevation: 100 }}>
           <View className="bg-white dark:bg-zinc-900 rounded-3xl p-6 w-full items-center">
@@ -866,9 +871,11 @@ export default function ShopScreen() {
           </View>
         </View>
       )}
+      </Modal>
 
 
       {/* Checkout Success Modal */}
+      <Modal visible={showSuccessModal} transparent animationType="fade">
       {showSuccessModal && (
         <View className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 z-[100]" style={{ elevation: 100 }}>
           <View className="bg-white dark:bg-zinc-900 rounded-3xl p-6 w-full items-center">
@@ -883,6 +890,7 @@ export default function ShopScreen() {
           </View>
         </View>
       )}
+      </Modal>
 
     </SafeAreaView>
   );
