@@ -78,6 +78,7 @@ export default function ShopScreen() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState('');
+  const [promoInput, setPromoInput] = useState('');
   const [isPremium, setIsPremium] = useState(false);
 
   const [showToast, setShowToast] = useState(false);
@@ -176,7 +177,7 @@ export default function ShopScreen() {
       Vibration.vibrate();
       LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
       setScratched(true);
-      setAppliedPromo('CODE10');
+      setAppliedPromo('CODE10'); setPromoInput('CODE10'); setPromoInput('CODE10');
     }
   };
 
@@ -726,16 +727,22 @@ export default function ShopScreen() {
                         </View>
                       )}
                     </View>
-                    <View className="mb-4 flex-row items-center border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                    <View className="mb-4 flex-row items-center border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 pr-2">
                       <TextInput
                         placeholder="Code promo (ex: CODE10)"
                         placeholderTextColor="gray"
-                        value={appliedPromo}
-                        onChangeText={setAppliedPromo}
+                        value={promoInput}
+                        onChangeText={setPromoInput}
                         autoCapitalize="characters"
                         className="flex-1 p-4 text-black dark:text-white"
                         style={{ fontFamily: 'Poppins_400Regular' }}
                       />
+                      <TouchableOpacity
+                        onPress={() => setAppliedPromo(promoInput.trim())}
+                        className="bg-[#39FF14] px-4 py-2 rounded-lg"
+                      >
+                        <Text className="text-black font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Appliquer</Text>
+                      </TouchableOpacity>
                     </View>
                     <View className="flex-row justify-between items-center mb-2">
                       <Text className="text-gray-500">Sous-total :</Text>
@@ -785,7 +792,7 @@ export default function ShopScreen() {
              </View>
 
              <TouchableOpacity
-               onPress={() => { setAppliedPromo('CODE10'); setShowExitIntent(false); }}
+               onPress={() => { setAppliedPromo('CODE10'); setPromoInput('CODE10'); setShowExitIntent(false); }}
                className="bg-black w-full py-4 rounded-xl mb-4 items-center"
              >
                <Text className="text-white" style={{ fontFamily: "Poppins_700Bold" }}>Appliquer le code</Text>
