@@ -237,7 +237,7 @@ export default function ShopScreen() {
       if (appliedPromo) cartText += ` (Code ${appliedPromo} appliqué)`;
 
       setShowCheckoutOptions(true);
-
+      setIsModalVisible(false);
     } catch(err) {
       console.error(err);
       Alert.alert("Erreur", "Impossible de valider la commande.");
@@ -285,7 +285,7 @@ export default function ShopScreen() {
       const finalTotal = baseTotal + actualDeliveryFee;
 
       await supabase.from('clients').update({ address: deliveryAddress }).eq('id', userId);
-      await supabase.from('nutrition_orders').insert([{
+      const { error: insertError } = await supabase.from('nutrition_orders').insert([{
         client_id: userId,
         client_name: profile?.full_name || 'Inconnu',
         phone: profile?.phone || '',
@@ -297,6 +297,12 @@ export default function ShopScreen() {
         delivery_fee: actualDeliveryFee,
         total_amount: finalTotal
       }]);
+
+      if (insertError) {
+        console.error('Failed to insert order:', insertError);
+        Alert.alert("Erreur", "La commande n'a pas pu être enregistrée.");
+        return;
+      }
 
       clearCart();
       setDeliveryAddress('');
@@ -825,7 +831,7 @@ export default function ShopScreen() {
                <Text className="text-white" style={{ fontFamily: "Poppins_700Bold" }}>M'envoyer mon panier (WhatsApp)</Text>
              </TouchableOpacity>
              <TouchableOpacity
-               onPress={() => setShowCheckoutOptions(false)}
+               onPress={() => { setShowCheckoutOptions(false); setIsModalVisible(true); }}
                className="bg-zinc-200 dark:bg-zinc-800 w-full py-4 rounded-xl items-center"
              >
                <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }}>Annuler</Text>
