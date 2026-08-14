@@ -631,7 +631,11 @@ export default function ShopScreen() {
               <View className="flex-1">
                 <Text className="text-black dark:text-white text-2xl mb-4" style={{ fontFamily: "Poppins_900Black" }}>Mon Panier</Text>
 
-                {/* Free Delivery Gauge */}
+
+
+                {shopCart.length > 0 ? (
+                  <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+                    {/* Free Delivery Gauge */}
                 {shopCart.length > 0 && (
                   <View className="mb-6 bg-zinc-100 dark:bg-zinc-900 p-4 rounded-2xl">
                     <View className="flex-row justify-between mb-2">
@@ -648,15 +652,21 @@ export default function ShopScreen() {
                     )}
                   </View>
                 )}
-
-                {shopCart.length > 0 ? (
-                  <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
                     {shopCart.map(item => (
                       <View key={item.id} className="flex-row items-center justify-between mb-4 bg-zinc-100 dark:bg-zinc-900 p-3 rounded-2xl">
-                         <View className="flex-1 pr-2">
-                           <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={1}>{item.name}</Text>
-                           <Text className="text-[#39FF14] font-bold">{item.price.toLocaleString('fr-FR')} FCFA</Text>
-                         </View>
+                         <TouchableOpacity
+                           onPress={() => { handleOpenProduct(item); }}
+                           className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-xl p-1 mr-3"
+                         >
+                           <Image source={{ uri: item.image_url || 'https://via.placeholder.com/150' }} className="w-full h-full resize-contain" />
+                         </TouchableOpacity>
+                         <TouchableOpacity
+                           onPress={() => { handleOpenProduct(item); }}
+                           className="flex-1 pr-2"
+                         >
+                           <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{item.name}</Text>
+                           <Text className="text-[#39FF14] font-bold mt-1">{item.price.toLocaleString('fr-FR')} FCFA</Text>
+                         </TouchableOpacity>
                          <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1 ml-2">
                            <TouchableOpacity onPress={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeFromCart(item.id)}>
                              <Text className="text-white dark:text-black px-2">-</Text>
@@ -715,6 +725,17 @@ export default function ShopScreen() {
                           </ScrollView>
                         </View>
                       )}
+                    </View>
+                    <View className="mb-4 flex-row items-center border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                      <TextInput
+                        placeholder="Code promo (ex: CODE10)"
+                        placeholderTextColor="gray"
+                        value={appliedPromo}
+                        onChangeText={setAppliedPromo}
+                        autoCapitalize="characters"
+                        className="flex-1 p-4 text-black dark:text-white"
+                        style={{ fontFamily: 'Poppins_400Regular' }}
+                      />
                     </View>
                     <View className="flex-row justify-between items-center mb-2">
                       <Text className="text-gray-500">Sous-total :</Text>
