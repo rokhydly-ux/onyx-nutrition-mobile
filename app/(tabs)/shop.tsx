@@ -865,6 +865,73 @@ export default function ShopScreen() {
 </TouchableOpacity>
 </View>
 )}
+
+                  {/* UPSELL / CROSS-SELL SECTIONS */}
+
+                  {products.filter(p => savedProductIds.includes(p.id) && !shopCart.some(cartItem => cartItem.id === p.id)).length > 0 && (
+                    <View className="mt-8 mb-6">
+                      <Text className="text-black dark:text-white text-lg mb-4" style={{ fontFamily: "Poppins_900Black" }}>Tu les avais mis de côté... C'est le moment de craquer ! ❤️</Text>
+                      <FlatList
+                        data={products.filter(p => savedProductIds.includes(p.id) && !shopCart.some(cartItem => cartItem.id === p.id))}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={item => item.id}
+                        renderItem={({ item: p }) => (
+                          <TouchableOpacity className="w-32 mr-4 bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-3" onPress={() => handleOpenProduct(p)}>
+                            <View className="w-full h-24 bg-white dark:bg-zinc-800 rounded-xl mb-2 p-2">
+                               <Image source={{ uri: p.image_url || 'https://via.placeholder.com/150' }} className="w-full h-full resize-contain" />
+                            </View>
+                            <Text className="text-black dark:text-white text-xs mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{p.nom || p.name}</Text>
+                            <Text className="text-[#39FF14] text-xs font-bold mb-2">{Number(p.prix_standard || p.prix || p.price || 0).toLocaleString('fr-FR')} FCFA</Text>
+                            <TouchableOpacity
+                              onPress={() => {
+                                addToCart({ ...p, _isPremiumUser: isPremium });
+                                setToastMessage("Produit ajouté avec succès ✅");
+                                setShowToast(true);
+                                setTimeout(() => setShowToast(false), 3000);
+                              }}
+                              className="bg-[#39FF14] py-2 rounded-xl items-center"
+                            >
+                              <Text className="text-black text-[10px]" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER</Text>
+                            </TouchableOpacity>
+                          </TouchableOpacity>
+                        )}
+                      />
+                    </View>
+                  )}
+
+                  {products.filter(p => !shopCart.some(cartItem => cartItem.id === p.id)).sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5).length > 0 && (
+                    <View className="mb-10">
+                      <Text className="text-black dark:text-white text-lg mb-4" style={{ fontFamily: "Poppins_900Black" }}>Ça t'avait fait de l'œil tout à l'heure 👀</Text>
+                      <FlatList
+                        data={products.filter(p => !shopCart.some(cartItem => cartItem.id === p.id)).sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5)}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={item => item.id}
+                        renderItem={({ item: p }) => (
+                          <TouchableOpacity className="w-32 mr-4 bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-3" onPress={() => handleOpenProduct(p)}>
+                            <View className="w-full h-24 bg-white dark:bg-zinc-800 rounded-xl mb-2 p-2">
+                               <Image source={{ uri: p.image_url || 'https://via.placeholder.com/150' }} className="w-full h-full resize-contain" />
+                            </View>
+                            <Text className="text-black dark:text-white text-xs mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{p.nom || p.name}</Text>
+                            <Text className="text-[#39FF14] text-xs font-bold mb-2">{Number(p.prix_standard || p.prix || p.price || 0).toLocaleString('fr-FR')} FCFA</Text>
+                            <TouchableOpacity
+                              onPress={() => {
+                                addToCart({ ...p, _isPremiumUser: isPremium });
+                                setToastMessage("Produit ajouté avec succès ✅");
+                                setShowToast(true);
+                                setTimeout(() => setShowToast(false), 3000);
+                              }}
+                              className="bg-[#39FF14] py-2 rounded-xl items-center"
+                            >
+                              <Text className="text-black text-[10px]" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER</Text>
+                            </TouchableOpacity>
+                          </TouchableOpacity>
+                        )}
+                      />
+                    </View>
+                  )}
+
 </ScrollView>
 ) : (
 <View className="flex-1 items-center justify-center p-6">
