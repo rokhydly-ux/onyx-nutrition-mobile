@@ -5,6 +5,7 @@ import { Home, Calendar, Utensils, Users, User, ShoppingBag, Package } from 'luc
 
 
 import { useColorScheme, Text } from 'react-native';
+import GlobalHeader from '../../components/GlobalHeader';
 import { useShopStore } from '../../lib/store';
 
 export default function TabLayout() {
@@ -13,6 +14,8 @@ export default function TabLayout() {
   const cartCount = shopCart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
+    <>
+      <GlobalHeader />
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -104,5 +107,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </>
   );
 }
