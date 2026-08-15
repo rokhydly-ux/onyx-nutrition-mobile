@@ -102,7 +102,9 @@ export default function OrdersScreen() {
 
                 <View className="mb-4">
                   {itemsList.map((item: any, i: number) => (
-                    <Text key={i} className="text-gray-600 dark:text-gray-400 text-sm mb-1">• {item.quantity}x {item.name}</Text>
+                    <Text key={i} className="text-gray-600 dark:text-gray-400 text-sm mb-1">
+                      • {item.quantity}x {item.name || item.product_name || item.title || "Produit inconnu"}
+                    </Text>
                   ))}
                 </View>
 
@@ -155,7 +157,9 @@ export default function OrdersScreen() {
                       <View className="bg-zinc-100 dark:bg-black w-8 h-8 rounded-full items-center justify-center mr-3">
                         <Text className="text-black dark:text-white font-bold">{item.quantity}x</Text>
                       </View>
-                      <Text className="text-black dark:text-white flex-1" style={{ fontFamily: 'Poppins_500Medium' }}>{item.name}</Text>
+                      <Text className="text-black dark:text-white flex-1" style={{ fontFamily: 'Poppins_500Medium' }}>
+                        {item.name || item.product_name || item.title || "Produit inconnu"}
+                      </Text>
                     </View>
                     <Text className="text-black dark:text-white font-bold">{(item.price * item.quantity).toLocaleString('fr-FR')} FCFA</Text>
                   </View>

@@ -674,10 +674,11 @@ export default function ShopScreen() {
                 <View className="flex-row items-center mb-4 flex-wrap">
                   <Text className="text-black dark:text-white text-2xl mr-4" style={{ fontFamily: "Poppins_900Black" }}>Mon Panier</Text>
                   {shopCart.length > 0 && (
-                    <View className="bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 rounded-full flex-row items-center border border-zinc-200 dark:border-zinc-800">
-                      <Text className="text-[10px] text-gray-500 mr-2">Subvention livraison:</Text>
-                      <Text className="text-[10px] font-bold text-[#39FF14]">
-                        {calculatedTotal >= 30000 ? "Active (-1500F)" : `${(30000 - calculatedTotal).toLocaleString('fr-FR')}F restants`}
+                    <View className="bg-zinc-100 dark:bg-zinc-900 px-3 py-2 rounded-xl flex-row items-center border border-zinc-200 dark:border-zinc-800 w-full mt-2">
+                      <Text className="text-sm font-bold text-[#39FF14] text-center w-full">
+                        {calculatedTotal >= 30000
+                          ? "✅ Réduction livraison (-1500F) débloquée !"
+                          : `Plus que ${(30000 - calculatedTotal).toLocaleString('fr-FR')} FCFA pour débloquer votre réduction livraison (-1500F) !`}
                       </Text>
                     </View>
                   )}
