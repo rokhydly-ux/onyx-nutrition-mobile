@@ -35,15 +35,30 @@ export default function GlobalHeader() {
     }
   };
 
+
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace('/login');
+    import('react-native').then(({ Alert }) => {
+      Alert.alert(
+        'Mon Profil',
+        'Que souhaitez-vous faire ?',
+        [
+          { text: 'Aller au profil', onPress: () => router.push('/profile') },
+          { text: 'Se déconnecter', style: 'destructive', onPress: async () => {
+              await supabase.auth.signOut();
+              router.replace('/login');
+            }
+          },
+          { text: 'Annuler', style: 'cancel' }
+        ]
+      );
+    });
   };
+
 
   return (
     <View className="flex-row items-center justify-between px-5 pt-4 pb-2 bg-transparent z-50">
       <View className="flex-row items-center">
-        <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full border-2 border-[#39FF14] mr-3" />
+        <TouchableOpacity onPress={() => router.push("/profile")}><Image source={{ uri: avatar }} className="w-10 h-10 rounded-full border-2 border-[#39FF14] mr-3" /></TouchableOpacity>
         <Text className="text-black dark:text-white text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>
           Hello {clientName && clientName !== "Membre" ? clientName.split(' ')[0] : "Membre"} <Text className="text-lg">⚡</Text>
         </Text>
