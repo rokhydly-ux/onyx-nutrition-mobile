@@ -867,8 +867,19 @@ export default function ShopScreen() {
 )}
 </ScrollView>
 ) : (
-<View className="flex-1 items-center justify-center">
-<Text className="text-gray-500">Votre panier est vide.</Text>
+<View className="flex-1 items-center justify-center p-6">
+<View className="bg-zinc-100 dark:bg-zinc-900 w-32 h-32 rounded-full items-center justify-center mb-6">
+  <Text className="text-6xl">🛒</Text>
+</View>
+<Text className="text-black dark:text-white text-2xl text-center mb-2" style={{ fontFamily: "Poppins_900Black" }}>Votre panier est vide</Text>
+<Text className="text-gray-500 text-center mb-8" style={{ fontFamily: "Poppins_400Regular" }}>Découvrez nos délicieux repas et produits sains pour commencer votre transformation dès aujourd'hui !</Text>
+<TouchableOpacity
+  activeOpacity={0.8}
+  onPress={() => setIsModalVisible(false)}
+  className="bg-[#39FF14] w-full py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30"
+>
+  <Text className="text-black text-lg tracking-wider" style={{ fontFamily: "Poppins_900Black" }}>VISITER NOTRE BOUTIQUE</Text>
+</TouchableOpacity>
 </View>
 )}
               </View>
