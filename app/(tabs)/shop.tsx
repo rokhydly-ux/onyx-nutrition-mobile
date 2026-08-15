@@ -659,21 +659,42 @@ export default function ShopScreen() {
                 </View>
 
 
-                                <View className="flex-row items-center justify-between mb-8 space-x-2">
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
-                      setIsModalVisible(false);
-                      setSelectedProduct(null);
-                      setToastMessage("Produit ajouté avec succès ✅");
-                      setShowToast(true);
-                      setTimeout(() => setShowToast(false), 3000);
-                    }}
-                    className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
-                  >
-                    <Text className="text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
-                  </TouchableOpacity>
+                                                <View className="flex-row items-center justify-between mb-8 space-x-2">
+                  {shopCart.find(item => item.id === selectedProduct.id) ? (
+                    <View className="flex-row items-center justify-between bg-black dark:bg-white rounded-2xl px-6 py-4 flex-1 mr-2 shadow-lg">
+                      <TouchableOpacity onPress={() => {
+                        const item = shopCart.find(i => i.id === selectedProduct.id);
+                        if (item && item.quantity > 1) updateQuantity(item.id, item.quantity - 1);
+                        else if (item) removeFromCart(item.id);
+                      }}>
+                        <Text className="text-white dark:text-black text-2xl" style={{ fontFamily: "Poppins_700Bold" }}>-</Text>
+                      </TouchableOpacity>
+                      <Text className="text-white dark:text-black text-xl" style={{ fontFamily: "Poppins_900Black" }}>
+                        {shopCart.find(item => item.id === selectedProduct.id)?.quantity}
+                      </Text>
+                      <TouchableOpacity onPress={() => {
+                        const item = shopCart.find(i => i.id === selectedProduct.id);
+                        if (item) updateQuantity(item.id, item.quantity + 1);
+                      }}>
+                        <Text className="text-white dark:text-black text-2xl" style={{ fontFamily: "Poppins_700Bold" }}>+</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
+                        setIsModalVisible(false);
+                        setSelectedProduct(null);
+                        setToastMessage("Produit ajouté avec succès ✅");
+                        setShowToast(true);
+                        setTimeout(() => setShowToast(false), 3000);
+                      }}
+                      className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
+                    >
+                      <Text className="text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
+                    </TouchableOpacity>
+                  )}
 
                   {/* Bouton Partage */}
 
