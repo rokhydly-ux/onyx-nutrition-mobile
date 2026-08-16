@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, ActivityIndicator, Pressable } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, ActivityIndicator, Pressable, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
 import { ChevronLeft, CheckCircle } from 'lucide-react-native';
 import CircularProgress from '../../components/CircularProgress';
 import { supabase } from '../../lib/supabase';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 // Helper component for the macros bars
 const MacroBar = ({ label, current, max, color }: { label: string, current: number, max: number, color: string }) => {
@@ -28,8 +29,46 @@ export default function MyDayScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [pulseAnim]);
+
   const [mode, setMode] = useState<'guided' | 'free'>('guided');
+  const fadeAnim = useRef(new Animated.Value(1)).current;
   const [isLoading, setIsLoading] = useState(true);
+
+  const [showXPConfetti, setShowXPConfetti] = useState(false);
+  const [xpGained, setXpGained] = useState(0);
+
+  const handleModeChange = (newMode: 'guided' | 'free') => {
+    if (newMode === mode) return;
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      setMode(newMode);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
 
   const [profile, setProfile] = useState<any>({
     calories_goal: 1500,
@@ -52,6 +91,72 @@ export default function MyDayScreen() {
 
   useEffect(() => {
     fetchMyDayData();
+
+    let userId = '';
+
+    const getUserId = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+         userId = session.user.id;
+      }
+    };
+    getUserId();
+
+    // 1. Realtime subscription for nutrition_profiles on Dashboard (for XP)
+    const subscriptionProfile = supabase
+      .channel('my_day_profile_xp')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'nutrition_profiles' },
+        (payload: any) => {
+          if (userId && payload.new && payload.new.client_id === userId) {
+              if (payload.old && payload.new.jongoma_xp > payload.old.jongoma_xp) {
+                  const gained = payload.new.jongoma_xp - payload.old.jongoma_xp;
+                  setXpGained(gained);
+                  setShowXPConfetti(true);
+                  setTimeout(() => setShowXPConfetti(false), 5000);
+              }
+          }
+        }
+      )
+      .subscribe();
+
+    // 2. Abonnement Realtime pour la table nutrition_daily_logs
+    const subscriptionLogs = supabase
+      .channel('my_day_daily_logs')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'nutrition_daily_logs',
+        },
+        async (payload: any) => {
+          // On recharge toutes les donnees du jour a chaque modification
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
+          const userId = session.user.id;
+
+          if (payload.new && payload.new.client_id === userId) {
+             const todayDateString = new Date().toISOString().split('T')[0];
+             if (payload.new.log_date === todayDateString) {
+               setDailyStats({
+                 calories_consumed: payload.new.calories_consumed || 0,
+                 protein_consumed: payload.new.protein_consumed || 0,
+                 carbs_consumed: payload.new.carbs_consumed || 0,
+                 fats_consumed: payload.new.fats_consumed || 0,
+                 water_glasses: payload.new.water_glasses || 0,
+               });
+             }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscriptionProfile);
+      supabase.removeChannel(subscriptionLogs);
+    };
   }, []);
 
   const fetchMyDayData = async () => {
@@ -281,6 +386,16 @@ export default function MyDayScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
+
+      {showXPConfetti && (
+        <View className="absolute inset-0 z-50 pointer-events-none items-center justify-center">
+            <ConfettiCannon count={100} origin={{x: -10, y: 0}} fallSpeed={2000} fadeOut />
+            <View className="bg-black/80 px-6 py-3 rounded-full mt-40">
+                <Text className="text-[#39FF14] text-xl font-black">⭐ +{xpGained} XP</Text>
+            </View>
+        </View>
+      )}
+
       {coachBubble.visible && (
         <View className="absolute bottom-20 left-4 right-4 bg-zinc-900 rounded-3xl p-4 flex-row items-center shadow-lg border border-[#39FF14]/30 z-50">
           <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1784209735/557516971_10235324002253110_1070574324835198049_n_ch9we7.jpg" }} className="w-12 h-12 rounded-full border-2 border-[#39FF14] mr-3" />
@@ -310,9 +425,10 @@ export default function MyDayScreen() {
                 </View>
                 <TouchableOpacity
                   onPress={() => router.push('/history')}
-                  className="bg-[#39FF14] px-4 py-2 rounded-full shadow-lg shadow-[#39FF14]/30"
                 >
-                  <Text className="text-black font-bold text-xs" style={{ fontFamily: 'Poppins_700Bold' }}>MON HISTORIQUE</Text>
+                  <Animated.View style={{ transform: [{ scale: pulseAnim }] }} className="bg-[#39FF14] px-4 py-2 rounded-full shadow-lg shadow-[#39FF14]/30">
+                    <Text className="text-black font-bold text-xs" style={{ fontFamily: 'Poppins_700Bold' }}>MON HISTORIQUE</Text>
+                  </Animated.View>
                 </TouchableOpacity>
               </View>
               <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1 pr-4 font-poppins">Enregistrez vos repas, suivez votre eau et complétez votre bilan de la journée.</Text>
@@ -321,13 +437,13 @@ export default function MyDayScreen() {
             <View className="bg-zinc-100 dark:bg-zinc-900 rounded-full p-1 flex-row mt-2">
 
               <TouchableOpacity
-                onPress={() => setMode('guided')}
+                onPress={() => handleModeChange('guided')}
                 className={`px-3 py-1.5 rounded-full ${mode === 'guided' ? 'bg-black dark:bg-[#39FF14]' : 'bg-transparent'}`}>
                 <Text className={`text-xs font-bold ${mode === 'guided' ? (isDark ? 'text-black' : 'text-white') : 'text-gray-500 dark:text-gray-400'}`}>Mode Guidé</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => setMode('free')}
+                onPress={() => handleModeChange('free')}
                 className={`px-3 py-1.5 rounded-full ${mode === 'free' ? 'bg-black dark:bg-[#39FF14]' : 'bg-transparent'}`}>
                 <Text className={`text-xs font-bold ${mode === 'free' ? (isDark ? 'text-black' : 'text-white') : 'text-gray-500 dark:text-gray-400'}`}>Mode Libre</Text>
               </TouchableOpacity>
@@ -363,6 +479,7 @@ export default function MyDayScreen() {
         {/* 3. FLUX DES REPAS DU JOUR */}
         <View className="mb-6">
             <Text className="text-black dark:text-white text-lg font-bold mb-4 font-poppins-bold">Repas du jour</Text>
+            <Animated.View style={{ opacity: fadeAnim }}>
             {mode === 'guided' && meals.map(meal => (
               <View key={meal.id} className="rounded-2xl overflow-hidden mb-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
                 <Image source={{ uri: meal.img }} className="w-full h-32 opacity-90" />
@@ -403,6 +520,7 @@ export default function MyDayScreen() {
                 </TouchableOpacity>
               </View>
             )}
+            </Animated.View>
           </View>
 
         {/* 4. LES 3 WIDGETS DU BAS */}
@@ -509,6 +627,24 @@ export default function MyDayScreen() {
               ))}
             </ScrollView>
           </View>
+
+          {/* E. WIDGET HISTORIQUE & BADGES */}
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/history')}
+            className="rounded-[2rem] overflow-hidden mt-4 bg-zinc-900 border border-[#39FF14]/30 shadow-lg mb-10 h-32 relative">
+
+            <View className="absolute inset-0 bg-[#39FF14]/5" />
+            <View style={{ flex: 1, padding: 24, justifyContent: 'center', alignItems: 'center' }}>
+              <View className="flex-row items-center justify-center mb-2">
+                <Text className="text-white text-lg font-black tracking-widest font-poppins-bold mr-2">VOIR MON HISTORIQUE</Text>
+                <ChevronLeft size={20} color="#39FF14" style={{ transform: [{ rotate: '180deg' }] }} />
+              </View>
+              <Text className="text-gray-300 text-xs text-center font-poppins">
+                Consultez vos logs passés et vos badges débloqués !
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
       </ScrollView>

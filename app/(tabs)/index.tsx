@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect , useRouter } from 'expo-router';
 import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, ImageBackground } from 'react-native';
-import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
 import { supabase } from '../../lib/supabase';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import {
   Droplets,
   MoreHorizontal,
@@ -128,10 +128,76 @@ export default function HomeScreen() {
 
   const [meals, setMeals] = useState<DailyLog[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [showXPConfetti, setShowXPConfetti] = useState(false);
+  const [xpGained, setXpGained] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
       fetchDashboardData();
+
+      let userId = '';
+
+      const getUserId = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+           userId = session.user.id;
+        }
+      };
+
+      getUserId();
+
+      // Realtime subscription for nutrition_profiles on Dashboard (for XP)
+      const subscriptionProfile = supabase
+        .channel('dashboard_profile_xp')
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'nutrition_profiles' },
+          (payload: any) => {
+            if (userId && payload.new && payload.new.client_id === userId) {
+                if (payload.old && payload.new.jongoma_xp > payload.old.jongoma_xp) {
+                    const gained = payload.new.jongoma_xp - payload.old.jongoma_xp;
+                    setXpGained(gained);
+                    setShowXPConfetti(true);
+                    setTimeout(() => setShowXPConfetti(false), 5000);
+                }
+
+                setProfile(prev => ({
+                    ...prev,
+                    xp: payload.new.jongoma_xp || prev.xp,
+                }));
+            }
+          }
+        )
+        .subscribe();
+
+      // Realtime subscription for daily logs on Dashboard
+      const subscriptionLogs = supabase
+        .channel('dashboard_daily_logs')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'nutrition_daily_logs' },
+          (payload: any) => {
+             if (userId && payload.new && payload.new.client_id === userId) {
+                 const todayDateString = new Date().toISOString().split('T')[0];
+                 if (payload.new.log_date === todayDateString) {
+                     setDailyStats(prev => ({
+                        ...prev,
+                        water_glasses: payload.new.water_glasses || 0,
+                        calories_consumed: payload.new.calories_consumed || 0,
+                        protein_consumed: payload.new.protein_consumed || 0,
+                        carbs_consumed: payload.new.carbs_consumed || 0,
+                        fats_consumed: payload.new.fats_consumed || 0,
+                     }));
+                 }
+             }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(subscriptionProfile);
+        supabase.removeChannel(subscriptionLogs);
+      };
     }, [])
   );
 
@@ -317,6 +383,15 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+
+      {showXPConfetti && (
+        <View className="absolute inset-0 z-50 pointer-events-none items-center justify-center">
+            <ConfettiCannon count={100} origin={{x: -10, y: 0}} fallSpeed={2000} fadeOut />
+            <View className="bg-black/80 px-6 py-3 rounded-full mt-40">
+                <Text className="text-[#39FF14] text-xl font-black">⭐ +{xpGained} XP</Text>
+            </View>
+        </View>
+      )}
 
       <ScrollView className="flex-1 px-5 pt-4 pb-32" showsVerticalScrollIndicator={false}>
 

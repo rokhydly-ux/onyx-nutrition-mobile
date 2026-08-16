@@ -1,9 +1,8 @@
 import { View, Image, Animated } from "react-native";
-import { useRef } from "react";
+import { useRef , useEffect } from "react";
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import '../global.css';
 import 'react-native-reanimated';
 
