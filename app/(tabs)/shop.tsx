@@ -1,3 +1,4 @@
+import ConfettiCannon from 'react-native-confetti-cannon';
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Image, ImageBackground, TouchableOpacity, TextInput, LayoutAnimation, UIManager, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -82,6 +83,7 @@ export default function ShopScreen() {
   const [isPremium, setIsPremium] = useState(false);
 
   const [showToast, setShowToast] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [toastMessage, setToastMessage] = useState("Produit ajouté avec succès ✅");
   const [showCheckoutOptions, setShowCheckoutOptions] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -387,9 +389,11 @@ export default function ShopScreen() {
     const code = promoInput !== undefined && promoInput !== null ? String(promoInput).trim().toUpperCase() : '';
     if (code === 'CODE10') {
       setAppliedPromo('CODE10');
-      setToastMessage("Code appliqué ! -10% de réduction ✅");
+      setShowConfetti(true);
+      setToastMessage("✅ 10% de réduction appliqué !");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
+      setTimeout(() => setShowConfetti(false), 5000);
     } else {
       setAppliedPromo('');
       Alert.alert("Code Invalide", "Ce code promo n'existe pas ou a expiré.");
@@ -405,7 +409,7 @@ export default function ShopScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
-      <GlobalHeader />
+
       <ScrollView className="flex-1 px-4 pt-4 pb-28" showsVerticalScrollIndicator={false}>
 
 
@@ -566,15 +570,42 @@ export default function ShopScreen() {
                   </View>
                 )}
 
-                <View className="flex-row items-end flex-wrap">
-                  <Text className="text-[#39FF14] text-base font-black mr-2">
-                    {Number(prod?.prix_standard || prod?.prix_premium || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} FCFA
-                  </Text>
-                  {prod.old_price && (
-                    <Text className="text-gray-400 text-xs line-through mb-0.5">
-                      {Number(prod.old_price).toLocaleString('fr-FR')} FCFA
+
+                <View className="flex-row items-center justify-between mt-2">
+                  <View className="flex-1">
+                    <Text className="text-[#39FF14] text-base font-black mr-2">
+                      {Number(prod?.prix_standard || prod?.prix_premium || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} FCFA
                     </Text>
-                  )}
+                    {prod.old_price && (
+                      <Text className="text-gray-400 text-xs line-through mb-0.5">
+                        {Number(prod.old_price).toLocaleString('fr-FR')} FCFA
+                      </Text>
+                    )}
+                  </View>
+                  {(() => {
+                    const cartItem = shopCart.find(i => i.id === prod.id);
+                    if (cartItem) {
+                      return (
+                        <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1 ml-1" style={{ elevation: 2 }}>
+                          <TouchableOpacity onPress={() => cartItem.quantity > 1 ? updateQuantity(prod.id, cartItem.quantity - 1) : removeFromCart(prod.id)}>
+                            <Text className="text-white dark:text-black px-1 font-bold">-</Text>
+                          </TouchableOpacity>
+                          <Text className="text-white dark:text-black px-1 text-xs" style={{ fontFamily: "Poppins_700Bold" }}>{cartItem.quantity}</Text>
+                          <TouchableOpacity onPress={() => updateQuantity(prod.id, cartItem.quantity + 1)}>
+                            <Text className="text-white dark:text-black px-1 font-bold">+</Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+                    return (
+                      <TouchableOpacity
+                        onPress={() => addToCart(prod)}
+                        className="bg-black dark:bg-white px-3 py-1.5 rounded-full"
+                      >
+                        <Text className="text-white dark:text-black text-[10px] font-bold">Ajouter</Text>
+                      </TouchableOpacity>
+                    );
+                  })()}
                 </View>
               </TouchableOpacity>
             );
@@ -623,20 +654,36 @@ export default function ShopScreen() {
 
 
                                 <View className="flex-row items-center justify-between mb-8 space-x-2">
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
-                      setIsModalVisible(false);
-                      setSelectedProduct(null);
-                      setToastMessage("Produit ajouté avec succès ✅");
-                      setShowToast(true);
-                      setTimeout(() => setShowToast(false), 3000);
-                    }}
-                    className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
-                  >
-                    <Text className="text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
-                  </TouchableOpacity>
+                  {(() => {
+                    const cartItem = shopCart.find(i => i.id === selectedProduct.id);
+                    if (cartItem) {
+                      return (
+                        <View className="flex-1 flex-row items-center justify-between bg-zinc-100 dark:bg-zinc-800 py-3 px-6 rounded-2xl mr-2">
+                          <TouchableOpacity onPress={() => cartItem.quantity > 1 ? updateQuantity(selectedProduct.id, cartItem.quantity - 1) : removeFromCart(selectedProduct.id)} className="p-2">
+                            <Text className="text-black dark:text-white text-3xl font-bold">-</Text>
+                          </TouchableOpacity>
+                          <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{cartItem.quantity}</Text>
+                          <TouchableOpacity onPress={() => updateQuantity(selectedProduct.id, cartItem.quantity + 1)} className="p-2">
+                            <Text className="text-black dark:text-white text-3xl font-bold">+</Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+                    return (
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
+                          setToastMessage("Produit ajouté avec succès ✅");
+                          setShowToast(true);
+                          setTimeout(() => setShowToast(false), 3000);
+                        }}
+                        className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
+                      >
+                        <Text className="text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
+                      </TouchableOpacity>
+                    );
+                  })()}
 
                   {/* Bouton Partage */}
 
@@ -686,8 +733,9 @@ export default function ShopScreen() {
 
 
 
+                <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={{ paddingBottom: 150 }} keyboardShouldPersistTaps="handled">
                 {shopCart.length > 0 ? (
-                  <ScrollView showsVerticalScrollIndicator={false} className="flex-1" keyboardShouldPersistTaps="handled">
+                  <View className="mb-4">
 
                     {shopCart.map(item => (
                       <View key={item.id} className="flex-row items-center justify-between mb-4 bg-zinc-100 dark:bg-zinc-900 p-3 rounded-2xl">
@@ -715,10 +763,16 @@ export default function ShopScreen() {
                          </View>
                       </View>
                     ))}
-                  </ScrollView>
+                  </View>
                 ) : (
-                  <View className="flex-1 items-center justify-center">
-                    <Text className="text-gray-500">Votre panier est vide.</Text>
+                  <View className="flex-1 items-center justify-center min-h-[300px]">
+                    <Text className="text-gray-500 mb-6 text-center px-4" style={{ fontFamily: "Poppins_400Regular" }}>Ton panier est vide, mais ça ne tient qu'à toi de le remplir !</Text>
+                    <TouchableOpacity
+                      onPress={() => { setIsModalVisible(false); setSelectedProduct(null); }}
+                      className="bg-black dark:bg-white px-8 py-4 rounded-full shadow-[0_0_15px_rgba(57,255,20,0.5)] border-2 border-[#39FF14]"
+                    >
+                      <Text className="text-[#39FF14] dark:text-black font-bold text-lg" style={{ fontFamily: "Poppins_900Black" }}>VISITER LA BOUTIQUE</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
 
@@ -816,12 +870,55 @@ export default function ShopScreen() {
                     </TouchableOpacity>
                   </View>
                 )}
+                {shopCart.length > 0 && (
+                  <View className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-6">
+                    <Text className="text-black dark:text-white text-lg mb-4" style={{ fontFamily: "Poppins_700Bold" }}>Tu les avais mis de côté... C'est le moment de craquer ! ❤️</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                      {products.filter(p => savedProductIds.includes(p.id)).map(prod => (
+                        <TouchableOpacity key={prod.id} className="min-w-[140px] mr-4 shrink-0" onPress={() => { setIsModalVisible(false); setSelectedProduct(null);; handleOpenProduct(prod); }}>
+                          <View className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-2 mb-2 relative">
+                            <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
+                          </View>
+                          <Text className="text-black dark:text-white text-xs mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={1}>{prod.nom || prod.name}</Text>
+                          <Text className="text-[#39FF14] font-bold">{Number(prod?.prix_standard || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} F</Text>
+                        </TouchableOpacity>
+                      ))}
+                      {products.filter(p => savedProductIds.includes(p.id)).length === 0 && (
+                        <Text className="text-gray-500 italic text-sm">Tu n'as pas encore de favoris.</Text>
+                      )}
+                    </ScrollView>
+
+                    <Text className="text-black dark:text-white text-lg mt-8 mb-4" style={{ fontFamily: "Poppins_700Bold" }}>Ça t'avait fait de l'œil tout à l'heure 👀</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                      {products.slice(0, 5).map(prod => (
+                        <TouchableOpacity key={prod.id} className="min-w-[140px] mr-4 shrink-0" onPress={() => { setIsModalVisible(false); setSelectedProduct(null);; handleOpenProduct(prod); }}>
+                          <View className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-2 mb-2 relative">
+                            <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
+                          </View>
+                          <Text className="text-black dark:text-white text-xs mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={1}>{prod.nom || prod.name}</Text>
+                          <Text className="text-[#39FF14] font-bold">{Number(prod?.prix_standard || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} F</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+
+              </ScrollView>
               </View>
             )}
           </View>
         </View>
       </Modal>
 
+
+      {showConfetti && (
+        <ConfettiCannon
+          count={100}
+          origin={{x: -10, y: 0}}
+          autoStart={true}
+          fadeOut={true}
+        />
+      )}
       {/* Custom Green Toast */}
       {showToast && (
         <View className="absolute bottom-24 self-center bg-[#39FF14] rounded-full px-6 py-3 z-[100] shadow-lg flex-row items-center" style={{ elevation: 100 }}>
