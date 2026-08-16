@@ -566,8 +566,7 @@ export default function ShopScreen() {
                   </View>
                 )}
 
-
-                <View className="flex-row items-end flex-wrap mb-2">
+                <View className="flex-row items-end flex-wrap">
                   <Text className="text-[#39FF14] text-base font-black mr-2">
                     {Number(prod?.prix_standard || prod?.prix_premium || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} FCFA
                   </Text>
@@ -577,43 +576,7 @@ export default function ShopScreen() {
                     </Text>
                   )}
                 </View>
-
-                {/* Quantity Controls */}
-                <View className="flex-row items-center justify-between mt-auto">
-                  {shopCart.find(item => item.id === prod.id) ? (
-                    <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1">
-                      <TouchableOpacity onPress={() => {
-                        const item = shopCart.find(i => i.id === prod.id);
-                        if (item && item.quantity > 1) updateQuantity(item.id, item.quantity - 1); else if (item) removeFromCart(item.id);
-                      }}>
-                        <Text className="text-white dark:text-black px-2 text-lg">-</Text>
-                      </TouchableOpacity>
-                      <Text className="text-white dark:text-black px-3" style={{ fontFamily: "Poppins_700Bold" }}>
-                        {shopCart.find(item => item.id === prod.id)?.quantity}
-                      </Text>
-                      <TouchableOpacity onPress={() => {
-                        const item = shopCart.find(i => i.id === prod.id);
-                        if (item) updateQuantity(item.id, item.quantity + 1);
-                      }}>
-                        <Text className="text-white dark:text-black px-2 text-lg">+</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      onPress={() => {
-                        addToCart({ ...prod, _isPremiumUser: isPremium });
-                        setToastMessage("Produit ajouté avec succès ✅");
-                        setShowToast(true);
-                        setTimeout(() => setShowToast(false), 3000);
-                      }}
-                      className="bg-[#39FF14] px-4 py-2 rounded-full flex-row items-center justify-center w-full"
-                    >
-                      <Text className="text-black text-xs" style={{ fontFamily: "Poppins_700Bold" }}>AJOUTER</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
               </TouchableOpacity>
-
             );
           })}
         </View>
@@ -648,7 +611,7 @@ export default function ShopScreen() {
             </TouchableOpacity>
 
             {selectedProduct ? (
-              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always">
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 <Image source={{ uri: selectedProduct.image_url }} className="w-full h-48 resize-contain mb-6" />
                 <Text className="text-black dark:text-white text-2xl mb-1" style={{ fontFamily: "Poppins_900Black" }}>{selectedProduct.nom || selectedProduct.name}</Text>
                 {selectedProduct.description_courte && <Text className="text-gray-400 mb-2 italic">{selectedProduct.description_courte}</Text>}
@@ -659,42 +622,21 @@ export default function ShopScreen() {
                 </View>
 
 
-                                                <View className="flex-row items-center justify-between mb-8 space-x-2">
-                  {shopCart.find(item => item.id === selectedProduct.id) ? (
-                    <View className="flex-row items-center justify-between bg-black dark:bg-white rounded-2xl px-6 py-4 flex-1 mr-2 shadow-lg">
-                      <TouchableOpacity onPress={() => {
-                        const item = shopCart.find(i => i.id === selectedProduct.id);
-                        if (item && item.quantity > 1) updateQuantity(item.id, item.quantity - 1);
-                        else if (item) removeFromCart(item.id);
-                      }}>
-                        <Text className="text-white dark:text-black text-2xl" style={{ fontFamily: "Poppins_700Bold" }}>-</Text>
-                      </TouchableOpacity>
-                      <Text className="text-white dark:text-black text-xl" style={{ fontFamily: "Poppins_900Black" }}>
-                        {shopCart.find(item => item.id === selectedProduct.id)?.quantity}
-                      </Text>
-                      <TouchableOpacity onPress={() => {
-                        const item = shopCart.find(i => i.id === selectedProduct.id);
-                        if (item) updateQuantity(item.id, item.quantity + 1);
-                      }}>
-                        <Text className="text-white dark:text-black text-2xl" style={{ fontFamily: "Poppins_700Bold" }}>+</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      onPress={() => {
-                        addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
-                        setIsModalVisible(false);
-                        setSelectedProduct(null);
-                        setToastMessage("Produit ajouté avec succès ✅");
-                        setShowToast(true);
-                        setTimeout(() => setShowToast(false), 3000);
-                      }}
-                      className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
-                    >
-                      <Text className="text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
-                    </TouchableOpacity>
-                  )}
+                                <View className="flex-row items-center justify-between mb-8 space-x-2">
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
+                      setIsModalVisible(false);
+                      setSelectedProduct(null);
+                      setToastMessage("Produit ajouté avec succès ✅");
+                      setShowToast(true);
+                      setTimeout(() => setShowToast(false), 3000);
+                    }}
+                    className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
+                  >
+                    <Text className="text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
+                  </TouchableOpacity>
 
                   {/* Bouton Partage */}
 
@@ -745,8 +687,7 @@ export default function ShopScreen() {
 
 
                 {shopCart.length > 0 ? (
-                  <ScrollView showsVerticalScrollIndicator={false} className="flex-1" keyboardShouldPersistTaps="always">
-
+                  <ScrollView showsVerticalScrollIndicator={false} className="flex-1" keyboardShouldPersistTaps="handled">
 
                     {shopCart.map(item => (
                       <View key={item.id} className="flex-row items-center justify-between mb-4 bg-zinc-100 dark:bg-zinc-900 p-3 rounded-2xl">
@@ -774,8 +715,15 @@ export default function ShopScreen() {
                          </View>
                       </View>
                     ))}
+                  </ScrollView>
+                ) : (
+                  <View className="flex-1 items-center justify-center">
+                    <Text className="text-gray-500">Votre panier est vide.</Text>
+                  </View>
+                )}
 
-{shopCart.length > 0 && (
+
+                {shopCart.length > 0 && (
                   <View className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
 
 
@@ -796,7 +744,7 @@ export default function ShopScreen() {
                       />
                       {showZoneAutocomplete && deliveryAddress.length > 0 && (
                         <View className="absolute top-[100%] left-0 right-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl mt-1 max-h-48 z-[100]" style={{ elevation: 5 }}>
-                          <ScrollView keyboardShouldPersistTaps="always">
+                          <ScrollView keyboardShouldPersistTaps="handled">
                             {filteredZones.map((z, idx) => (
                               <TouchableOpacity
                                 key={idx}
@@ -859,85 +807,15 @@ export default function ShopScreen() {
                       <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{((appliedPromo === 'CODE10' ? calculatedTotal * 0.9 : calculatedTotal) + (calculatedTotal >= 30000 ? Math.max(0, deliveryFee - 1500) : deliveryFee)).toLocaleString('fr-FR')} FCFA</Text>
                     </View>
 
-
-<TouchableOpacity activeOpacity={0.8} onPress={handleCheckout} className="bg-black dark:bg-[#39FF14] w-full py-4 rounded-2xl items-center" >
-<Text className="text-white dark:text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>VALIDER LA COMMANDE</Text>
-</TouchableOpacity>
-</View>
-)}
-
-                  {/* UPSELL / CROSS-SELL SECTIONS */}
-
-                  {products.filter(p => savedProductIds.includes(p.id) && !shopCart.some(cartItem => cartItem.id === p.id)).length > 0 && (
-                    <View className="mt-8 mb-6">
-                      <Text className="text-black dark:text-white text-lg mb-4" style={{ fontFamily: "Poppins_900Black" }}>Tu les avais mis de côté... C'est le moment de craquer ! ❤️</Text>
-                      <FlatList
-                        data={products.filter(p => savedProductIds.includes(p.id) && !shopCart.some(cartItem => cartItem.id === p.id))}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        keyExtractor={item => item.id}
-                        renderItem={({ item: p }) => (
-                          <TouchableOpacity className="w-32 mr-4 bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-3" onPress={() => handleOpenProduct(p)}>
-                            <View className="w-full h-24 bg-white dark:bg-zinc-800 rounded-xl mb-2 p-2">
-                               <Image source={{ uri: p.image_url || 'https://via.placeholder.com/150' }} className="w-full h-full resize-contain" />
-                            </View>
-                            <Text className="text-black dark:text-white text-xs mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{p.nom || p.name}</Text>
-                            <Text className="text-[#39FF14] text-xs font-bold mb-2">{Number(p.prix_standard || p.prix || p.price || 0).toLocaleString('fr-FR')} FCFA</Text>
-                            <TouchableOpacity
-                              onPress={() => {
-                                addToCart({ ...p, _isPremiumUser: isPremium });
-                                setToastMessage("Produit ajouté avec succès ✅");
-                                setShowToast(true);
-                                setTimeout(() => setShowToast(false), 3000);
-                              }}
-                              className="bg-[#39FF14] py-2 rounded-xl items-center"
-                            >
-                              <Text className="text-black text-[10px]" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER</Text>
-                            </TouchableOpacity>
-                          </TouchableOpacity>
-                        )}
-                      />
-                    </View>
-                  )}
-
-                  {products.filter(p => !shopCart.some(cartItem => cartItem.id === p.id)).sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5).length > 0 && (
-                    <View className="mb-10">
-                      <Text className="text-black dark:text-white text-lg mb-4" style={{ fontFamily: "Poppins_900Black" }}>Ça t'avait fait de l'œil tout à l'heure 👀</Text>
-                      <FlatList
-                        data={products.filter(p => !shopCart.some(cartItem => cartItem.id === p.id)).sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5)}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        keyExtractor={item => item.id}
-                        renderItem={({ item: p }) => (
-                          <TouchableOpacity className="w-32 mr-4 bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-3" onPress={() => handleOpenProduct(p)}>
-                            <View className="w-full h-24 bg-white dark:bg-zinc-800 rounded-xl mb-2 p-2">
-                               <Image source={{ uri: p.image_url || 'https://via.placeholder.com/150' }} className="w-full h-full resize-contain" />
-                            </View>
-                            <Text className="text-black dark:text-white text-xs mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{p.nom || p.name}</Text>
-                            <Text className="text-[#39FF14] text-xs font-bold mb-2">{Number(p.prix_standard || p.prix || p.price || 0).toLocaleString('fr-FR')} FCFA</Text>
-                            <TouchableOpacity
-                              onPress={() => {
-                                addToCart({ ...p, _isPremiumUser: isPremium });
-                                setToastMessage("Produit ajouté avec succès ✅");
-                                setShowToast(true);
-                                setTimeout(() => setShowToast(false), 3000);
-                              }}
-                              className="bg-[#39FF14] py-2 rounded-xl items-center"
-                            >
-                              <Text className="text-black text-[10px]" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER</Text>
-                            </TouchableOpacity>
-                          </TouchableOpacity>
-                        )}
-                      />
-                    </View>
-                  )}
-
-</ScrollView>
-) : (
-<View className="flex-1 items-center justify-center">
-<Text className="text-gray-500">Votre panier est vide.</Text>
-</View>
-)}
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={handleCheckout}
+                      className="bg-black dark:bg-[#39FF14] w-full py-4 rounded-2xl items-center"
+                    >
+                      <Text className="text-white dark:text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>VALIDER LA COMMANDE</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             )}
           </View>
