@@ -308,7 +308,12 @@ export default function MyDayScreen() {
                   />
                   <Text className="text-black dark:text-white text-3xl font-black tracking-tight font-poppins">MON JOUR</Text>
                 </View>
-                <Image source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png' }} className="h-8 w-24" resizeMode="contain" />
+                <TouchableOpacity
+                  onPress={() => router.push('/history')}
+                  className="bg-[#39FF14] px-4 py-2 rounded-full shadow-lg shadow-[#39FF14]/30"
+                >
+                  <Text className="text-black font-bold text-xs" style={{ fontFamily: 'Poppins_700Bold' }}>MON HISTORIQUE</Text>
+                </TouchableOpacity>
               </View>
               <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1 pr-4 font-poppins">Enregistrez vos repas, suivez votre eau et complétez votre bilan de la journée.</Text>
             </View>
