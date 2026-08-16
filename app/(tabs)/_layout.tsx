@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, SafeAreaView } from 'react-native';
 import { Home, Calendar, Utensils, Users, User, ShoppingBag, Package } from 'lucide-react-native';
 
 
@@ -15,7 +15,9 @@ export default function TabLayout() {
 
   return (
     <>
-      <GlobalHeader />
+      <SafeAreaView>
+        <GlobalHeader />
+      </SafeAreaView>
     <Tabs
       screenOptions={{
         headerShown: false,

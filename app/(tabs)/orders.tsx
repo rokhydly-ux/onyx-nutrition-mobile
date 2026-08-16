@@ -64,7 +64,7 @@ export default function OrdersScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['top']}>
-      <GlobalHeader />
+
       <View className="px-5 pb-4"><Text className="text-2xl text-black dark:text-white" style={{ fontFamily: 'Poppins_900Black' }}>Suivi Commandes</Text></View>
 
       {loading && !refreshing ? (

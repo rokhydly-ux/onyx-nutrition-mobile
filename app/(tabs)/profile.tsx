@@ -202,12 +202,13 @@ export default function ProfileScreen() {
         .from('clients')
         .update({
           full_name: fullName,
-          bio: bio,
+
           avatar_url: avatarUrl,
           cover_url: coverUrl,
           instagram: instagram,
           facebook: facebook,
           twitter: twitter,
+          bio: bio,
         })
         .eq('id', userId);
 
@@ -219,7 +220,7 @@ export default function ProfileScreen() {
         const updatedDiagnosticData = {
           ...currentDiagnosticData,
           poids: poids ? parseFloat(poids) : null,
-          taille: taille ? parseFloat(taille) : null,
+          taille: taille ? parseFloat(taille) : null
         };
 
         const { error: nutritionError } = await supabase
