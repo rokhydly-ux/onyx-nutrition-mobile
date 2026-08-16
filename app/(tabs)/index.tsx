@@ -350,7 +350,7 @@ export default function HomeScreen() {
         <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(tabs)/my-day')} className="flex-row justify-between mb-6 space-x-2">
           {/* Poids */}
 
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/weight')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/profile')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
             <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783280413/Woman_standing_on_scale_smiling_202607051938_e6h39p.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.25 }}>
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>POIDS</Text>
