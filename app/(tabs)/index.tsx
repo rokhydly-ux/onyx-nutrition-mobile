@@ -307,16 +307,16 @@ export default function HomeScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A] justify-center items-center">
+      <View className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A] justify-center items-center">
         <ActivityIndicator size="large" color="#39FF14" />
-      </SafeAreaView>
+      </View>
     );
   }
 
   const caloriesProgress = profile.calories_goal > 0 ? (dailyStats.calories_consumed / profile.calories_goal) : 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]" edges={['top']}>
+    <View className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
 
       <ScrollView className="flex-1 px-5 pt-4 pb-32" showsVerticalScrollIndicator={false}>
 
@@ -593,6 +593,6 @@ export default function HomeScreen() {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
