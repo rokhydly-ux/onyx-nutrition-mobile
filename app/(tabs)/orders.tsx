@@ -63,7 +63,7 @@ export default function OrdersScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['top']}>
+    <View className="flex-1 bg-white dark:bg-black">
 
       <View className="px-5 pb-4"><Text className="text-2xl text-black dark:text-white" style={{ fontFamily: 'Poppins_900Black' }}>Suivi Commandes</Text></View>
 
@@ -129,7 +129,7 @@ export default function OrdersScreen() {
 
       {/* Order Details Modal */}
       <Modal visible={!!selectedOrder} animationType="slide" transparent={false}>
-        <SafeAreaView className="flex-1 bg-zinc-50 dark:bg-zinc-950">
+        <View className="flex-1 bg-zinc-50 dark:bg-zinc-950">
           <View className="flex-row items-center justify-between px-5 py-4 bg-white dark:bg-black border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
             <Text className="text-black dark:text-white text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>Détail de la commande</Text>
             <TouchableOpacity onPress={() => setSelectedOrder(null)} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full">
@@ -212,9 +212,9 @@ export default function OrdersScreen() {
               </View>
             </TouchableOpacity>
           )}
-        </SafeAreaView>
+        </View>
       </Modal>
 
-    </SafeAreaView>
+    </View>
   );
 }

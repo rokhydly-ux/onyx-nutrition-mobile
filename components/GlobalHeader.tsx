@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import { Bell, LogOut } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 import { useColorScheme } from 'nativewind';
@@ -37,8 +37,7 @@ export default function GlobalHeader() {
 
 
   const handleLogout = async () => {
-    import('react-native').then(({ Alert }) => {
-      Alert.alert(
+    Alert.alert(
         'Mon Profil',
         'Que souhaitez-vous faire ?',
         [
@@ -48,10 +47,8 @@ export default function GlobalHeader() {
               router.replace('/login');
             }
           },
-          { text: 'Annuler', style: 'cancel' }
-        ]
+          { text: 'Annuler', style: 'cancel' }        ]
       );
-    });
   };
 
 

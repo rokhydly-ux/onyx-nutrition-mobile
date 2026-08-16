@@ -14,7 +14,7 @@ export default function TabLayout() {
   const cartCount = shopCart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <SafeAreaView>
         <GlobalHeader />
       </SafeAreaView>
@@ -52,14 +52,7 @@ export default function TabLayout() {
           />
         ),
       }}>
-      <Tabs.Screen
-        name="orders"
-        options={{
-          title: 'Commandes',
-          tabBarIcon: ({ color }) => <Package color={color} size={24} />,
-        }}
-      />
-      <Tabs.Screen
+            <Tabs.Screen
         name="index"
         options={{
           title: 'Accueil',
@@ -77,12 +70,7 @@ export default function TabLayout() {
         name="my-day"
         options={{
           title: 'Mon Jour',
-          tabBarIcon: ({ color }) => (
-            <View className="bg-[#39FF14] h-14 w-14 rounded-full flex items-center justify-center -mt-8 shadow-[0_0_15px_rgba(57,255,20,0.5)]">
-              <Calendar color="black" size={28} />
-            </View>
-          ),
-          tabBarLabel: () => null, // Hide label for central button
+          tabBarIcon: ({ color }) => <Calendar color={color} size={24} />,
         }}
       />
       <Tabs.Screen
@@ -102,6 +90,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="orders"
+        options={{
+          title: 'Commandes',
+          tabBarIcon: ({ color }) => <Package color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',
@@ -109,6 +104,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    </>
+    </View>
   );
 }

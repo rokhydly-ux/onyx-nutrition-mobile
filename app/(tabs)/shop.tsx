@@ -1,5 +1,5 @@
 import ConfettiCannon from 'react-native-confetti-cannon';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Image, ImageBackground, TouchableOpacity, TextInput, LayoutAnimation, UIManager, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Heart } from 'lucide-react-native';
@@ -84,6 +84,25 @@ export default function ShopScreen() {
 
   const [showToast, setShowToast] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const carouselRef = useRef<FlatList>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentIndex(prev => {
+          const nextIndex = (prev + 1) % Math.min(products.length, 6);
+          try { carouselRef.current?.scrollToIndex({ index: nextIndex, animated: true }); } catch (e) {}
+          return nextIndex;
+        });
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [products]);
+
+
+
+
   const [toastMessage, setToastMessage] = useState("Produit ajouté avec succès ✅");
   const [showCheckoutOptions, setShowCheckoutOptions] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -408,7 +427,7 @@ export default function ShopScreen() {
     : [];
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
+    <View className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
 
       <ScrollView className="flex-1 px-4 pt-4 pb-28" showsVerticalScrollIndicator={false}>
 
@@ -416,7 +435,7 @@ export default function ShopScreen() {
         {/* A. Hero Section */}
         <View className="h-52 rounded-[2.5rem] p-6 mb-6 overflow-hidden bg-zinc-900 justify-between">
           <ImageBackground
-            source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783002400/A_high-end__photorealistic_commercial_shot_202607021426_vutjqi.jpg' }}
+            source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786892773/2_kp1j0s.png' }}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
             imageStyle={{ opacity: 0.4 }}
           />
@@ -425,14 +444,19 @@ export default function ShopScreen() {
               <Text className="text-white text-3xl" style={{ fontFamily: "Poppins_900Black" }}>Essentiels{'\n'}Nutrition</Text>
               <Text className="text-[#39FF14] text-sm font-bold mt-1">Atteignez vos objectifs plus vite.</Text>
             </View>
-            <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className={`w-10 h-10 rounded-full items-center justify-center relative backdrop-blur-md ${cartItemCount > 0 ? 'bg-[#39FF14] animate-pulse' : 'bg-white/20'}`}>
-              <ShoppingBagIcon color={cartItemCount > 0 ? "black" : "white"} size={20} />
-              {cartItemCount > 0 && (
-              <View className="absolute -top-1 -right-1 bg-black w-4 h-4 rounded-full items-center justify-center">
-                <Text className="text-white text-[9px] font-black">{cartItemCount}</Text>
-              </View>
-            )}
-            </TouchableOpacity>
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity onPress={() => router.push('/orders')} className="bg-white/20 px-3 py-2 rounded-full backdrop-blur-md border border-white/10">
+                <Text className="text-white text-[10px] font-bold">Mes Achats</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className={`w-10 h-10 rounded-full items-center justify-center relative backdrop-blur-md ${cartItemCount > 0 ? 'bg-[#39FF14] animate-pulse' : 'bg-white/20'}`}>
+                <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1786892773/2_kp1j0s.png" }} className="w-5 h-5 rounded-full" />
+                {cartItemCount > 0 && (
+                <View className="absolute -top-1 -right-1 bg-black w-4 h-4 rounded-full items-center justify-center">
+                  <Text className="text-white text-[9px] font-black">{cartItemCount}</Text>
+                </View>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -460,9 +484,22 @@ export default function ShopScreen() {
         {/* C. Nouveautés */}
         <View className="mb-8">
           <Text className="text-black dark:text-white text-lg mb-4" style={{ fontFamily: "Poppins_700Bold" }}>Nouveautés de la semaine</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-            {displayProducts.slice(0, 3).map(prod => (
-              <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => handleOpenProduct(prod)} className="w-32 mr-4">
+          <FlatList
+            ref={carouselRef}
+            onScrollToIndexFailed={info => {
+              const wait = new Promise(resolve => setTimeout(resolve, 500));
+              wait.then(() => {
+                carouselRef.current?.scrollToIndex({ index: info.index, animated: true });
+              });
+            }}
+            data={displayProducts.slice(0, 6)}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item.id}
+            snapToInterval={144} // w-32 (128) + mr-4 (16)
+            decelerationRate="fast"
+            renderItem={({ item: prod }) => (
+              <TouchableOpacity activeOpacity={0.8} onPress={() => handleOpenProduct(prod)} className="w-32 mr-4">
                 <View className="w-32 h-32 bg-zinc-100 dark:bg-zinc-900 rounded-2xl mb-2 p-2 relative">
                   <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
                   {prod.isNew && (
@@ -470,16 +507,11 @@ export default function ShopScreen() {
                       <Text className="text-[#39FF14] text-[8px] font-bold uppercase">NEW</Text>
                     </View>
                   )}
-                  {prod.stock <= 10 && (
-                    <View className="absolute top-2 right-2 bg-red-500 rounded-md px-1.5 py-0.5">
-                      <Text className="text-white text-[8px] font-bold uppercase">Quantité Limitée</Text>
-                    </View>
-                  )}
                 </View>
-                <Text className="text-black dark:text-white text-xs" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={1}>{prod.name}</Text>
+                <Text className="text-black dark:text-white text-xs" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={1}>{prod.nom || prod.name}</Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            )}
+          />
         </View>
 
         {/* D. Filtres & Recherche */}
@@ -625,6 +657,16 @@ export default function ShopScreen() {
 
       {/* Dynamic Modal for Product Details & Cart */}
       <Modal visible={isModalVisible} animationType="slide" transparent>
+      {showConfetti && (
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, elevation: 9999 }} pointerEvents="none">
+          <ConfettiCannon
+            count={100}
+            origin={{x: -10, y: 0}}
+            autoStart={true}
+            fadeOut={true}
+          />
+        </View>
+      )}
         <View className="flex-1 bg-black/80 justify-end">
           <View className="bg-white dark:bg-zinc-950 rounded-t-[2.5rem] p-6 h-[80%]">
 
@@ -752,13 +794,18 @@ export default function ShopScreen() {
                            <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{item.name}</Text>
                            <Text className="text-[#39FF14] font-bold mt-1">{item.price.toLocaleString('fr-FR')} FCFA</Text>
                          </TouchableOpacity>
-                         <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1 ml-2">
-                           <TouchableOpacity onPress={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeFromCart(item.id)}>
-                             <Text className="text-white dark:text-black px-2">-</Text>
-                           </TouchableOpacity>
-                           <Text className="text-white dark:text-black px-2" style={{ fontFamily: "Poppins_700Bold" }}>{item.quantity}</Text>
-                           <TouchableOpacity onPress={() => updateQuantity(item.id, item.quantity + 1)}>
-                             <Text className="text-white dark:text-black px-2">+</Text>
+                         <View className="flex-row items-center ml-2">
+                           <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1 mr-2">
+                             <TouchableOpacity onPress={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeFromCart(item.id)}>
+                               <Text className="text-white dark:text-black px-2">-</Text>
+                             </TouchableOpacity>
+                             <Text className="text-white dark:text-black px-2" style={{ fontFamily: "Poppins_700Bold" }}>{item.quantity}</Text>
+                             <TouchableOpacity onPress={() => updateQuantity(item.id, item.quantity + 1)}>
+                               <Text className="text-white dark:text-black px-2">+</Text>
+                             </TouchableOpacity>
+                           </View>
+                           <TouchableOpacity onPress={() => removeFromCart(item.id)} className="bg-red-500 p-2 rounded-full">
+                             <Text className="text-white text-xs">🗑️</Text>
                            </TouchableOpacity>
                          </View>
                       </View>
@@ -911,14 +958,7 @@ export default function ShopScreen() {
       </Modal>
 
 
-      {showConfetti && (
-        <ConfettiCannon
-          count={100}
-          origin={{x: -10, y: 0}}
-          autoStart={true}
-          fadeOut={true}
-        />
-      )}
+
       {/* Custom Green Toast */}
       {showToast && (
         <View className="absolute bottom-24 self-center bg-[#39FF14] rounded-full px-6 py-3 z-[100] shadow-lg flex-row items-center" style={{ elevation: 100 }}>
@@ -1004,7 +1044,7 @@ export default function ShopScreen() {
       )}
       </Modal>
 
-    </SafeAreaView>
+    </View>
   );
 }
 
