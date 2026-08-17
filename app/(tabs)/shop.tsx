@@ -433,17 +433,15 @@ export default function ShopScreen() {
 
 
         {/* A. Hero Section */}
-        <View className="h-52 rounded-[2.5rem] p-6 mb-6 overflow-hidden bg-zinc-900 justify-between">
+        <View className="h-52 rounded-[2.5rem] mb-6 overflow-hidden justify-between">
           <ImageBackground
             source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786892773/2_kp1j0s.png' }}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-            imageStyle={{ opacity: 0.4 }}
+            imageStyle={{ opacity: 1 }}
+            resizeMode="cover"
           />
-          <View className="flex-row justify-between items-start">
-            <View>
-              <Text className="text-white text-3xl" style={{ fontFamily: "Poppins_900Black" }}>Essentiels{'\n'}Nutrition</Text>
-              <Text className="text-[#39FF14] text-sm font-bold mt-1">Atteignez vos objectifs plus vite.</Text>
-            </View>
+          <View className="flex-row justify-end items-start p-6">
+            <View />
             <View className="flex-row items-center gap-2">
               <TouchableOpacity onPress={() => router.push('/orders')} className="bg-white/20 px-3 py-2 rounded-full backdrop-blur-md border border-white/10">
                 <Text className="text-white text-[10px] font-bold">Mes Achats</Text>
