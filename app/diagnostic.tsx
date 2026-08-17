@@ -8,9 +8,9 @@ import { fr } from 'date-fns/locale';
 import { supabase } from '../lib/supabase';
 import { BlurView } from 'expo-blur';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { useColorScheme } from 'nativewind';
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedView = Animated.View;
+import { useColorScheme } from 'nativewind';
 
 const { width } = Dimensions.get('window');
 

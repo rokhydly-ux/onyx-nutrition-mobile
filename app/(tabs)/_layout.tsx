@@ -1,9 +1,10 @@
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
-import { StyleSheet, View, SafeAreaView , useColorScheme, Text } from 'react-native';
+import { StyleSheet, View, SafeAreaView } from 'react-native';
 import { Home, Calendar, Utensils, Users, User, ShoppingBag, Package } from 'lucide-react-native';
 
 
+import { useColorScheme, Text } from 'react-native';
 import GlobalHeader from '../../components/GlobalHeader';
 import { useShopStore } from '../../lib/store';
 
