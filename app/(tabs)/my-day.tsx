@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, ActivityIndicator, Pressable, Animated } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, ActivityIndicator, Pressable, Modal, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
@@ -87,75 +87,73 @@ export default function MyDayScreen() {
   });
 
   const [meals, setMeals] = useState<any[]>([]);
+  const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+  const [foodSearchQuery, setFoodSearchQuery] = useState('');
+  const [foodSearchResults, setFoodSearchResults] = useState<any[]>([]);
+  const [isSearchingFood, setIsSearchingFood] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchMyDayData();
 
-    let userId = '';
+    let channel: any;
 
-    const getUserId = async () => {
+    const setupRealtime = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-         userId = session.user.id;
-      }
+      if (!session) return;
+      const userId = session.user.id;
+      const todayDateString = new Date().toISOString().split('T')[0];
+
+      channel = supabase.channel('daily_logs_sync')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'nutrition_daily_logs',
+            filter: `client_id=eq.${userId}`,
+          },
+          (payload) => {
+            const newLog = payload.new as any;
+            if (newLog && newLog.log_date === todayDateString) {
+              setDailyStats((prev: any) => ({
+                ...prev,
+                calories_consumed: newLog.calories_consumed || 0,
+                protein_consumed: newLog.protein_consumed || 0,
+                carbs_consumed: newLog.carbs_consumed || 0,
+                fats_consumed: newLog.fats_consumed || 0,
+                water_glasses: newLog.water_glasses || 0,
+              }));
+              // Also update XP in profile if needed?
+              // The XP might be in nutrition_profiles, so we should listen to that as well!
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'nutrition_profiles',
+            filter: `client_id=eq.${userId}`,
+          },
+          (payload) => {
+            const newProfile = payload.new as any;
+            if (newProfile) {
+               setProfile((prev: any) => ({
+                 ...prev,
+                 jongoma_xp: newProfile.jongoma_xp || 0
+               }));
+            }
+          }
+        )
+        .subscribe();
     };
-    getUserId();
 
-    // 1. Realtime subscription for nutrition_profiles on Dashboard (for XP)
-    const subscriptionProfile = supabase
-      .channel('my_day_profile_xp')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'nutrition_profiles' },
-        (payload: any) => {
-          if (userId && payload.new && payload.new.client_id === userId) {
-              if (payload.old && payload.new.jongoma_xp > payload.old.jongoma_xp) {
-                  const gained = payload.new.jongoma_xp - payload.old.jongoma_xp;
-                  setXpGained(gained);
-                  setShowXPConfetti(true);
-                  setTimeout(() => setShowXPConfetti(false), 5000);
-              }
-          }
-        }
-      )
-      .subscribe();
-
-    // 2. Abonnement Realtime pour la table nutrition_daily_logs
-    const subscriptionLogs = supabase
-      .channel('my_day_daily_logs')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'nutrition_daily_logs',
-        },
-        async (payload: any) => {
-          // On recharge toutes les donnees du jour a chaque modification
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) return;
-          const userId = session.user.id;
-
-          if (payload.new && payload.new.client_id === userId) {
-             const todayDateString = new Date().toISOString().split('T')[0];
-             if (payload.new.log_date === todayDateString) {
-               setDailyStats({
-                 calories_consumed: payload.new.calories_consumed || 0,
-                 protein_consumed: payload.new.protein_consumed || 0,
-                 carbs_consumed: payload.new.carbs_consumed || 0,
-                 fats_consumed: payload.new.fats_consumed || 0,
-                 water_glasses: payload.new.water_glasses || 0,
-               });
-             }
-          }
-        }
-      )
-      .subscribe();
+    setupRealtime();
 
     return () => {
-      supabase.removeChannel(subscriptionProfile);
-      supabase.removeChannel(subscriptionLogs);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
@@ -181,6 +179,7 @@ export default function MyDayScreen() {
           carbs_goal: nutritionData.carbs_goal || 150,
           fats_goal: nutritionData.fats_goal || 50,
           diagnostic_data: nutritionData.diagnostic_data || null,
+          jongoma_xp: nutritionData.jongoma_xp || 0,
         });
       }
 
@@ -253,7 +252,7 @@ export default function MyDayScreen() {
           });
       }
 
-      setDailyStats(prev => ({ ...prev, water_glasses: glasses }));
+      setDailyStats((prev: any) => ({ ...prev, water_glasses: glasses }));
     } catch (e) {
       console.error("Error updating water:", e);
     }
@@ -299,7 +298,7 @@ export default function MyDayScreen() {
           .eq('id', existingLog.id);
 
 
-        setDailyStats(prev => ({
+        setDailyStats((prev: any) => ({
           ...prev,
           calories_consumed: updatedCalories,
           protein_consumed: updatedProtein,
@@ -311,6 +310,33 @@ export default function MyDayScreen() {
       }
     } catch (e) {
       console.error("Error removing meal:", e);
+    }
+  };
+
+    const handleFoodSearch = async () => {
+    if (!foodSearchQuery) return;
+    setIsSearchingFood(true);
+    try {
+      // 1. Search OpenFoodFacts
+      const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(foodSearchQuery)}&search_simple=1&action=process&json=1`);
+      const offData = await offRes.json();
+
+      const parsedResults = (offData.products || []).map((p: any) => ({
+        id: p._id || p.id,
+        name: p.product_name || p.product_name_fr || 'Aliment inconnu',
+        calories: p.nutriments && p.nutriments['energy-kcal_100g'] ? p.nutriments['energy-kcal_100g'] : 0,
+        p: p.nutriments && p.nutriments.proteins_100g ? p.nutriments.proteins_100g : 0,
+        c: p.nutriments && p.nutriments.carbohydrates_100g ? p.nutriments.carbohydrates_100g : 0,
+        f: p.nutriments && p.nutriments.fat_100g ? p.nutriments.fat_100g : 0,
+        img: p.image_front_url || 'https://via.placeholder.com/150',
+        type: '100g'
+      })).filter((p: any) => p.calories > 0);
+
+      setFoodSearchResults(parsedResults);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setIsSearchingFood(false);
     }
   };
 
@@ -358,7 +384,7 @@ export default function MyDayScreen() {
       }
 
 
-      setDailyStats(prev => ({
+      setDailyStats((prev: any) => ({
         ...prev,
         calories_consumed: updatedCalories,
         protein_consumed: updatedProtein,
@@ -380,21 +406,70 @@ export default function MyDayScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 justify-center items-center">
         <ActivityIndicator size="large" color="#39FF14" />
-      </SafeAreaView>
+
+    </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
+      {/* Search Food Modal */}
+      <Modal visible={isSearchModalVisible} animationType="slide" transparent>
+        <View className="flex-1 bg-black/90 p-4 pt-12">
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-white text-2xl font-bold font-poppins-bold">Ajouter un aliment</Text>
+            <TouchableOpacity onPress={() => setIsSearchModalVisible(false)} className="w-10 h-10 bg-zinc-800 rounded-full items-center justify-center">
+              <Text className="text-white font-bold">✕</Text>
+            </TouchableOpacity>
+          </View>
 
-      {showXPConfetti && (
-        <View className="absolute inset-0 z-50 pointer-events-none items-center justify-center">
-            <ConfettiCannon count={100} origin={{x: -10, y: 0}} fallSpeed={2000} fadeOut />
-            <View className="bg-black/80 px-6 py-3 rounded-full mt-40">
-                <Text className="text-[#39FF14] text-xl font-black">⭐ +{xpGained} XP</Text>
-            </View>
+          <View className="flex-row items-center bg-zinc-800 rounded-2xl p-2 mb-6 border border-zinc-700">
+            <TextInput
+              value={foodSearchQuery}
+              onChangeText={setFoodSearchQuery}
+              placeholder="Rechercher (ex: Pomme, Fonio...)"
+              placeholderTextColor="#9CA3AF"
+              className="flex-1 text-white px-4 py-2"
+              onSubmitEditing={handleFoodSearch}
+            />
+            <TouchableOpacity onPress={handleFoodSearch} className="bg-[#39FF14] px-4 py-2 rounded-xl">
+              <Text className="text-black font-bold">Chercher</Text>
+            </TouchableOpacity>
+          </View>
+
+          {isSearchingFood ? (
+            <ActivityIndicator size="large" color="#39FF14" className="mt-10" />
+          ) : (
+            <ScrollView className="flex-1">
+              {foodSearchResults.map((food, idx) => (
+                <View key={idx} className="bg-zinc-900 p-4 rounded-2xl mb-3 flex-row items-center justify-between border border-zinc-800">
+                  <View className="flex-row items-center flex-1">
+                    <Image source={{ uri: food.img }} className="w-12 h-12 rounded-lg mr-3 bg-zinc-800" />
+                    <View className="flex-1">
+                      <Text className="text-white font-bold" numberOfLines={1}>{food.name}</Text>
+                      <Text className="text-gray-400 text-xs mt-1">{food.calories} kcal | {food.p}g P | {food.c}g G | {food.f}g L</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      handleLogMeal(food);
+                      setIsSearchModalVisible(false);
+                      setFoodSearchQuery('');
+                      setFoodSearchResults([]);
+                    }}
+                    className="bg-[#39FF14] w-10 h-10 rounded-full items-center justify-center ml-2"
+                  >
+                    <Text className="text-black font-bold text-lg">+</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+              {foodSearchResults.length === 0 && foodSearchQuery !== '' && !isSearchingFood && (
+                <Text className="text-gray-500 text-center mt-10">Aucun résultat trouvé pour "{foodSearchQuery}".</Text>
+              )}
+            </ScrollView>
+          )}
         </View>
-      )}
+      </Modal>
 
       {coachBubble.visible && (
         <View className="absolute bottom-20 left-4 right-4 bg-zinc-900 rounded-3xl p-4 flex-row items-center shadow-lg border border-[#39FF14]/30 z-50">
@@ -412,41 +487,43 @@ export default function MyDayScreen() {
             <Text className="text-black dark:text-white text-sm font-medium ml-1">Retour à l'accueil</Text>
           </TouchableOpacity>
 
-          <View className="flex-row items-start justify-between">
-            <View className="flex-1">
-              <View className="flex-row items-center justify-between mb-4">
-                <View className="flex-row items-center">
-
-                  <Image
-                    source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535958/A_cute__highly_detailed_3D_202606151505_2_akqmx4.jpg' }}
-                    className="w-10 h-10 rounded-xl mr-3"
-                  />
-                  <Text className="text-black dark:text-white text-3xl font-black tracking-tight font-poppins">MON JOUR</Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => router.push('/history')}
-                >
-                  <Animated.View style={{ transform: [{ scale: pulseAnim }] }} className="bg-[#39FF14] px-4 py-2 rounded-full shadow-lg shadow-[#39FF14]/30">
-                    <Text className="text-black font-bold text-xs" style={{ fontFamily: 'Poppins_700Bold' }}>MON HISTORIQUE</Text>
-                  </Animated.View>
-                </TouchableOpacity>
+          <View className="flex-col">
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center">
+                <Image
+                  source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535958/A_cute__highly_detailed_3D_202606151505_2_akqmx4.jpg' }}
+                  className="w-10 h-10 rounded-xl mr-3"
+                />
+                <Text className="text-black dark:text-white text-3xl font-black tracking-tight font-poppins">MON JOUR</Text>
               </View>
-              <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1 pr-4 font-poppins">Enregistrez vos repas, suivez votre eau et complétez votre bilan de la journée.</Text>
+              <TouchableOpacity
+                onPress={() => router.push('/history' as any)}
+                className="bg-[#39FF14] px-4 py-2 rounded-full border border-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.5)]"
+              >
+                <Text className="text-black font-bold text-[10px] uppercase tracking-wider" style={{ fontFamily: 'Poppins_700Bold' }}>Historique</Text>
+              </TouchableOpacity>
             </View>
 
-            <View className="bg-zinc-100 dark:bg-zinc-900 rounded-full p-1 flex-row mt-2">
+            <View className="flex-row items-center justify-between mt-2">
+              <Text className="flex-1 text-gray-500 dark:text-gray-400 text-xs pr-4 font-poppins leading-relaxed">
+                Enregistrez vos repas, suivez votre eau et complétez votre bilan de la journée.
+              </Text>
 
-              <TouchableOpacity
-                onPress={() => handleModeChange('guided')}
-                className={`px-3 py-1.5 rounded-full ${mode === 'guided' ? 'bg-black dark:bg-[#39FF14]' : 'bg-transparent'}`}>
-                <Text className={`text-xs font-bold ${mode === 'guided' ? (isDark ? 'text-black' : 'text-white') : 'text-gray-500 dark:text-gray-400'}`}>Mode Guidé</Text>
-              </TouchableOpacity>
+              <View className="bg-zinc-100 dark:bg-zinc-900 rounded-full p-1 flex-row">
+                <TouchableOpacity
+                  onPress={() => setMode('guided')}
+                  className={`px-4 py-2 rounded-full ${mode === 'guided' ? 'bg-[#39FF14] shadow-[0_0_10px_rgba(57,255,20,0.4)] animate-pulse' : 'bg-transparent'}`}
+                >
+                  <Text className={`text-xs font-bold ${mode === 'guided' ? 'text-black' : 'text-gray-500 dark:text-gray-400'}`}>Mode Guidé</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={() => handleModeChange('free')}
-                className={`px-3 py-1.5 rounded-full ${mode === 'free' ? 'bg-black dark:bg-[#39FF14]' : 'bg-transparent'}`}>
-                <Text className={`text-xs font-bold ${mode === 'free' ? (isDark ? 'text-black' : 'text-white') : 'text-gray-500 dark:text-gray-400'}`}>Mode Libre</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setMode('free')}
+                  className={`px-4 py-2 rounded-full ${mode === 'free' ? 'bg-[#39FF14] shadow-[0_0_10px_rgba(57,255,20,0.4)] animate-pulse' : 'bg-transparent'}`}
+                >
+                  <Text className={`text-xs font-bold ${mode === 'free' ? 'text-black' : 'text-gray-500 dark:text-gray-400'}`}>Mode Libre</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
@@ -508,7 +585,7 @@ export default function MyDayScreen() {
               <View>
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => console.log('Open manual entry modal')}
+                  onPress={() => setIsSearchModalVisible(true)}
                   className="border-2 border-dashed border-[#39FF14] p-4 rounded-2xl items-center mt-4 mb-2 flex-row justify-center">
                   <Text className="text-[#39FF14] text-xs font-bold uppercase mr-2" style={{ fontFamily: 'Poppins_700Bold' }}>+ Ajouter un aliment</Text>
                 </TouchableOpacity>
