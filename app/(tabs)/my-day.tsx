@@ -6,6 +6,7 @@ import { useColorScheme } from 'nativewind';
 import { ChevronLeft, CheckCircle } from 'lucide-react-native';
 import CircularProgress from '../../components/CircularProgress';
 import { supabase } from '../../lib/supabase';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 // Helper component for the macros bars
 const MacroBar = ({ label, current, max, color }: { label: string, current: number, max: number, color: string }) => {
@@ -28,8 +29,46 @@ export default function MyDayScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [pulseAnim]);
+
   const [mode, setMode] = useState<'guided' | 'free'>('guided');
+  const fadeAnim = useRef(new Animated.Value(1)).current;
   const [isLoading, setIsLoading] = useState(true);
+
+  const [showXPConfetti, setShowXPConfetti] = useState(false);
+  const [xpGained, setXpGained] = useState(0);
+
+  const handleModeChange = (newMode: 'guided' | 'free') => {
+    if (newMode === mode) return;
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      setMode(newMode);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
 
   const [profile, setProfile] = useState<any>({
     calories_goal: 1500,
@@ -517,6 +556,7 @@ export default function MyDayScreen() {
         {/* 3. FLUX DES REPAS DU JOUR */}
         <View className="mb-6">
             <Text className="text-black dark:text-white text-lg font-bold mb-4 font-poppins-bold">Repas du jour</Text>
+            <Animated.View style={{ opacity: fadeAnim }}>
             {mode === 'guided' && meals.map(meal => (
               <View key={meal.id} className="rounded-2xl overflow-hidden mb-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
                 <Image source={{ uri: meal.img }} className="w-full h-32 opacity-90" />
@@ -557,6 +597,7 @@ export default function MyDayScreen() {
                 </TouchableOpacity>
               </View>
             )}
+            </Animated.View>
           </View>
 
         {/* 4. LES 3 WIDGETS DU BAS */}
@@ -663,6 +704,24 @@ export default function MyDayScreen() {
               ))}
             </ScrollView>
           </View>
+
+          {/* E. WIDGET HISTORIQUE & BADGES */}
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/history')}
+            className="rounded-[2rem] overflow-hidden mt-4 bg-zinc-900 border border-[#39FF14]/30 shadow-lg mb-10 h-32 relative">
+
+            <View className="absolute inset-0 bg-[#39FF14]/5" />
+            <View style={{ flex: 1, padding: 24, justifyContent: 'center', alignItems: 'center' }}>
+              <View className="flex-row items-center justify-center mb-2">
+                <Text className="text-white text-lg font-black tracking-widest font-poppins-bold mr-2">VOIR MON HISTORIQUE</Text>
+                <ChevronLeft size={20} color="#39FF14" style={{ transform: [{ rotate: '180deg' }] }} />
+              </View>
+              <Text className="text-gray-300 text-xs text-center font-poppins">
+                Consultez vos logs passés et vos badges débloqués !
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
       </ScrollView>

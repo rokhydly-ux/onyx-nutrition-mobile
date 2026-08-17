@@ -1,12 +1,11 @@
 import ConfettiCannon from 'react-native-confetti-cannon';
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, Image, ImageBackground, TouchableOpacity, TextInput, LayoutAnimation, UIManager, Platform } from 'react-native';
+import { View, Text, ScrollView, Image, ImageBackground, TouchableOpacity, TextInput, LayoutAnimation, UIManager, Platform , Modal, Vibration, Alert, Linking, Pressable, Share, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Heart } from 'lucide-react-native';
 import GlobalHeader from '../../components/GlobalHeader';
 import { supabase } from '../../lib/supabase';
 import { useColorScheme } from 'nativewind';
-import { Modal, Vibration, Alert, Linking, Pressable, Share, FlatList } from 'react-native';
 import { useShopStore } from '../../lib/store';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
