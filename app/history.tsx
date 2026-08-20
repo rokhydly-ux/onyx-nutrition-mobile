@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
-import { ChevronLeft } from 'lucide-react-native';
+import { Lock } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 import { LineChart } from 'react-native-chart-kit';
+import { Image } from 'react-native';
+import GlobalHeader from '../components/GlobalHeader';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -72,9 +73,9 @@ export default function HistoryScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 justify-center items-center">
+      <View className="flex-1 bg-white dark:bg-zinc-950 justify-center items-center">
         <ActivityIndicator size="large" color="#39FF14" />
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -102,22 +103,19 @@ export default function HistoryScreen() {
   };
 
   const badges = [
-    { title: 'Débutante', xpReq: 0, icon: '🌟' },
-    { title: 'Constante', xpReq: 50, icon: '🔥' },
-    { title: 'Maître du Fonio', xpReq: 150, icon: '🌾' },
-    { title: 'Reine de l\'Eau', xpReq: 300, icon: '💧' },
+    { title: 'Force Baobab', xpReq: 0, uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1784493020/FORCE_BAOBAB_ltcuer.png' },
+    { title: 'Maître du Fonio', xpReq: 100, uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1784493020/MAITRE_DU_FONIO_emczhf.png' },
+    { title: 'Lekkologue Or', xpReq: 500, uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1784493019/LEKKOLOGUE_OR_a0znxt.png' },
+    { title: 'Légende', xpReq: 1000, uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1784493019/LEGENDE_z4ipny.png' },
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans">
-      <View className="flex-row items-center px-4 py-4 mb-4">
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft size={24} color={isDark ? '#FFF' : '#000'} />
-        </TouchableOpacity>
-        <Text className="text-2xl font-black dark:text-white" style={{ fontFamily: 'Poppins_700Bold' }}>MON HISTORIQUE</Text>
-      </View>
+    <View className="flex-1 bg-white dark:bg-zinc-950 font-sans pt-4">
+      <GlobalHeader />
 
-      <ScrollView className="flex-1 px-4 pb-12" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-4 pb-12" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+
+        <Text className="text-2xl font-black dark:text-white mb-6 mt-4" style={{ fontFamily: 'Poppins_700Bold' }}>MON HISTORIQUE</Text>
 
         {/* GRAPH VIEW */}
         <View className="bg-zinc-50 dark:bg-zinc-900 rounded-[2rem] p-4 mb-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
@@ -140,18 +138,33 @@ export default function HistoryScreen() {
         {/* LOGS LIST */}
         <View className="bg-zinc-50 dark:bg-zinc-900 rounded-[2rem] p-6 mb-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
           <Text className="text-black dark:text-white font-bold mb-4 font-poppins-bold">Derniers Jours</Text>
-          {logs.length > 0 ? logs.slice().reverse().map((log: any, idx: number) => (
-            <View key={log.id || idx} className="flex-row justify-between items-center py-3 border-b border-zinc-200 dark:border-zinc-800 last:border-b-0">
-              <View>
-                <Text className="text-black dark:text-white font-bold font-poppins-bold">{new Date(log.log_date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</Text>
-                <Text className="text-xs text-gray-500 mt-1">{log.protein_consumed || 0}g P | {log.carbs_consumed || 0}g G | {log.fats_consumed || 0}g L</Text>
+          {logs.length > 0 ? logs.slice().reverse().map((log: any, idx: number) => {
+            const isEmpty = (log.calories_consumed || 0) === 0;
+            return (
+              <View key={log.id || idx} className="flex-row justify-between items-center py-3 border-b border-zinc-200 dark:border-zinc-800 last:border-b-0">
+                <View>
+                  <Text className="text-black dark:text-white font-bold font-poppins-bold mb-1">{new Date(log.log_date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</Text>
+                  {isEmpty ? (
+                    <TouchableOpacity className="bg-[#39FF14] px-3 py-1 rounded-full animate-pulse" onPress={() => console.log('Ouvrir bilan journalier')}>
+                      <Text className="text-black text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>Rattraper</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View className={`px-2 py-1 rounded w-24 items-center ${log.report_data?.status === 'Craquage' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-green-100 dark:bg-green-900/30'}`}>
+                      <Text className={`text-[10px] font-bold ${log.report_data?.status === 'Craquage' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-[#39FF14]'}`}>
+                        {log.report_data?.status === 'Craquage' ? 'Craquage' : 'Menu suivi'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                {!isEmpty && (
+                  <View className="items-end">
+                    <Text className="text-[#39FF14] font-bold font-poppins-bold text-lg">{log.calories_consumed || 0} <Text className="text-xs text-black dark:text-white">kcal</Text></Text>
+                    <Text className="text-xs text-blue-500 mt-1">{log.water_glasses || 0}/8 💧</Text>
+                  </View>
+                )}
               </View>
-              <View className="items-end">
-                <Text className="text-[#39FF14] font-bold font-poppins-bold text-lg">{log.calories_consumed || 0} <Text className="text-xs text-black dark:text-white">kcal</Text></Text>
-                <Text className="text-xs text-blue-500 mt-1">{log.water_glasses || 0}/8 💧</Text>
-              </View>
-            </View>
-          )) : (
+            )
+          }) : (
             <Text className="text-gray-500 text-center py-4">Aucun log récent trouvé.</Text>
           )}
         </View>
@@ -167,11 +180,11 @@ export default function HistoryScreen() {
             {badges.map((badge, idx) => {
               const unlocked = xp >= badge.xpReq;
               return (
-                <View key={idx} className="w-[48%] bg-white dark:bg-zinc-800 p-4 rounded-2xl items-center border border-zinc-200 dark:border-zinc-700">
-                  <View className={`w-16 h-16 rounded-full items-center justify-center mb-2 ${unlocked ? 'bg-[#39FF14]/20' : 'bg-gray-200 dark:bg-zinc-700'}`}>
-                     <Text className={`text-3xl ${!unlocked ? 'opacity-30' : ''}`}>{badge.icon}</Text>
+                <View key={idx} className={`w-[48%] bg-white dark:bg-zinc-800 p-4 rounded-2xl items-center border ${unlocked ? 'border-[#39FF14]' : 'border-zinc-200 dark:border-zinc-700'}`}>
+                  <View className={`w-16 h-16 rounded-full items-center justify-center mb-2 ${unlocked ? 'bg-[#39FF14]/20' : 'bg-gray-200 dark:bg-zinc-700'} overflow-hidden`}>
+                     {!unlocked ? <Lock color="#9CA3AF" size={24} /> : <Image source={{ uri: badge.uri }} style={{ width: 60, height: 60, resizeMode: 'contain' }} />}
                   </View>
-                  <Text className="text-black dark:text-white font-bold text-center text-xs font-poppins-bold">{badge.title}</Text>
+                  <Text className={`text-center text-xs font-poppins-bold ${unlocked ? 'text-black dark:text-white' : 'text-gray-400'}`}>{badge.title}</Text>
                   {!unlocked && (
                     <Text className="text-gray-400 text-[10px] mt-1 text-center font-poppins">Requis: {badge.xpReq} XP</Text>
                   )}
@@ -181,7 +194,15 @@ export default function HistoryScreen() {
           </View>
         </View>
 
+        {/* BOUTON EXPORT PDF */}
+        <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => console.log('Export PDF')}
+            className="bg-black dark:bg-zinc-800 rounded-full py-4 items-center justify-center mt-2 mx-4 shadow-lg mb-10">
+            <Text className="text-[#39FF14] text-sm font-black uppercase tracking-wider" style={{ fontFamily: 'Poppins_700Bold' }}>EXPORTER MON BILAN (PDF)</Text>
+        </TouchableOpacity>
+
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -629,7 +629,7 @@ export default function MyDayScreen() {
           {/* D. LA BOUTIQUE ONYX */}
           <View className="mt-8 mb-4">
             <View className="mb-4">
-              <Text className="text-black dark:text-white text-lg uppercase tracking-wide" style={{ fontFamily: "Poppins_700Bold" }}>LE MARCHÉ ONYX • VOS ALLIÉS MINCEUR</Text>
+              <Text className="text-black dark:text-white text-lg uppercase tracking-wide" style={{ fontFamily: "Poppins_700Bold" }}>BOUTIQUE SUPER ALIMENTS AFRICAINS • VOS ALLIÉS MINCEUR ET ALIMENTATION SAINE</Text>
               <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">Sélection 100% naturelle personnalisée selon votre métabolisme</Text>
             </View>
 
@@ -663,6 +663,15 @@ export default function MyDayScreen() {
               ))}
             </ScrollView>
           </View>
+
+          {/* E. BOUTON MON HISTORIQUE GLOBAL */}
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/history' as any)}
+            className="bg-zinc-900 rounded-[2rem] p-6 items-center justify-center mt-6 shadow-lg mb-10 border border-[#39FF14]/30">
+            <Text className="text-white text-xl font-black uppercase font-poppins-bold">MON HISTORIQUE</Text>
+            <Text className="text-[#39FF14] text-xs font-bold mt-1 font-poppins-bold">Voir mon évolution et mes badges</Text>
+          </TouchableOpacity>
         </View>
 
       </ScrollView>
