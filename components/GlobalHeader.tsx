@@ -52,13 +52,63 @@ export default function GlobalHeader() {
   };
 
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'Bonjour';
+    if (hour >= 12 && hour < 18) return 'Salam';
+    return 'Bonsoir';
+  };
+
+  const [coachMessage, setCoachMessage] = useState("Prête à briller aujourd'hui ?");
+
+  useEffect(() => {
+    const generateCoachMessage = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const todayDateString = new Date().toISOString().split('T')[0];
+        const { data: todayLog } = await supabase
+          .from('nutrition_daily_logs')
+          .select('water_glasses, calories_consumed')
+          .eq('client_id', session.user.id)
+          .eq('log_date', todayDateString)
+          .maybeSingle();
+
+        const messages = [];
+        const hour = new Date().getHours();
+
+        if (hour > 12 && (!todayLog || !todayLog.water_glasses || todayLog.water_glasses < 4)) {
+           messages.push("Il fait chaud à Dakar aujourd'hui, n'oublie pas tes verres d'eau ! 💧");
+        } else if (todayLog && todayLog.calories_consumed > 1000) {
+           messages.push("Objectif journalier presque atteint, encore un petit effort ! 💪");
+        } else if (hour < 10) {
+           messages.push("Un bon petit-déjeuner pour bien démarrer la journée ! ☀️");
+        } else {
+           messages.push("Prête à briller aujourd'hui ? Reste constante ! ✨");
+        }
+
+        setCoachMessage(messages[0]);
+      } catch (e) {
+        // Silently fallback if error
+      }
+    };
+    generateCoachMessage();
+  }, []);
+
   return (
     <View className="flex-row items-center justify-between px-5 pt-4 pb-2 bg-transparent z-50">
-      <View className="flex-row items-center">
-        <TouchableOpacity onPress={() => router.push("/profile")}><Image source={{ uri: avatar }} className="w-10 h-10 rounded-full border-2 border-[#39FF14] mr-3" /></TouchableOpacity>
-        <Text className="text-black dark:text-white text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>
-          Hello {clientName && clientName !== "Membre" ? clientName.split(' ')[0] : "Membre"} <Text className="text-lg">⚡</Text>
-        </Text>
+      <View className="flex-row items-center flex-1 pr-4">
+        <TouchableOpacity onPress={() => router.push("/profile")}>
+          <Image source={{ uri: avatar }} className="w-12 h-12 rounded-full border-2 border-[#39FF14] mr-3" />
+        </TouchableOpacity>
+        <View className="flex-col flex-1 justify-center relative">
+           <Image source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535959/A_cute__highly_detailed_3D_202606151505_ytie6s.jpg' }} className="absolute -left-12 -top-1 w-6 h-6 rounded-full border border-white z-10" />
+           <Text className="text-black dark:text-white text-xl leading-tight" style={{ fontFamily: 'Poppins_900Black' }}>
+            {getGreeting()} {clientName && clientName !== "Membre" ? clientName.split(' ')[0] : "Membre"} <Text className="text-lg">⚡</Text>
+           </Text>
+           <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-medium" numberOfLines={1}>{coachMessage}</Text>
+        </View>
       </View>
       <View className="flex-row items-center space-x-4">
         <TouchableOpacity className="relative mr-4">
