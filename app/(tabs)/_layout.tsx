@@ -103,6 +103,12 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <User color={color} size={24} />,
         }}
       />
+      <Tabs.Screen
+        name="history"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
     </View>
   );
