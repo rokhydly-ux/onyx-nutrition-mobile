@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
 import { ChevronLeft, CheckCircle, Trophy } from 'lucide-react-native';
 import CircularProgress from '../../components/CircularProgress';
+import DailyReportModal from '../../components/DailyReportModal';
 import { supabase } from '../../lib/supabase';
 
 // Helper component for the macros bars
@@ -379,44 +380,13 @@ export default function MyDayScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
 
       {/* Bilan du Jour Modal */}
-      <Modal visible={isDailyReportModalVisible} animationType="slide" transparent>
-        <View className="flex-1 bg-black/90 p-4 pt-12 justify-center items-center">
-          <View className="bg-zinc-900 w-full rounded-[2rem] p-6 items-center shadow-lg border border-zinc-800">
-             <Trophy size={48} color="#39FF14" className="mb-4" />
-             <Text className="text-white text-2xl font-black mb-2 text-center" style={{ fontFamily: 'Poppins_900Black' }}>BILAN DU JOUR</Text>
-             <Text className="text-gray-400 text-center mb-6 text-sm" style={{ fontFamily: 'Poppins_400Regular' }}>Confirmez vos repas de la journée pour gagner vos XP !</Text>
-
-             <View className="w-full mb-6">
-                {meals.map((m, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    className="flex-row items-center justify-between bg-zinc-800 p-4 rounded-xl mb-3 border border-zinc-700"
-                    onPress={() => !m.logged && handleLogMeal(m)}
-                  >
-                    <Text className="text-white font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{m.type}</Text>
-                    <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${m.logged ? 'border-[#39FF14] bg-[#39FF14]/20' : 'border-gray-500'}`}>
-                      {m.logged && <CheckCircle size={14} color="#39FF14" />}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-             </View>
-
-             <TouchableOpacity
-                disabled={!allMealsLogged}
-                onPress={() => {
-                  setIsDailyReportModalVisible(false);
-                  triggerCoachBubble("Bilan validé ! Félicitations pour ta constance !");
-                }}
-                className={`w-full py-4 rounded-2xl items-center ${allMealsLogged ? 'bg-[#39FF14]' : 'bg-gray-600'}`}>
-               <Text className={`font-black text-lg ${allMealsLogged ? 'text-black' : 'text-gray-400'}`} style={{ fontFamily: 'Poppins_900Black' }}>VALIDER MON BILAN</Text>
-             </TouchableOpacity>
-
-             <TouchableOpacity className="mt-4" onPress={() => setIsDailyReportModalVisible(false)}>
-               <Text className="text-gray-400 font-bold">Plus tard</Text>
-             </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <DailyReportModal
+        visible={isDailyReportModalVisible}
+        onClose={() => setIsDailyReportModalVisible(false)}
+        meals={meals}
+        onLogMeal={handleLogMeal}
+        onValidate={() => triggerCoachBubble("Bilan validé ! Félicitations pour ta constance !")}
+      />
 
       {/* Search Food Modal */}
       <Modal visible={isSearchModalVisible} animationType="slide" transparent>
