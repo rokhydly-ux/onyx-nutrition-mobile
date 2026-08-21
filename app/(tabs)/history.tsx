@@ -6,6 +6,7 @@ import { Lock, ChevronLeft } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { Image, Alert } from 'react-native';
 import GlobalHeader from '../../components/GlobalHeader';
+import DailyReportModal from '../../components/DailyReportModal';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -21,6 +22,9 @@ export default function HistoryScreen() {
   const [profile, setProfile] = useState<any>(null);
 
   const xp = profile?.jongoma_xp || 0;
+  const [isDailyReportModalVisible, setIsDailyReportModalVisible] = React.useState(false);
+  const [selectedDateMeals, setSelectedDateMeals] = React.useState<any[]>([]);
+  const [selectedDateStr, setSelectedDateStr] = React.useState('');
 
   useEffect(() => {
     fetchHistoryData();
@@ -117,6 +121,44 @@ export default function HistoryScreen() {
     { title: 'Légende', xpReq: 1000, uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1784493019/LEGENDE_z4ipny.png' },
   ];
 
+
+  const handleRattraper = async (logDate: string) => {
+    setSelectedDateStr(logDate);
+    const templateMeals = [
+      { id: '1', type: 'Petit-déjeuner', name: 'Standard', calories: 400, p: 20, c: 50, f: 15, logged: false, img: 'https://via.placeholder.com/150' },
+      { id: '2', type: 'Déjeuner', name: 'Standard', calories: 600, p: 30, c: 60, f: 20, logged: false, img: 'https://via.placeholder.com/150' },
+      { id: '3', type: 'Dîner', name: 'Standard', calories: 500, p: 25, c: 45, f: 15, logged: false, img: 'https://via.placeholder.com/150' }
+    ];
+    setSelectedDateMeals(templateMeals);
+    setIsDailyReportModalVisible(true);
+  };
+
+  const handleLogPastMeal = async (meal: any) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+
+      const { data: existingLog } = await supabase
+        .from('nutrition_daily_logs')
+        .select('*')
+        .eq('client_id', userId)
+        .eq('log_date', selectedDateStr)
+        .maybeSingle();
+
+      const updatedCalories = (existingLog?.calories_consumed || 0) + (meal.calories || 0);
+
+      if (existingLog) {
+        await supabase.from('nutrition_daily_logs').update({ calories_consumed: updatedCalories }).eq('id', existingLog.id);
+      } else {
+        await supabase.from('nutrition_daily_logs').insert({ client_id: userId, log_date: selectedDateStr, calories_consumed: updatedCalories });
+      }
+
+      setSelectedDateMeals(prev => prev.map(m => m.id === meal.id ? { ...m, logged: true } : m));
+      fetchHistoryData();
+    } catch (e) {}
+  };
+
   const handleExportPDF = async () => {
     try {
       const html = `
@@ -189,9 +231,9 @@ export default function HistoryScreen() {
   return (
     <View className="flex-1 bg-white dark:bg-zinc-950 font-sans pt-4">
 
-      <ScrollView className="flex-1 px-4 pb-12" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView className="flex-1 px-4 pb-12" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
 
-        <View className="flex-row items-center mb-6 mt-4">
+        <View className="flex-row items-center mb-6 mt-12 z-50 relative">
           <TouchableOpacity onPress={() => router.back()} className="mr-3">
             <ChevronLeft size={24} color={isDark ? '#FFF' : '#000'} />
           </TouchableOpacity>
@@ -206,11 +248,11 @@ export default function HistoryScreen() {
             {/* HYDRATATION */}
             <View className="flex-1 mr-2 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-2 items-center">
                <Text className="text-gray-400 text-[10px] font-bold mb-4">EAU (VERRES)</Text>
-               <View className="flex-row items-end h-24 gap-1">
+               <View className="flex-row items-end h-24 gap-1 w-full">
                  {mappedLogs.map((log, idx) => {
                    const heightPct = Math.min((log.water_glasses / maxWater) * 100, 100);
                    return (
-                     <View key={`water-${idx}`} className="items-center flex-1">
+                     <View key={`water-${idx}`} className="items-center flex-1 justify-end h-full">
                        <View className="w-full bg-blue-500 rounded-t-sm" style={{ height: `${heightPct}%`, minHeight: 4 }} />
                      </View>
                    );
@@ -221,11 +263,11 @@ export default function HistoryScreen() {
             {/* CALORIES */}
             <View className="flex-1 ml-2 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-2 items-center">
                <Text className="text-gray-400 text-[10px] font-bold mb-4">CALORIES</Text>
-               <View className="flex-row items-end h-24 gap-1">
+               <View className="flex-row items-end h-24 gap-1 w-full">
                  {mappedLogs.map((log, idx) => {
                    const heightPct = Math.min((log.calories_consumed / maxCalories) * 100, 100);
                    return (
-                     <View key={`cal-${idx}`} className="items-center flex-1">
+                     <View key={`cal-${idx}`} className="items-center flex-1 justify-end h-full">
                        <View className="w-full bg-red-400 rounded-t-sm" style={{ height: `${heightPct}%`, minHeight: 4 }} />
                      </View>
                    );
@@ -243,14 +285,14 @@ export default function HistoryScreen() {
         {/* LOGS LIST */}
         <View className="bg-zinc-50 dark:bg-zinc-900 rounded-[2rem] p-6 mb-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
           <Text className="text-black dark:text-white font-bold mb-4 font-poppins-bold">Derniers Jours</Text>
-          {logs.length > 0 ? logs.slice().reverse().map((log: any, idx: number) => {
+          {mappedLogs.length > 0 ? mappedLogs.slice().reverse().map((log: any, idx: number) => {
             const isEmpty = (log.calories_consumed || 0) === 0;
             return (
               <View key={log.id || idx} className="flex-row justify-between items-center py-3 border-b border-zinc-200 dark:border-zinc-800 last:border-b-0">
                 <View>
                   <Text className="text-black dark:text-white font-bold font-poppins-bold mb-1">{new Date(log.log_date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</Text>
                   {isEmpty ? (
-                    <TouchableOpacity className="bg-[#39FF14] px-3 py-1 rounded-full animate-pulse" onPress={() => router.push('/my-day')}>
+                    <TouchableOpacity className="bg-[#39FF14] px-3 py-1 rounded-full animate-pulse" onPress={() => handleRattraper(log.log_date)}>
                       <Text className="text-black text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>Rattraper</Text>
                     </TouchableOpacity>
                   ) : (
@@ -308,6 +350,16 @@ export default function HistoryScreen() {
         </TouchableOpacity>
 
       </ScrollView>
+      <DailyReportModal
+        visible={isDailyReportModalVisible}
+        onClose={() => setIsDailyReportModalVisible(false)}
+        meals={selectedDateMeals}
+        onLogMeal={handleLogPastMeal}
+        onValidate={() => {
+          setIsDailyReportModalVisible(false);
+          fetchHistoryData();
+        }}
+      />
     </View>
   );
 }

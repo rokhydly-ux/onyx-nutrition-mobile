@@ -1,6 +1,6 @@
 import ConfettiCannon from 'react-native-confetti-cannon';
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, Image, ImageBackground, TouchableOpacity, TextInput, LayoutAnimation, UIManager, Platform } from 'react-native';
+import { View, Text, ScrollView, Animated, Image, ImageBackground, TouchableOpacity, TextInput, LayoutAnimation, UIManager, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Heart } from 'lucide-react-native';
 import GlobalHeader from '../../components/GlobalHeader';
@@ -145,6 +145,30 @@ export default function ShopScreen() {
 
 
   const cartItemCount = shopCart.reduce((acc, item) => acc + item.quantity, 0);
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (cartItemCount > 0) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.2,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          })
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+    return () => pulseAnim.stopAnimation();
+  }, [cartItemCount, pulseAnim]);
   const calculatedTotal = shopCart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
 
@@ -446,8 +470,10 @@ export default function ShopScreen() {
               <TouchableOpacity onPress={() => router.push('/orders')} className="bg-white/20 px-3 py-2 rounded-full backdrop-blur-md border border-white/10">
                 <Text className="text-white text-[10px] font-bold">Mes Achats</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className={`w-12 h-12 rounded-full items-center justify-center relative backdrop-blur-md ${cartItemCount > 0 ? 'bg-[#39FF14] animate-pulse' : 'bg-white/20'}`}>
-                <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1786883944/panierreact_glnlwm.png" }} className="w-8 h-8 resize-contain" />
+              <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className={`w-12 h-12 rounded-full items-center justify-center relative backdrop-blur-md ${cartItemCount > 0 ? 'bg-[#39FF14]' : 'bg-white/20'}`}>
+                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                  <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1786883944/panierreact_glnlwm.png" }} className="w-10 h-10 resize-contain" />
+                </Animated.View>
                 {cartItemCount > 0 && (
                 <View className="absolute -top-1 -right-1 bg-black w-4 h-4 rounded-full items-center justify-center">
                   <Text className="text-white text-[9px] font-black">{cartItemCount}</Text>
