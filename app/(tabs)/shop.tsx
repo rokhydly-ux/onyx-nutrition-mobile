@@ -446,8 +446,8 @@ export default function ShopScreen() {
               <TouchableOpacity onPress={() => router.push('/orders')} className="bg-white/20 px-3 py-2 rounded-full backdrop-blur-md border border-white/10">
                 <Text className="text-white text-[10px] font-bold">Mes Achats</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className={`w-10 h-10 rounded-full items-center justify-center relative backdrop-blur-md ${cartItemCount > 0 ? 'bg-[#39FF14] animate-pulse' : 'bg-white/20'}`}>
-                <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1786892773/2_kp1j0s.png" }} className="w-5 h-5 rounded-full" />
+              <TouchableOpacity onPress={() => { setSelectedProduct(null); setIsModalVisible(true); }} className={`w-12 h-12 rounded-full items-center justify-center relative backdrop-blur-md ${cartItemCount > 0 ? 'bg-[#39FF14] animate-pulse' : 'bg-white/20'}`}>
+                <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1786883944/panierreact_glnlwm.png" }} className="w-8 h-8 resize-contain" />
                 {cartItemCount > 0 && (
                 <View className="absolute -top-1 -right-1 bg-black w-4 h-4 rounded-full items-center justify-center">
                   <Text className="text-white text-[9px] font-black">{cartItemCount}</Text>
