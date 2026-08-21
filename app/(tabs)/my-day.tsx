@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, Activ
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
-import { ChevronLeft, CheckCircle } from 'lucide-react-native';
+import { ChevronLeft, CheckCircle, Trophy } from 'lucide-react-native';
 import CircularProgress from '../../components/CircularProgress';
 import { supabase } from '../../lib/supabase';
 
@@ -53,6 +53,7 @@ export default function MyDayScreen() {
   const [foodSearchResults, setFoodSearchResults] = useState<any[]>([]);
   const [isSearchingFood, setIsSearchingFood] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
+  const [isDailyReportModalVisible, setIsDailyReportModalVisible] = useState(false);
 
   useEffect(() => {
     fetchMyDayData();
@@ -372,8 +373,51 @@ export default function MyDayScreen() {
     );
   }
 
+  const allMealsLogged = meals.every(m => m.logged);
+
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-zinc-950 font-sans relative">
+
+      {/* Bilan du Jour Modal */}
+      <Modal visible={isDailyReportModalVisible} animationType="slide" transparent>
+        <View className="flex-1 bg-black/90 p-4 pt-12 justify-center items-center">
+          <View className="bg-zinc-900 w-full rounded-[2rem] p-6 items-center shadow-lg border border-zinc-800">
+             <Trophy size={48} color="#39FF14" className="mb-4" />
+             <Text className="text-white text-2xl font-black mb-2 text-center" style={{ fontFamily: 'Poppins_900Black' }}>BILAN DU JOUR</Text>
+             <Text className="text-gray-400 text-center mb-6 text-sm" style={{ fontFamily: 'Poppins_400Regular' }}>Confirmez vos repas de la journée pour gagner vos XP !</Text>
+
+             <View className="w-full mb-6">
+                {meals.map((m, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    className="flex-row items-center justify-between bg-zinc-800 p-4 rounded-xl mb-3 border border-zinc-700"
+                    onPress={() => !m.logged && handleLogMeal(m)}
+                  >
+                    <Text className="text-white font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{m.type}</Text>
+                    <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${m.logged ? 'border-[#39FF14] bg-[#39FF14]/20' : 'border-gray-500'}`}>
+                      {m.logged && <CheckCircle size={14} color="#39FF14" />}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+             </View>
+
+             <TouchableOpacity
+                disabled={!allMealsLogged}
+                onPress={() => {
+                  setIsDailyReportModalVisible(false);
+                  triggerCoachBubble("Bilan validé ! Félicitations pour ta constance !");
+                }}
+                className={`w-full py-4 rounded-2xl items-center ${allMealsLogged ? 'bg-[#39FF14]' : 'bg-gray-600'}`}>
+               <Text className={`font-black text-lg ${allMealsLogged ? 'text-black' : 'text-gray-400'}`} style={{ fontFamily: 'Poppins_900Black' }}>VALIDER MON BILAN</Text>
+             </TouchableOpacity>
+
+             <TouchableOpacity className="mt-4" onPress={() => setIsDailyReportModalVisible(false)}>
+               <Text className="text-gray-400 font-bold">Plus tard</Text>
+             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Search Food Modal */}
       <Modal visible={isSearchModalVisible} animationType="slide" transparent>
         <View className="flex-1 bg-black/90 p-4 pt-12">
@@ -438,12 +482,12 @@ export default function MyDayScreen() {
           <Text className="flex-1 text-white text-xs" style={{ fontFamily: 'Poppins_500Medium' }}>{coachBubble.message}</Text>
         </View>
       )}
-      <ScrollView className="flex-1 px-4 pt-12 pb-24" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-4 pt-12 pb-32" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
 
 
         {/* 1. EN-TÊTE DE PAGE */}
         <View className="mb-6">
-          <TouchableOpacity onPress={() => router.back()} className="flex-row items-center mb-4">
+          <TouchableOpacity onPress={() => router.push('/')} className="flex-row items-center mb-4">
             <ChevronLeft size={20} color={isDark ? '#FFF' : '#000'} />
             <Text className="text-black dark:text-white text-sm font-medium ml-1">Retour à l'accueil</Text>
           </TouchableOpacity>
@@ -618,9 +662,9 @@ export default function MyDayScreen() {
 
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => console.log('Open Daily Report Modal')}
+            onPress={() => setIsDailyReportModalVisible(true)}
             className="bg-[#39FF14] rounded-[2rem] p-6 items-center justify-center mt-4 shadow-lg shadow-[#39FF14]/20 mb-10">
-            <CheckCircle size={32} color="black" className="mb-2" />
+            <Trophy size={32} color="black" className="mb-2" />
             <Text className="text-black text-xl font-black uppercase font-poppins-bold">BILAN DU JOUR</Text>
             <Text className="text-black/70 text-xs font-bold mt-1 font-poppins-bold">Clôturez pour gagner de l'XP</Text>
           </TouchableOpacity>
