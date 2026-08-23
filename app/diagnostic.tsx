@@ -117,6 +117,14 @@ export default function DiagnosticScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [password, setPassword] = useState('');
 
+  const [hasSession, setHasSession] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasSession(!!session);
+    });
+  }, []);
+
   const step9Scale = useRef(new Animated.Value(1)).current;
 
 
@@ -251,10 +259,12 @@ export default function DiagnosticScreen() {
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <Text className="text-black dark:text-white text-2xl font-bold mb-6" style={{ fontFamily: 'Poppins_700Bold' }}>Parle-nous de toi</Text>
 
-      <View className="flex-row gap-3">
-        <SelectableGridCard label="Homme" value="Homme" selectedValue={data.gender} onSelect={(v: string) => updateData('gender', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_format_1_1_en_202606111044_rjknkg.jpg" />
-        <SelectableGridCard label="Femme" value="Femme" selectedValue={data.gender} onSelect={(v: string) => updateData('gender', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_1_1_en_gardant_202606111043_unmonc.jpg" />
-      </View>
+      {!hasSession && (
+        <View className="flex-row gap-3">
+          <SelectableGridCard label="Homme" value="Homme" selectedValue={data.gender} onSelect={(v: string) => updateData('gender', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_format_1_1_en_202606111044_rjknkg.jpg" />
+          <SelectableGridCard label="Femme" value="Femme" selectedValue={data.gender} onSelect={(v: string) => updateData('gender', v)} imageUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781174715/redimensionner_1_1_en_gardant_202606111043_unmonc.jpg" />
+        </View>
+      )}
 
       <View className="mt-8">
         <Text className="text-gray-500 dark:text-gray-400 text-lg mb-2 text-center" style={{ fontFamily: 'Poppins_500Medium' }}>Quel âge as-tu ?</Text>
@@ -539,7 +549,13 @@ export default function DiagnosticScreen() {
 
         <TouchableOpacity
           className="bg-black py-4 rounded-full items-center mt-10 shadow-[0_0_15px_rgba(0,0,0,0.3)]"
-          onPress={() => setStep(11)}
+          onPress={() => {
+            if (hasSession) {
+              handleSubmit();
+            } else {
+              setStep(11);
+            }
+          }}
         >
           <Text className="font-bold text-lg uppercase text-[#39FF14]" style={{ fontFamily: 'Poppins_700Bold' }}>
             Valider mes objectifs
@@ -622,64 +638,81 @@ export default function DiagnosticScreen() {
 
     const backendProcess = async () => {
       try {
-        const cleanPhone = data.phone.replace(/\s+/g, '');
-        const authEmail = cleanPhone.includes('@') ? cleanPhone : `${cleanPhone}@clients.onyxcrm.com`;
-        const defaultPassword = cleanPhone.slice(-8).padStart(8, '0');
-
-
         let userId = null;
+        let finalPhone = data.phone;
+        let finalFirstName = data.firstName;
 
-        // ÉTAPE A : Tentative de connexion (Si le compte existe déjà)
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: authEmail,
-          password: password || defaultPassword,
-        });
+        // If the user is already authenticated, fetch their ID and skip creation
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (signInData?.user) {
-          userId = signInData.user.id;
+        if (session?.user) {
+          userId = session.user.id;
+
+          // Optionally fetch existing client data if we didn't collect it
+          if (!finalPhone || !finalFirstName) {
+             const { data: clientData } = await supabase.from('clients').select('phone, full_name').eq('id', userId).maybeSingle();
+             if (clientData) {
+               finalPhone = clientData.phone || finalPhone;
+               finalFirstName = clientData.full_name || finalFirstName;
+             }
+          }
         } else {
-          // ÉTAPE B : Création via notre API Backend Web (Bypass RLS & Période d'essai J+15)
-          const response = await fetch('https://nutriafro.app/api/create-user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: authEmail,
-              password: password || defaultPassword,
-              fullName: data.firstName,
-              phone: cleanPhone.startsWith('+221') ? cleanPhone : `+221${cleanPhone}`,
-              role: 'client',
-              saas: "Nutrition à l'Africaine",
-              type: 'Client',
-              status: 'Compte Créé',
-              password_temp: password || defaultPassword,
-              trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-            }),
+          const cleanPhone = data.phone.replace(/\s+/g, '');
+          const authEmail = cleanPhone.includes('@') ? cleanPhone : `${cleanPhone}@clients.onyxcrm.com`;
+          const defaultPassword = cleanPhone.slice(-8).padStart(8, '0');
+
+          // ÉTAPE A : Tentative de connexion (Si le compte existe déjà)
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: authEmail,
+            password: password || defaultPassword,
           });
 
-          const apiResult = await response.json();
+          if (signInData?.user) {
+            userId = signInData.user.id;
+          } else {
+            // ÉTAPE B : Création via notre API Backend Web (Bypass RLS & Période d'essai J+15)
+            const response = await fetch('https://nutriafro.app/api/create-user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: authEmail,
+                password: password || defaultPassword,
+                fullName: data.firstName,
+                phone: cleanPhone.startsWith('+221') ? cleanPhone : `+221${cleanPhone}`,
+                role: 'client',
+                saas: "Nutrition à l'Africaine",
+                type: 'Client',
+                status: 'Compte Créé',
+                password_temp: password || defaultPassword,
+                trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+              }),
+            });
+
+            const apiResult = await response.json();
 
 
-          if (!response.ok) {
-            throw new Error(apiResult.message || "Erreur lors de la création du compte via API");
+            if (!response.ok) {
+              throw new Error(apiResult.message || "Erreur lors de la création du compte via API");
+            }
+
+            userId = apiResult.user?.id || apiResult.id;
+
+            // Connecter immédiatement la session côté mobile après la création API
+            await supabase.auth.signInWithPassword({
+              email: authEmail,
+              password: defaultPassword,
+            });
           }
 
-          userId = apiResult.user?.id || apiResult.id;
-
-          // Connecter immédiatement la session côté mobile après la création API
-          await supabase.auth.signInWithPassword({
-            email: authEmail,
-            password: defaultPassword,
-          });
+          await supabase.from('clients').upsert([{
+            id: userId,
+            full_name: finalFirstName,
+            phone: cleanPhone,
+            created_at: new Date().toISOString()
+          }], { onConflict: 'id' });
         }
 
         if (!userId) throw new Error("Impossible de récupérer l'ID utilisateur.");
-
-        await supabase.from('clients').upsert([{
-          id: userId,
-          full_name: data.firstName,
-          phone: cleanPhone,
-          created_at: new Date().toISOString()
-        }], { onConflict: 'id' });
 
         const calories = calculateDailyCalories(data);
 
@@ -688,8 +721,8 @@ export default function DiagnosticScreen() {
           .from('leads')
           .insert([
             {
-              full_name: data.firstName,
-              phone: cleanPhone,
+              full_name: finalFirstName,
+              phone: finalPhone || data.phone.replace(/\s+/g, ''),
               source: "Diagnostic Nutrition Landing",
               intent: "A complété son diagnostic",
               status: "Nouveau",
@@ -709,7 +742,7 @@ export default function DiagnosticScreen() {
           .upsert([
             {
               client_id: userId,
-              phone: cleanPhone,
+              phone: finalPhone || data.phone.replace(/\s+/g, ''),
               daily_calorie_goal: calories,
               bmr: 0,
               tdee: 0,
@@ -798,13 +831,13 @@ export default function DiagnosticScreen() {
           <View className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 border-t border-zinc-100 dark:border-zinc-800" >
             {step === 9 ? (
               <TouchableOpacity
-                className={`w-full py-4 rounded-full items-center ${data.firstName && data.phone && !isSubmitting ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}
+                className={`w-full py-4 rounded-full items-center ${(!isSubmitting) ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}
                 onPress={() => {
                    setStep(10);
                 }}
-                disabled={!(data.firstName && data.phone) || isSubmitting}
+                disabled={isSubmitting}
               >
-                <Text className={`font-bold text-lg uppercase ${data.firstName && data.phone ? 'text-black' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+                <Text className={`font-bold text-lg uppercase ${!isSubmitting ? 'text-black' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_700Bold' }}>
                   Générer mon programme
                 </Text>
               </TouchableOpacity>

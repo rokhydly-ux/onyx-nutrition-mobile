@@ -77,21 +77,33 @@ export default function MenuScreen() {
 
               <View className={`rounded-[2rem] bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 relative overflow-hidden`}>
 
-                <View className={`flex-row items-center mb-4 ${isLocked ? 'opacity-30' : ''}`}>
-                   <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg" }} className="w-16 h-16 rounded-2xl mr-4" />
-                   <View>
-                     <Text className="text-black dark:text-white font-bold text-lg" style={{ fontFamily: "Poppins_700Bold" }}>Lundi - Déjeuner</Text>
-                     <Text className="text-gray-500">Thieboudienne Diététique</Text>
+                {weekData.days ? weekData.days.map((dayData: any, dayIndex: number) => (
+                   <View key={dayIndex} className={`flex-row items-center mb-4 ${isLocked ? 'opacity-30' : ''}`}>
+                     <Image source={{ uri: dayData.image_url || "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg" }} className="w-16 h-16 rounded-2xl mr-4" />
+                     <View className="flex-1">
+                       <Text className="text-black dark:text-white font-bold text-lg" style={{ fontFamily: "Poppins_700Bold" }}>{dayData.day_name} - {dayData.meal_type}</Text>
+                       <Text className="text-gray-500" numberOfLines={1}>{dayData.recipe_name}</Text>
+                     </View>
                    </View>
-                </View>
+                )) : (
+                  <>
+                    <View className={`flex-row items-center mb-4 ${isLocked ? 'opacity-30' : ''}`}>
+                       <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg" }} className="w-16 h-16 rounded-2xl mr-4" />
+                       <View className="flex-1">
+                         <Text className="text-black dark:text-white font-bold text-lg" style={{ fontFamily: "Poppins_700Bold" }}>Lundi - Déjeuner</Text>
+                         <Text className="text-gray-500">Thieboudienne Diététique</Text>
+                       </View>
+                    </View>
 
-                <View className={`flex-row items-center mb-4 ${isLocked ? 'opacity-30' : ''}`}>
-                   <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg" }} className="w-16 h-16 rounded-2xl mr-4" />
-                   <View>
-                     <Text className="text-black dark:text-white font-bold text-lg" style={{ fontFamily: "Poppins_700Bold" }}>Mardi - Petit-déjeuner</Text>
-                     <Text className="text-gray-500">Bouillie de mil</Text>
-                   </View>
-                </View>
+                    <View className={`flex-row items-center mb-4 ${isLocked ? 'opacity-30' : ''}`}>
+                       <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg" }} className="w-16 h-16 rounded-2xl mr-4" />
+                       <View className="flex-1">
+                         <Text className="text-black dark:text-white font-bold text-lg" style={{ fontFamily: "Poppins_700Bold" }}>Mardi - Petit-déjeuner</Text>
+                         <Text className="text-gray-500">Bouillie de mil</Text>
+                       </View>
+                    </View>
+                  </>
+                )}
 
                 {isLocked && (
                   <View className="absolute inset-0 z-10 items-center justify-center bg-black/40">
