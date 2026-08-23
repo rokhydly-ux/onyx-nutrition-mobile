@@ -61,7 +61,7 @@ const initialDiagData: DiagData = {
   phone: '',
 };
 
-const TOTAL_STEPS = 12;
+const TOTAL_STEPS = 11;
 
   const SelectableCard = ({ label, value, selectedValue, onSelect, imageUri, icon: IconComponent }: any) => {
     const isSelected = selectedValue === value;
@@ -166,15 +166,6 @@ export default function DiagnosticScreen() {
           Animated.timing(step10Scale4, { toValue: 1, duration: 400, useNativeDriver: true })
         ])
       ]).start();
-    }
-  }, [step]);
-
-  useEffect(() => {
-    if (step === 12) {
-      const timer = setTimeout(() => {
-        router.replace('/(tabs)');
-      }, 3000);
-      return () => clearTimeout(timer);
     }
   }, [step]);
 
@@ -603,56 +594,6 @@ export default function DiagnosticScreen() {
     );
   };
 
-  const Step12 = () => {
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        router.replace('/(tabs)');
-      }, 4000);
-      return () => clearTimeout(timer);
-    }, []);
-
-    return (
-      <View className="flex-1 bg-white -m-6 p-6 justify-center items-center" style={{ borderTopWidth: 8, borderTopColor: '#39FF14' }}>
-        <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png" }} className="w-32 h-12 mb-8" resizeMode="contain" />
-
-        <Text className="text-black text-3xl font-bold text-center mb-8" style={{ fontFamily: 'Poppins_700Bold' }}>
-          Bienvenue <Text className="text-[#39FF14]">{data.firstName}</Text> !
-        </Text>
-
-        <View className="bg-black rounded-2xl p-6 w-full mb-6">
-          <View className="flex-row items-center justify-center mb-4">
-            <CheckCircle2 color="white" size={32} />
-          </View>
-          <Text className="text-white text-center mb-4" style={{ fontFamily: 'Poppins_500Medium' }}>
-            Numéro WhatsApp : <Text className="font-bold">{data.phone}</Text>
-          </Text>
-          <View className="flex-row items-center justify-center">
-            <Text className="text-white text-center mr-2" style={{ fontFamily: 'Poppins_500Medium' }}>Mot de passe provisoire :</Text>
-            <View className="bg-[#39FF14] rounded-lg p-2">
-              <Text className="text-black font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{(data.phone || "").replace(/\s+/g, '').slice(-8).padStart(8, '0')}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View className="flex-row items-center justify-center mb-10">
-          <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1781536233/A_cute__highly_detailed_3D_202606151510_uj9z5c.jpg" }} className="w-8 h-8 rounded-full mr-2" />
-          <Text className="text-gray-500 text-xs text-center" style={{ fontFamily: 'Poppins_400Regular' }}>
-            Vous pourrez modifier ce mot de passe plus tard.
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          className="bg-[#39FF14] w-full py-4 rounded-full items-center shadow-[0_0_15px_rgba(57,255,20,0.5)]"
-          onPress={() => router.replace('/(tabs)')}
-        >
-          <Text className="font-bold text-lg uppercase text-black" style={{ fontFamily: 'Poppins_700Bold' }}>
-            🚀 ACCÉDER À MON TABLEAU DE BORD
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
   // --- Backend Submission Logic --- //
 
   const calculateDailyCalories = (data: DiagData) => {
@@ -704,7 +645,7 @@ export default function DiagnosticScreen() {
             body: JSON.stringify({
               email: authEmail,
               password: password || defaultPassword,
-              full_name: data.firstName,
+              fullName: data.firstName,
               phone: cleanPhone.startsWith('+221') ? cleanPhone : `+221${cleanPhone}`,
               role: 'client',
               saas: "Nutrition à l'Africaine",
@@ -789,8 +730,8 @@ export default function DiagnosticScreen() {
     const success = await backendProcess();
 
     if (success) {
-      setStep(12);
       setIsSubmitting(false);
+      router.replace('/(tabs)');
     } else {
       // NEVER go backwards. Alert the user and let them retry without changing the step.
       alert("Erreur critique: Impossible de créer le compte. Veuillez vérifier votre connexion ou vos identifiants.");
@@ -811,7 +752,6 @@ export default function DiagnosticScreen() {
       case 9: return Step9();
       case 10: return Step10();
       case 11: return Step11();
-      case 12: return Step12();
       default: return Step1();
     }
   };
