@@ -26,6 +26,38 @@ export default function HistoryScreen() {
   const [selectedDateMeals, setSelectedDateMeals] = React.useState<any[]>([]);
   const [selectedDateStr, setSelectedDateStr] = React.useState('');
 
+  const [isSubmittingReport, setIsSubmittingReport] = React.useState(false);
+
+  const submitPastDailyReport = async (reportData: any) => {
+    setIsSubmittingReport(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+
+      let payload = {
+        client_id: userId,
+        log_date: selectedDateStr,
+        calories_consumed: profile?.daily_calorie_goal || 2000,
+        protein_consumed: 0,
+        carbs_consumed: 0,
+        fats_consumed: 0,
+        water_glasses: reportData.drankWater ? 8 : 0,
+        report_data: reportData
+      };
+
+      await supabase.from('nutrition_daily_logs').upsert(payload, { onConflict: 'client_id,log_date' });
+
+      setIsDailyReportModalVisible(false);
+      fetchHistoryData();
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+
   useEffect(() => {
     fetchHistoryData();
   }, []);
@@ -124,12 +156,6 @@ export default function HistoryScreen() {
 
   const handleRattraper = async (logDate: string) => {
     setSelectedDateStr(logDate);
-    const templateMeals = [
-      { id: '1', type: 'Petit-déjeuner', name: 'Standard', calories: 400, p: 20, c: 50, f: 15, logged: false, img: 'https://via.placeholder.com/150' },
-      { id: '2', type: 'Déjeuner', name: 'Standard', calories: 600, p: 30, c: 60, f: 20, logged: false, img: 'https://via.placeholder.com/150' },
-      { id: '3', type: 'Dîner', name: 'Standard', calories: 500, p: 25, c: 45, f: 15, logged: false, img: 'https://via.placeholder.com/150' }
-    ];
-    setSelectedDateMeals(templateMeals);
     setIsDailyReportModalVisible(true);
   };
 
@@ -353,12 +379,8 @@ export default function HistoryScreen() {
       <DailyReportModal
         visible={isDailyReportModalVisible}
         onClose={() => setIsDailyReportModalVisible(false)}
-        meals={selectedDateMeals}
-        onLogMeal={handleLogPastMeal}
-        onValidate={() => {
-          setIsDailyReportModalVisible(false);
-          fetchHistoryData();
-        }}
+        onValidate={submitPastDailyReport}
+        isSubmittingReport={isSubmittingReport}
       />
     </View>
   );

@@ -56,6 +56,47 @@ export default function MyDayScreen() {
   const [products, setProducts] = useState<any[]>([]);
   const [isDailyReportModalVisible, setIsDailyReportModalVisible] = useState(false);
 
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+  const submitDailyReport = async (reportData: any) => {
+    setIsSubmittingReport(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+      const todayDateString = new Date().toISOString().split('T')[0];
+
+      let payload = {
+        client_id: userId,
+        log_date: todayDateString,
+        calories_consumed: dailyStats.calories_consumed,
+        protein_consumed: dailyStats.protein_consumed,
+        carbs_consumed: dailyStats.carbs_consumed,
+        fats_consumed: dailyStats.fats_consumed,
+        water_glasses: dailyStats.water_glasses,
+        report_data: reportData
+      };
+
+      // Bonus UI: Si l'utilisateur a coché "Menu Suivi" mais qu'il n'avait rien logué (Calories = 0)
+      if (reportData.followedMenu && dailyStats.calories_consumed === 0) {
+          payload.calories_consumed = profile?.calories_goal || 2000;
+          payload.protein_consumed = profile?.protein_goal || 0;
+          payload.carbs_consumed = profile?.carbs_goal || 0;
+          payload.fats_consumed = profile?.fats_goal || 0;
+      }
+
+      await supabase.from('nutrition_daily_logs').upsert(payload, { onConflict: 'client_id,log_date' });
+
+      triggerCoachBubble("Bilan enregistré avec succès ! L'IA adaptera votre menu de demain.");
+      setIsDailyReportModalVisible(false);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+
   useEffect(() => {
     fetchMyDayData();
 
@@ -383,9 +424,8 @@ export default function MyDayScreen() {
       <DailyReportModal
         visible={isDailyReportModalVisible}
         onClose={() => setIsDailyReportModalVisible(false)}
-        meals={meals}
-        onLogMeal={handleLogMeal}
-        onValidate={() => triggerCoachBubble("Bilan validé ! Félicitations pour ta constance !")}
+        onValidate={submitDailyReport}
+        isSubmittingReport={isSubmittingReport}
       />
 
       {/* Search Food Modal */}
