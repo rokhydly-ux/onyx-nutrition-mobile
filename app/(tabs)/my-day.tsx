@@ -93,9 +93,11 @@ export default function MyDayScreen() {
         .maybeSingle();
 
       if (existingLog) {
-         await supabase.from('nutrition_daily_logs').update(payload).eq('id', existingLog.id);
+         const { error } = await supabase.from('nutrition_daily_logs').update(payload).eq('id', existingLog.id);
+         if (error) console.error("Update error:", error);
       } else {
-         await supabase.from('nutrition_daily_logs').insert([payload]);
+         const { error } = await supabase.from('nutrition_daily_logs').insert([payload]);
+         if (error) console.error("Insert error:", error);
       }
 
       triggerCoachBubble("Bilan enregistré avec succès ! L'IA adaptera votre menu de demain.");

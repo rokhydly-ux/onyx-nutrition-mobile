@@ -59,13 +59,15 @@ export default function HistoryScreen() {
       };
 
       if (existingLog) {
-         await supabase.from('nutrition_daily_logs').update(payload).eq('id', existingLog.id);
+         const { error } = await supabase.from('nutrition_daily_logs').update(payload).eq('id', existingLog.id);
+         if (error) console.error("Update error:", error);
       } else {
-         await supabase.from('nutrition_daily_logs').insert([payload]);
+         const { error } = await supabase.from('nutrition_daily_logs').insert([payload]);
+         if (error) console.error("Insert error:", error);
       }
 
       setIsDailyReportModalVisible(false);
-      await fetchHistoryData();
+      await fetchHistoryData(false);
     } catch(e) {
       console.error(e);
     } finally {
@@ -78,8 +80,8 @@ export default function HistoryScreen() {
     fetchHistoryData();
   }, []);
 
-  const fetchHistoryData = async () => {
-    setIsLoading(true);
+  const fetchHistoryData = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -96,8 +98,8 @@ export default function HistoryScreen() {
         .from('nutrition_daily_logs')
         .select('*')
         .eq('client_id', session.user.id)
-        .order('log_date', { ascending: true })
-        .limit(7);
+        .order('log_date', { ascending: false })
+        .limit(30);
 
       if (logsData) {
         setLogs(logsData);
@@ -197,7 +199,7 @@ export default function HistoryScreen() {
       }
 
       setSelectedDateMeals(prev => prev.map(m => m.id === meal.id ? { ...m, logged: true } : m));
-      fetchHistoryData();
+      fetchHistoryData(false);
     } catch (e) {}
   };
 
