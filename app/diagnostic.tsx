@@ -116,6 +116,34 @@ export default function DiagnosticScreen() {
   const [chatMessage, setChatMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [password, setPassword] = useState('');
+  const [session, setSession] = useState<any>(null);
+
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const initSession = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      setSession(currentSession);
+      if (currentSession) {
+        const { data: profileData } = await supabase
+          .from('nutrition_profiles')
+          .select('*')
+          .eq('client_id', currentSession.user.id)
+          .maybeSingle();
+
+        if (profileData && profileData.diagnostic_data) {
+          setProfile(profileData);
+          if (profileData.diagnostic_data.gender) {
+            setData(prev => ({ ...prev, gender: profileData.diagnostic_data.gender }));
+            // Start at step 2 if gender is known
+            setStep(2);
+          }
+        }
+      }
+    };
+    initSession();
+  }, []);
+
 
   const step9Scale = useRef(new Animated.Value(1)).current;
 
@@ -183,7 +211,12 @@ export default function DiagnosticScreen() {
 
   const prevStep = () => {
     if (step > 1) {
-      setStep(step - 1);
+      // If going back to step 1 and gender is already preset by profile, jump to back instead
+      if (step === 2 && profile?.diagnostic_data?.gender) {
+        router.back();
+      } else {
+        setStep(step - 1);
+      }
     } else {
       router.back();
     }
@@ -539,7 +572,7 @@ export default function DiagnosticScreen() {
 
         <TouchableOpacity
           className="bg-black py-4 rounded-full items-center mt-10 shadow-[0_0_15px_rgba(0,0,0,0.3)]"
-          onPress={() => setStep(11)}
+          onPress={handleValidateObjectives} disabled={isSubmitting}
         >
           <Text className="font-bold text-lg uppercase text-[#39FF14]" style={{ fontFamily: 'Poppins_700Bold' }}>
             Valider mes objectifs
@@ -616,6 +649,66 @@ export default function DiagnosticScreen() {
     // Plancher de sécurité
     return Math.max(1200, Math.round(tdee));
   };
+
+
+  const handleValidateObjectives = async () => {
+    if (session && session.user) {
+      setIsSubmitting(true);
+      try {
+        const calories = calculateDailyCalories(data);
+
+        // Update client data (if necessary, though we don't have new phone/name from step 11)
+        // Since we skip step 11, firstName/phone are blank if they didn't fill it earlier.
+        // Wait, step 9 already asks for "Prénom" and "Numéro WhatsApp" !!
+        // Let's check step 9. "Générer mon programme" requires `data.firstName && data.phone`.
+        // So we already have firstName and phone.
+
+        const profilePayload = {
+          client_id: session.user.id,
+          daily_calorie_goal: calories,
+          diagnostic_data: {
+            gender: data.gender,
+            age: data.age,
+            objective: data.objective,
+            height: data.height,
+            currentWeight: data.currentWeight,
+            targetWeight: data.targetWeight,
+            activityLevel: data.activityLevel,
+            sleep: data.sleep,
+            health: data.health,
+            womenCondition: data.womenCondition,
+            hydration: data.hydration,
+            pastDiets: data.pastDiets,
+            cookingFats: data.cookingFats,
+            mainCarb: data.mainCarb,
+            dinnerType: data.dinnerType,
+            lunchType: data.lunchType,
+            cookingFor: data.cookingFor,
+            groceryBudget: data.groceryBudget,
+          },
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: existingProfile } = await supabase.from('nutrition_profiles').select('id, diagnostic_data').eq('client_id', session.user.id).maybeSingle();
+
+        if (existingProfile) {
+          const mergedDiagnosticData = { ...existingProfile.diagnostic_data, ...profilePayload.diagnostic_data };
+          await supabase.from('nutrition_profiles').update({ ...profilePayload, diagnostic_data: mergedDiagnosticData }).eq('id', existingProfile.id);
+        } else {
+          await supabase.from('nutrition_profiles').insert([profilePayload]);
+        }
+
+        router.replace('/(tabs)');
+      } catch (error) {
+        console.error("Error updating objectives:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      setStep(11);
+    }
+  };
+
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
