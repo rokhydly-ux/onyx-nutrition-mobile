@@ -799,9 +799,9 @@ export default function ShopScreen() {
 
 
 
-                <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={{ paddingBottom: 150 }} keyboardShouldPersistTaps="handled">
+                <ScrollView showsVerticalScrollIndicator={false} className="flex-1 w-full" contentContainerStyle={{ paddingBottom: 150 }} keyboardShouldPersistTaps="handled">
                 {shopCart.length > 0 ? (
-                  <View className="mb-4">
+                  <View className="mb-4 w-full">
 
                     {shopCart.map(item => (
                       <View key={item.id} className="flex-row items-center justify-between mb-4 bg-zinc-100 dark:bg-zinc-900 p-3 rounded-2xl">
