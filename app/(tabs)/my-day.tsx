@@ -74,7 +74,7 @@ export default function MyDayScreen() {
         carbs_consumed: dailyStats.carbs_consumed,
         fats_consumed: dailyStats.fats_consumed,
         water_glasses: dailyStats.water_glasses,
-        report_data: reportData
+        report_data: { ...reportData, status: reportData.cravedRice ? 'Craquage' : 'Menu suivi' }
       };
 
       // Bonus UI: Si l'utilisateur a coché "Menu Suivi" mais qu'il n'avait rien logué (Calories = 0)
