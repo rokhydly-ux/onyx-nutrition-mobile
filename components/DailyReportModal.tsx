@@ -14,6 +14,16 @@ export default function DailyReportModal({
     cravedRice: false
   });
 
+  React.useEffect(() => {
+    if (visible) {
+      setReportData({
+        followedMenu: false,
+        drankWater: false,
+        cravedRice: false
+      });
+    }
+  }, [visible]);
+
   const toggleOption = (key: keyof typeof reportData) => {
     setReportData(prev => ({ ...prev, [key]: !prev[key] }));
   };
