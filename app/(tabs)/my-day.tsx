@@ -85,7 +85,18 @@ export default function MyDayScreen() {
           payload.fats_consumed = profile?.fats_goal || 0;
       }
 
-      await supabase.from('nutrition_daily_logs').upsert(payload, { onConflict: 'client_id,log_date' });
+      const { data: existingLog } = await supabase
+        .from('nutrition_daily_logs')
+        .select('*')
+        .eq('client_id', userId)
+        .eq('log_date', todayDateString)
+        .maybeSingle();
+
+      if (existingLog) {
+         await supabase.from('nutrition_daily_logs').update(payload).eq('id', existingLog.id);
+      } else {
+         await supabase.from('nutrition_daily_logs').insert([payload]);
+      }
 
       triggerCoachBubble("Bilan enregistré avec succès ! L'IA adaptera votre menu de demain.");
       setIsDailyReportModalVisible(false);

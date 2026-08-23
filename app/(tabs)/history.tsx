@@ -40,18 +40,29 @@ export default function HistoryScreen() {
         status: reportData.cravedRice ? 'Craquage' : 'Menu suivi'
       };
 
+      const { data: existingLog } = await supabase
+        .from('nutrition_daily_logs')
+        .select('*')
+        .eq('client_id', userId)
+        .eq('log_date', selectedDateStr)
+        .maybeSingle();
+
       let payload = {
         client_id: userId,
         log_date: selectedDateStr,
-        calories_consumed: profile?.daily_calorie_goal || 2000,
-        protein_consumed: 0,
-        carbs_consumed: 0,
-        fats_consumed: 0,
-        water_glasses: reportData.drankWater ? 8 : 0,
+        calories_consumed: existingLog?.calories_consumed || profile?.daily_calorie_goal || 2000,
+        protein_consumed: existingLog?.protein_consumed || 0,
+        carbs_consumed: existingLog?.carbs_consumed || 0,
+        fats_consumed: existingLog?.fats_consumed || 0,
+        water_glasses: reportData.drankWater ? 8 : (existingLog?.water_glasses || 0),
         report_data: updatedReportData
       };
 
-      await supabase.from('nutrition_daily_logs').upsert(payload, { onConflict: 'client_id, log_date' });
+      if (existingLog) {
+         await supabase.from('nutrition_daily_logs').update(payload).eq('id', existingLog.id);
+      } else {
+         await supabase.from('nutrition_daily_logs').insert([payload]);
+      }
 
       setIsDailyReportModalVisible(false);
       await fetchHistoryData();
