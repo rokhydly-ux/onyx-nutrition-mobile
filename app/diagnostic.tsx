@@ -651,7 +651,8 @@ export default function DiagnosticScreen() {
               saas: "Nutrition à l'Africaine",
               type: 'Client',
               status: 'Compte Créé',
-              password_temp: password || defaultPassword
+              password_temp: password || defaultPassword,
+              trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
             }),
           });
 
@@ -701,6 +702,8 @@ export default function DiagnosticScreen() {
         if (leadsError) console.error("Erreur insertion Lead:", leadsError);
 
         // ÉTAPE D : Création / Mise à jour du profil dans NUTRITION_PROFILES (Pour le Dashboard)
+        const expirationDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
         const { error: profileError } = await supabase
           .from('nutrition_profiles')
           .upsert([
@@ -714,7 +717,8 @@ export default function DiagnosticScreen() {
               protein_goal: 80,
               fats_goal: 50,
               diagnostic_data: data, // Le JSON complet des réponses
-              tracking_mode: 'guided'
+              tracking_mode: 'guided',
+              trial_ends_at: expirationDate.toISOString()
             }
           ], { onConflict: 'client_id' });
 
