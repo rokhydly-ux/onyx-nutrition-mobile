@@ -35,6 +35,11 @@ export default function HistoryScreen() {
       if (!session) return;
       const userId = session.user.id;
 
+      const updatedReportData = {
+        ...reportData,
+        status: reportData.cravedRice ? 'Craquage' : 'Menu suivi'
+      };
+
       let payload = {
         client_id: userId,
         log_date: selectedDateStr,
@@ -43,13 +48,13 @@ export default function HistoryScreen() {
         carbs_consumed: 0,
         fats_consumed: 0,
         water_glasses: reportData.drankWater ? 8 : 0,
-        report_data: reportData
+        report_data: updatedReportData
       };
 
-      await supabase.from('nutrition_daily_logs').upsert(payload, { onConflict: 'client_id,log_date' });
+      await supabase.from('nutrition_daily_logs').upsert(payload, { onConflict: 'client_id, log_date' });
 
       setIsDailyReportModalVisible(false);
-      fetchHistoryData();
+      await fetchHistoryData();
     } catch(e) {
       console.error(e);
     } finally {
