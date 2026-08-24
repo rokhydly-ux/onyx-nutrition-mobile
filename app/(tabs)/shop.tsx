@@ -70,6 +70,7 @@ export default function ShopScreen() {
   const [savedProductIds, setSavedProductIds] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState('Tous');
   const [activePriceFilter, setActivePriceFilter] = useState('Tous');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [scratchCount, setScratchCount] = useState(0);
   const [scratched, setScratched] = useState(false);
@@ -245,7 +246,17 @@ export default function ShopScreen() {
     const filterClean = activeFilter.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     filteredProducts = filteredProducts.filter(p => {
       const cat = p.categorie;
-      return (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "") === filterClean || (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "").includes(filterClean) || (p.nom || p.name || '').toLowerCase().includes(filterClean);
+      return (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "") === filterClean || (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "").includes(filterClean);
+    });
+  }
+
+  if (searchQuery.trim() !== '') {
+    const queryClean = searchQuery.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    filteredProducts = filteredProducts.filter(p => {
+      const name = (p.nom || p.name || '');
+      const desc = (p.description_courte || p.description_longue || p.description || '');
+      return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().includes(queryClean) ||
+             desc.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().includes(queryClean);
     });
   }
 
@@ -538,6 +549,33 @@ export default function ShopScreen() {
           />
         </View>
 
+        {/* C2. Meilleures offres */}
+        <View className="mb-8">
+          <Text className="text-black dark:text-white text-lg mb-1" style={{ fontFamily: "Poppins_700Bold" }}>Les mieux notés, au meilleur prix</Text>
+          <Text className="text-gray-500 text-sm mb-4" style={{ fontFamily: "Poppins_500Medium" }}>Meilleures offres</Text>
+          <FlatList
+            data={displayProducts.filter(p => p.rating && p.rating >= 4).sort((a, b) => b.rating - a.rating)}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item.id}
+            snapToInterval={144}
+            decelerationRate="fast"
+            renderItem={({ item: prod }) => (
+              <TouchableOpacity activeOpacity={0.8} onPress={() => handleOpenProduct(prod)} className="w-32 mr-4">
+                <View className="w-32 h-32 bg-zinc-100 dark:bg-zinc-900 rounded-2xl mb-2 p-2 relative">
+                  <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
+                  <View className="absolute top-2 right-2 bg-yellow-500 rounded-md px-1.5 py-0.5 flex-row items-center">
+                    <Text className="text-white text-[10px] font-bold mr-1">{prod.rating}</Text>
+                    <Text className="text-white text-[8px]">★</Text>
+                  </View>
+                </View>
+                <Text className="text-black dark:text-white text-xs mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={1}>{prod.nom || prod.name}</Text>
+                <Text className="text-[#39FF14] text-xs font-black">{Number(prod?.prix_standard || prod?.prix_premium || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} FCFA</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+
         {/* D. Filtres & Recherche */}
         <View className="flex-row items-center bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-3 mb-4">
           <Search color={isDark ? '#9CA3AF' : '#6B7280'} size={20} />
@@ -546,6 +584,8 @@ export default function ShopScreen() {
             placeholder="Rechercher un produit..."
             placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
             className="flex-1 ml-2 text-black dark:text-white font-sans"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
         </View>
 
@@ -597,7 +637,7 @@ export default function ShopScreen() {
 
         {/* E. Layout "Jumia" - Blocs par Catégories */}
         <View className="mb-8">
-          {activeFilter === 'Tous' ? (
+          {activeFilter === 'Tous' && searchQuery.trim() === '' ? (
             FILTERS.filter(f => f.id !== 'Tous' && f.id !== 'Sauvegardés').map(filter => {
               const categoryProducts = filteredProducts.filter(p => {
                 const cat = p.categorie;
