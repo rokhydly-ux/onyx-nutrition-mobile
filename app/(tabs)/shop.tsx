@@ -244,7 +244,7 @@ export default function ShopScreen() {
   if (activeFilter !== 'Tous' && activeFilter !== 'Sauvegardés') {
     const filterClean = activeFilter.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     filteredProducts = filteredProducts.filter(p => {
-      const cat = p.category || p.categorie || p.categorie_nom || p.tags;
+      const cat = p.categorie;
       return (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "") === filterClean || (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "").includes(filterClean) || (p.nom || p.name || '').toLowerCase().includes(filterClean);
     });
   }
@@ -595,77 +595,172 @@ export default function ShopScreen() {
           })}
         </ScrollView>
 
-        {/* E. Grille Principale */}
-        <View className="flex-row flex-wrap justify-between gap-y-6 mb-8">
-          {filteredProducts.map(prod => {
-            const isSaved = savedProductIds.includes(prod.id);
-            return (
-              <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => handleOpenProduct(prod)} className="w-[48%]">
-                <View className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-3xl p-3 mb-3 relative">
-                  <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
-                  {prod.stock <= 10 && (
-                    <View className="absolute top-3 left-3 bg-red-500 rounded-md px-2 py-1">
-                      <Text className="text-white text-[8px] font-bold uppercase">Quantité Limitée</Text>
-                    </View>
-                  )}
+        {/* E. Layout "Jumia" - Blocs par Catégories */}
+        <View className="mb-8">
+          {activeFilter === 'Tous' ? (
+            FILTERS.filter(f => f.id !== 'Tous' && f.id !== 'Sauvegardés').map(filter => {
+              const categoryProducts = filteredProducts.filter(p => {
+                const cat = p.categorie;
+                const filterClean = filter.id.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+                return (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "") === filterClean || (cat ? cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "").includes(filterClean);
+              });
 
-                  <TouchableOpacity
-                    onPress={() => toggleSaveProduct(prod.id)}
-                    className="absolute top-3 right-3 w-8 h-8 bg-white dark:bg-black rounded-full items-center justify-center shadow-sm"
-                  >
-                    <Heart size={16} color={isSaved ? '#EF4444' : (isDark ? '#FFF' : '#000')} fill={isSaved ? '#EF4444' : 'transparent'} />
-                  </TouchableOpacity>
-                </View>
-                <Text className="text-black dark:text-white text-sm mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{prod.name}</Text>
+              if (categoryProducts.length === 0) return null;
 
-
-                {prod.rating && (
-                  <View className="flex-row items-center mb-1">
-                    <Text className="text-yellow-500 text-[10px]">★</Text>
-                    <Text className="text-gray-500 text-[10px] ml-1">{prod.rating}</Text>
+              return (
+                <View key={filter.id} className="mb-8">
+                  <View className="flex-row justify-between items-center mb-4">
+                    <Text className="text-black dark:text-white text-lg font-bold" style={{ fontFamily: "Poppins_700Bold" }}>{filter.name}</Text>
+                    <TouchableOpacity onPress={() => setActiveFilter(filter.id)}>
+                      <Text className="text-[#39FF14] text-sm" style={{ fontFamily: "Poppins_500Medium" }}>Voir tout &gt;</Text>
+                    </TouchableOpacity>
                   </View>
-                )}
-
-
-                <View className="flex-row items-center justify-between mt-2">
-                  <View className="flex-1">
-                    <Text className="text-[#39FF14] text-base font-black mr-2">
-                      {Number(prod?.prix_standard || prod?.prix_premium || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} FCFA
-                    </Text>
-                    {prod.old_price && (
-                      <Text className="text-gray-400 text-xs line-through mb-0.5">
-                        {Number(prod.old_price).toLocaleString('fr-FR')} FCFA
-                      </Text>
-                    )}
-                  </View>
-                  {(() => {
-                    const cartItem = shopCart.find(i => i.id === prod.id);
-                    if (cartItem) {
+                  <FlatList
+                    data={categoryProducts}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item: prod }) => {
+                      const isSaved = savedProductIds.includes(prod.id);
                       return (
-                        <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1 ml-1" style={{ elevation: 2 }}>
-                          <TouchableOpacity onPress={() => cartItem.quantity > 1 ? updateQuantity(prod.id, cartItem.quantity - 1) : removeFromCart(prod.id)}>
-                            <Text className="text-white dark:text-black px-1 font-bold">-</Text>
-                          </TouchableOpacity>
-                          <Text className="text-white dark:text-black px-1 text-xs" style={{ fontFamily: "Poppins_700Bold" }}>{cartItem.quantity}</Text>
-                          <TouchableOpacity onPress={() => updateQuantity(prod.id, cartItem.quantity + 1)}>
-                            <Text className="text-white dark:text-black px-1 font-bold">+</Text>
-                          </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity activeOpacity={0.8} onPress={() => handleOpenProduct(prod)} className="w-40 mr-4">
+                          <View className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-3xl p-3 mb-3 relative">
+                            <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
+                            {prod.stock <= 10 && (
+                              <View className="absolute top-3 left-3 bg-red-500 rounded-md px-2 py-1">
+                                <Text className="text-white text-[8px] font-bold uppercase">Quantité Limitée</Text>
+                              </View>
+                            )}
+                            <TouchableOpacity
+                              onPress={() => toggleSaveProduct(prod.id)}
+                              className="absolute top-3 right-3 w-8 h-8 bg-white dark:bg-black rounded-full items-center justify-center shadow-sm"
+                            >
+                              <Heart size={16} color={isSaved ? '#EF4444' : (isDark ? '#FFF' : '#000')} fill={isSaved ? '#EF4444' : 'transparent'} />
+                            </TouchableOpacity>
+                          </View>
+                          <Text className="text-black dark:text-white text-sm mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{prod.name || prod.nom}</Text>
+                          {prod.rating && (
+                            <View className="flex-row items-center mb-1">
+                              <Text className="text-yellow-500 text-[10px]">★</Text>
+                              <Text className="text-gray-500 text-[10px] ml-1">{prod.rating}</Text>
+                            </View>
+                          )}
+                          <View className="flex-row items-center justify-between mt-2">
+                            <View className="flex-1">
+                              <Text className="text-[#39FF14] text-sm font-black mr-2">
+                                {Number(prod?.prix_standard || prod?.prix_premium || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} FCFA
+                              </Text>
+                              {prod.old_price && (
+                                <Text className="text-gray-400 text-xs line-through mb-0.5">
+                                  {Number(prod.old_price).toLocaleString('fr-FR')} FCFA
+                                </Text>
+                              )}
+                            </View>
+                            {(() => {
+                              const cartItem = shopCart.find(i => i.id === prod.id);
+                              if (cartItem) {
+                                return (
+                                  <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1 ml-1" style={{ elevation: 2 }}>
+                                    <TouchableOpacity onPress={() => cartItem.quantity > 1 ? updateQuantity(prod.id, cartItem.quantity - 1) : removeFromCart(prod.id)}>
+                                      <Text className="text-white dark:text-black px-1 font-bold">-</Text>
+                                    </TouchableOpacity>
+                                    <Text className="text-white dark:text-black px-1 text-xs" style={{ fontFamily: "Poppins_700Bold" }}>{cartItem.quantity}</Text>
+                                    <TouchableOpacity onPress={() => updateQuantity(prod.id, cartItem.quantity + 1)}>
+                                      <Text className="text-white dark:text-black px-1 font-bold">+</Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                );
+                              }
+                              return (
+                                <TouchableOpacity
+                                  onPress={() => addToCart(prod)}
+                                  className="bg-black dark:bg-white px-3 py-1.5 rounded-full"
+                                >
+                                  <Text className="text-white dark:text-black text-[10px] font-bold">Ajouter</Text>
+                                </TouchableOpacity>
+                              );
+                            })()}
+                          </View>
+                        </TouchableOpacity>
                       );
-                    }
-                    return (
-                      <TouchableOpacity
-                        onPress={() => addToCart(prod)}
-                        className="bg-black dark:bg-white px-3 py-1.5 rounded-full"
-                      >
-                        <Text className="text-white dark:text-black text-[10px] font-bold">Ajouter</Text>
-                      </TouchableOpacity>
-                    );
-                  })()}
+                    }}
+                  />
                 </View>
-              </TouchableOpacity>
-            );
-          })}
+              );
+            })
+          ) : (
+            <View className="flex-row flex-wrap justify-between gap-y-6">
+              {filteredProducts.map(prod => {
+                const isSaved = savedProductIds.includes(prod.id);
+                return (
+                  <TouchableOpacity key={prod.id} activeOpacity={0.8} onPress={() => handleOpenProduct(prod)} className="w-[48%]">
+                    <View className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-3xl p-3 mb-3 relative">
+                      <Image source={{ uri: prod.image_url }} className="w-full h-full" resizeMode="contain" />
+                      {prod.stock <= 10 && (
+                        <View className="absolute top-3 left-3 bg-red-500 rounded-md px-2 py-1">
+                          <Text className="text-white text-[8px] font-bold uppercase">Quantité Limitée</Text>
+                        </View>
+                      )}
+
+                      <TouchableOpacity
+                        onPress={() => toggleSaveProduct(prod.id)}
+                        className="absolute top-3 right-3 w-8 h-8 bg-white dark:bg-black rounded-full items-center justify-center shadow-sm"
+                      >
+                        <Heart size={16} color={isSaved ? '#EF4444' : (isDark ? '#FFF' : '#000')} fill={isSaved ? '#EF4444' : 'transparent'} />
+                      </TouchableOpacity>
+                    </View>
+                    <Text className="text-black dark:text-white text-sm mb-1" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{prod.name || prod.nom}</Text>
+
+
+                    {prod.rating && (
+                      <View className="flex-row items-center mb-1">
+                        <Text className="text-yellow-500 text-[10px]">★</Text>
+                        <Text className="text-gray-500 text-[10px] ml-1">{prod.rating}</Text>
+                      </View>
+                    )}
+
+
+                    <View className="flex-row items-center justify-between mt-2">
+                      <View className="flex-1">
+                        <Text className="text-[#39FF14] text-base font-black mr-2">
+                          {Number(prod?.prix_standard || prod?.prix_premium || prod?.prix || prod?.price || 0).toLocaleString('fr-FR')} FCFA
+                        </Text>
+                        {prod.old_price && (
+                          <Text className="text-gray-400 text-xs line-through mb-0.5">
+                            {Number(prod.old_price).toLocaleString('fr-FR')} FCFA
+                          </Text>
+                        )}
+                      </View>
+                      {(() => {
+                        const cartItem = shopCart.find(i => i.id === prod.id);
+                        if (cartItem) {
+                          return (
+                            <View className="flex-row items-center bg-black dark:bg-white rounded-full px-2 py-1 ml-1" style={{ elevation: 2 }}>
+                              <TouchableOpacity onPress={() => cartItem.quantity > 1 ? updateQuantity(prod.id, cartItem.quantity - 1) : removeFromCart(prod.id)}>
+                                <Text className="text-white dark:text-black px-1 font-bold">-</Text>
+                              </TouchableOpacity>
+                              <Text className="text-white dark:text-black px-1 text-xs" style={{ fontFamily: "Poppins_700Bold" }}>{cartItem.quantity}</Text>
+                              <TouchableOpacity onPress={() => updateQuantity(prod.id, cartItem.quantity + 1)}>
+                                <Text className="text-white dark:text-black px-1 font-bold">+</Text>
+                              </TouchableOpacity>
+                            </View>
+                          );
+                        }
+                        return (
+                          <TouchableOpacity
+                            onPress={() => addToCart(prod)}
+                            className="bg-black dark:bg-white px-3 py-1.5 rounded-full"
+                          >
+                            <Text className="text-white dark:text-black text-[10px] font-bold">Ajouter</Text>
+                          </TouchableOpacity>
+                        );
+                      })()}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
 
         {/* F. Footer Blog */}
@@ -709,10 +804,19 @@ export default function ShopScreen() {
 
             {selectedProduct ? (
               <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                <Image source={{ uri: selectedProduct.image_url }} className="w-full h-48 resize-contain mb-6" />
+                <FlatList
+                  data={(selectedProduct.gallery && selectedProduct.gallery.length > 0) ? selectedProduct.gallery : [selectedProduct.image_url]}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(item, index) => index.toString()}
+                  className="mb-6"
+                  renderItem={({ item }) => (
+                    <Image source={{ uri: item }} className="w-[300px] h-48 resize-contain mr-4 rounded-xl" />
+                  )}
+                />
                 <Text className="text-black dark:text-white text-2xl mb-1" style={{ fontFamily: "Poppins_900Black" }}>{selectedProduct.nom || selectedProduct.name}</Text>
                 {selectedProduct.description_courte && <Text className="text-gray-400 mb-2 italic">{selectedProduct.description_courte}</Text>}
-                {(selectedProduct.description) && <Text className="text-black dark:text-white mb-4 leading-relaxed" style={{ fontFamily: 'Poppins_400Regular' }}>{selectedProduct.description}</Text>}
+                {(selectedProduct.description_longue) && <Text className="text-black dark:text-white mb-4 leading-relaxed" style={{ fontFamily: 'Poppins_400Regular' }}>{selectedProduct.description_longue}</Text>}
                 <View className="flex-row items-center mb-6">
                   <Text className="text-[#39FF14] text-2xl font-black mr-3">{Number(selectedProduct?.prix_standard || selectedProduct?.prix || selectedProduct?.price || 0).toLocaleString('fr-FR')} FCFA</Text>
                   {selectedProduct.prix_premium && <Text className="text-black dark:text-white font-bold text-sm bg-yellow-400 px-2 py-1 rounded-lg">Premium: {Number(selectedProduct.prix_premium).toLocaleString('fr-FR')} FCFA</Text>}
