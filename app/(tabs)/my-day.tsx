@@ -227,29 +227,11 @@ export default function MyDayScreen() {
         setProducts(prodData);
       }
 
-      // Sync meals with PWA structure (weekly_menu)
-      let todayMeals = [];
-      if (profileData && profileData.weekly_menu) {
-        const todayDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; // 0 is Monday in PWA logic usually
-        const dayMenu = profileData.weekly_menu[todayDayIndex] || profileData.weekly_menu[0];
-        if (dayMenu) {
-          todayMeals = [
-            { ...dayMenu.petitDejeuner, type: 'PETIT-DÉJEUNER', logged: false, img: dayMenu.petitDejeuner?.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' },
-            { ...dayMenu.dejeuner, type: 'DÉJEUNER', logged: false, img: dayMenu.dejeuner?.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg' },
-            { ...dayMenu.diner, type: 'DÎNER', logged: false, img: dayMenu.diner?.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' }
-          ].filter(m => m && m.name); // only keep valid ones
-        }
-      }
-
-      if (todayMeals.length > 0) {
-        setMeals(todayMeals);
-      } else {
-        // Fallback
-        setMeals([
-          { id: '1', type: 'PETIT-DÉJEUNER', name: 'Bouillie de mil', calories: 250, p: 8, c: 45, f: 5, img: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' },
-          { id: '2', type: 'DÉJEUNER', name: 'Fonio aux Crevettes & Poivrons', calories: 480, p: 58, c: 0, f: 25, img: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg' },
-        ]);
-      }
+      // Mock meals for now based on mockup structure
+      setMeals([
+        { id: '1', type: 'PETIT-DÉJEUNER', name: 'Bouillie de mil', calories: 250, p: 8, c: 45, f: 5, img: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' },
+        { id: '2', type: 'DÉJEUNER', name: 'Fonio aux Crevettes & Poivrons', calories: 480, p: 58, c: 0, f: 25, img: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg' },
+      ]);
 
     } catch (e) {
       console.error(e);
