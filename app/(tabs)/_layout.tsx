@@ -102,10 +102,23 @@ export default function TabLayout() {
               <ShoppingBag color={color} size={24} />
               {cartCount > 0 && (
                 <Animated.View
-                  className="absolute -top-1 -right-2 bg-red-500 w-4 h-4 rounded-full flex items-center justify-center"
-                  style={{ transform: [{ scale: scaleAnim }] }}
+                  style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -10,
+                    backgroundColor: '#EF4444',
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 1.5,
+                    borderColor: 'white',
+                    transform: [{ scale: scaleAnim }]
+                  }}
                 >
-                  <Text className="text-white text-[10px] font-bold">{cartCount}</Text>
+                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>{cartCount}</Text>
                 </Animated.View>
               )}
             </View>
