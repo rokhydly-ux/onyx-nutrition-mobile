@@ -115,7 +115,6 @@ export default function DiagnosticScreen() {
   // Fake chat state
   const [chatMessage, setChatMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [password, setPassword] = useState('');
 
   const [hasSession, setHasSession] = useState(false);
 
@@ -664,7 +663,7 @@ export default function DiagnosticScreen() {
           // ÉTAPE A : Tentative de connexion (Si le compte existe déjà)
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email: authEmail,
-            password: password || defaultPassword,
+            password: defaultPassword,
           });
 
           if (signInData?.user) {
@@ -673,17 +672,20 @@ export default function DiagnosticScreen() {
             // ÉTAPE B : Création via notre API Backend Web (Bypass RLS & Période d'essai J+15)
             const response = await fetch('https://nutriafro.app/api/create-user', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
               body: JSON.stringify({
                 email: authEmail,
-                password: password || defaultPassword,
-                fullName: data.firstName,
+                password: defaultPassword,
+                full_name: data.firstName,
                 phone: cleanPhone.startsWith('+221') ? cleanPhone : `+221${cleanPhone}`,
                 role: 'client',
                 saas: "Nutrition à l'Africaine",
                 type: 'Client',
                 status: 'Compte Créé',
-                password_temp: password || defaultPassword,
+                password_temp: defaultPassword,
                 trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
               }),
             });
