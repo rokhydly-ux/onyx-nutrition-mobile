@@ -42,3 +42,45 @@ export const useShopStore = create<ShopStore>((set) => ({
   })),
   clearCart: () => set({ shopCart: [] })
 }));
+
+
+// --- Menu Store --- //
+interface MenuStore {
+  weeklyMenu: any[];
+  consumedMeals: any[];
+  dailyMacros: { calories: number; protein: number; carbs: number; fats: number; water: number };
+
+  setWeeklyMenu: (menu: any[]) => void;
+  setConsumedMeals: (meals: any[]) => void;
+  setDailyMacros: (macros: any) => void;
+
+  addConsumedMeal: (meal: any) => void;
+  updateWeeklyMenuDay: (dayIndex: number, newDayMenu: any) => void;
+}
+
+export const useMenuStore = create<MenuStore>((set) => ({
+  weeklyMenu: [],
+  consumedMeals: [],
+  dailyMacros: { calories: 0, protein: 0, carbs: 0, fats: 0, water: 0 },
+
+  setWeeklyMenu: (menu) => set({ weeklyMenu: menu }),
+  setConsumedMeals: (meals) => set({ consumedMeals: meals }),
+  setDailyMacros: (macros) => set({ dailyMacros: macros }),
+
+  addConsumedMeal: (meal) => set((state) => ({
+    consumedMeals: [...state.consumedMeals, meal],
+    dailyMacros: {
+      calories: state.dailyMacros.calories + (meal.calories || 0),
+      protein: state.dailyMacros.protein + (meal.p || 0),
+      carbs: state.dailyMacros.carbs + (meal.c || 0),
+      fats: state.dailyMacros.fats + (meal.f || 0),
+      water: state.dailyMacros.water
+    }
+  })),
+
+  updateWeeklyMenuDay: (dayIndex, newDayMenu) => set((state) => {
+    const newWeekly = [...state.weeklyMenu];
+    newWeekly[dayIndex] = newDayMenu;
+    return { weeklyMenu: newWeekly };
+  })
+}));
