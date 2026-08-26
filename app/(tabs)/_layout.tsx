@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 import { BlurView } from 'expo-blur';
-import { StyleSheet, View, SafeAreaView, Animated } from 'react-native';
+import { StyleSheet, View, SafeAreaView } from 'react-native';
 import { Home, Calendar, Utensils, Users, User, ShoppingBag, Package } from 'lucide-react-native';
-import React, { useRef, useEffect } from 'react';
+
 
 import { useColorScheme, Text } from 'react-native';
 import GlobalHeader from '../../components/GlobalHeader';
@@ -12,26 +12,6 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const shopCart = useShopStore((state) => state.shopCart);
   const cartCount = shopCart.reduce((acc, item) => acc + item.quantity, 0);
-
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, [scaleAnim]);
-
 
   return (
     <View style={{ flex: 1 }}>
@@ -101,25 +81,9 @@ export default function TabLayout() {
             <View>
               <ShoppingBag color={color} size={24} />
               {cartCount > 0 && (
-                <Animated.View
-                  style={{
-                    position: 'absolute',
-                    top: -6,
-                    right: -10,
-                    backgroundColor: '#EF4444',
-                    width: 20,
-                    height: 20,
-                    borderRadius: 10,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderWidth: 1.5,
-                    borderColor: 'white',
-                    transform: [{ scale: scaleAnim }]
-                  }}
-                >
-                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>{cartCount}</Text>
-                </Animated.View>
+                <View className="absolute -top-1 -right-2 bg-red-500 w-4 h-4 rounded-full flex items-center justify-center">
+                  <Text className="text-white text-[10px] font-bold">{cartCount}</Text>
+                </View>
               )}
             </View>
           ),
