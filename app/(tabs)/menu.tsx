@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, ActivityIndicator, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Modal } from 'react-native';
 import { supabase } from '../../lib/supabase';
@@ -16,36 +16,7 @@ export default function MenuScreen() {
 
   useEffect(() => {
     fetchWeeklyMenu();
-    fetchTodayLogs(); // Pour la synchronisation
   }, []);
-
-  const fetchTodayLogs = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const date = new Date();
-      const today = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-      setTodayString(today);
-
-      const { data: logData } = await supabase
-        .from('nutrition_daily_logs')
-        .select('meals_logged')
-        .eq('client_id', session.user.id)
-        .eq('log_date', today)
-        .maybeSingle();
-
-      if (logData && logData.meals_logged) {
-        logData.meals_logged.forEach((loggedMeal: any) => {
-          if (loggedMeal.id) {
-            setConsumedMeal(today, loggedMeal.id, true);
-          }
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const fetchWeeklyMenu = async () => {
     try {
@@ -55,7 +26,7 @@ export default function MenuScreen() {
 
       const { data } = await supabase
         .from('nutrition_profiles')
-        .select('weekly_menu, trial_ends_at')
+        .select('weekly_menu')
         .eq('client_id', session.user.id)
         .maybeSingle();
 
@@ -379,13 +350,3 @@ export default function MenuScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  bentoCard: {
-    shadowColor: '#39FF14',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 5,
-  }
-});
