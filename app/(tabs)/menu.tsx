@@ -127,7 +127,7 @@ export default function MenuScreen() {
   const handleSwapMeal = async (dayIndex: number, mealType: string) => {
     // Basic scaling logic using nutrition_recipes
     try {
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('is_recipe', true).limit(20);
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('type', 'recipe').limit(20);
       if (recipes && recipes.length > 0) {
         const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
 
@@ -189,7 +189,7 @@ export default function MenuScreen() {
       if (!profileData) return;
 
       // Basic regeneration logic based on budget/allergies
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('is_recipe', true);
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('type', 'recipe');
       if (!recipes || recipes.length === 0) return;
 
       const daysOfWeekFr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
