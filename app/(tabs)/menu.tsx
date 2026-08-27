@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Modal } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import { useMenuStore } from '../../lib/store';
-import { Moon, Sun, RefreshCw, ShoppingCart, Plus, CheckCircle, RefreshCcw } from 'lucide-react-native';
+import { Moon, Sun, RefreshCw, ShoppingCart, Plus, CheckCircle, RefreshCcw, Trash2 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 
 export default function MenuScreen() {
@@ -12,13 +12,14 @@ export default function MenuScreen() {
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const { weeklyMenu, setWeeklyMenu, consumedMeals, addConsumedMeal } = useMenuStore();
+  const { weeklyMenu, setWeeklyMenu, consumedMeals, addConsumedMeal, removeConsumedMeal } = useMenuStore();
 
   useEffect(() => {
     fetchWeeklyMenu();
   }, []);
 
   const fetchWeeklyMenu = async () => {
+
     try {
       setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -30,13 +31,54 @@ export default function MenuScreen() {
         .eq('client_id', session.user.id)
         .maybeSingle();
 
-      if (data && data.weekly_menu) {
+      if (data && data.weekly_menu && data.weekly_menu.length > 0) {
         setWeeklyMenu(data.weekly_menu); // Store original order
+      } else {
+        setTimeout(() => handleRegenerateMenu(), 0);
       }
     } catch (error) {
       console.error("Erreur Sama Menu:", error);
     } finally {
       setIsLoading(false);
+    }
+
+  };
+
+
+  const handleRemoveMeal = async (meal: any) => {
+    removeConsumedMeal(meal.id, meal.date);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+      const todayDateString = new Date().toISOString().split('T')[0];
+
+      const { data: existingLog } = await supabase
+        .from('nutrition_daily_logs')
+        .select('*')
+        .eq('client_id', userId)
+        .eq('log_date', todayDateString)
+        .maybeSingle();
+
+      if (existingLog) {
+        const updatedCalories = Math.max(0, (existingLog.calories_consumed || 0) - (meal.calories || 0));
+        const updatedProtein = Math.max(0, (existingLog.protein_consumed || 0) - (meal.p || meal.proteines || meal.protein || 0));
+        const updatedCarbs = Math.max(0, (existingLog.carbs_consumed || 0) - (meal.c || meal.glucides || meal.carbs || 0));
+        const updatedFats = Math.max(0, (existingLog.fats_consumed || 0) - (meal.f || meal.lipides || meal.fats || 0));
+
+        await supabase
+          .from('nutrition_daily_logs')
+          .update({
+            calories_consumed: updatedCalories,
+            protein_consumed: updatedProtein,
+            carbs_consumed: updatedCarbs,
+            fats_consumed: updatedFats,
+          })
+          .eq('id', existingLog.id);
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -85,7 +127,7 @@ export default function MenuScreen() {
   const handleSwapMeal = async (dayIndex: number, mealType: string) => {
     // Basic scaling logic using nutrition_recipes
     try {
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').limit(10);
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('is_recipe', true).limit(20);
       if (recipes && recipes.length > 0) {
         const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
 
@@ -147,7 +189,7 @@ export default function MenuScreen() {
       if (!profileData) return;
 
       // Basic regeneration logic based on budget/allergies
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*');
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('is_recipe', true);
       if (!recipes || recipes.length === 0) return;
 
       const daysOfWeekFr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
@@ -161,7 +203,7 @@ export default function MenuScreen() {
          const col = recipes[Math.floor(Math.random() * recipes.length)];
          const din = recipes[Math.floor(Math.random() * recipes.length)];
 
-         const scale = (recipe, target) => {
+         const scale = (recipe: any, target: number) => {
             const ratio = target / (recipe.calories || 1);
             return {
                ...recipe,
@@ -234,7 +276,7 @@ export default function MenuScreen() {
 
         {/* Header Sama Menu */}
         <View className="flex-row justify-between items-center mb-6">
-          <Text className="text-black dark:text-white text-3xl font-black uppercase tracking-tighter" style={{ fontFamily: 'Poppins_900Black' }}>MON SAMA MENU</Text>
+          <Text className="text-black dark:text-white text-3xl font-black uppercase tracking-tighter" style={{ fontFamily: 'Poppins_900Black' }}>SAMA MENU</Text>
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={handleRegenerateMenu} className="w-10 h-10 bg-zinc-200 dark:bg-zinc-800 rounded-full items-center justify-center">
               <RefreshCw size={18} color={isDark ? "#FFF" : "#000"} />
@@ -299,21 +341,34 @@ export default function MenuScreen() {
                         <View className="flex-1">
                           <Text className="text-gray-400 text-[10px] font-bold uppercase mb-0.5">{typeObj.label}</Text>
                           <Text className="text-black dark:text-white font-bold text-sm mb-1" numberOfLines={1}>{meal.nom || meal.name}</Text>
-                          <Text className="text-gray-500 text-[10px] font-medium">🔥 {meal.calories} kcal | 🍗 {meal.p || meal.proteines}g | 🍞 {meal.c || meal.glucides}g | 🥑 {meal.f || meal.lipides}g</Text>
+                          <Text className="text-gray-500 text-[10px] font-medium">🔥 {meal.calories || 0} kcal | 🍗 {meal.p || meal.proteines || meal.protein || 0}g | 🍞 {meal.c || meal.glucides || meal.carbs || 0}g | 🥑 {meal.f || meal.lipides || meal.fats || 0}g</Text>
                         </View>
+
 
                         <View className="flex-row items-center gap-2 ml-2">
-                          <TouchableOpacity onPress={() => handleSwapMeal(dayIndex, typeObj.key)} className="w-8 h-8 bg-zinc-200 dark:bg-zinc-700 rounded-full items-center justify-center">
-                            <RefreshCcw size={14} color={isDark ? "#FFF" : "#000"} />
-                          </TouchableOpacity>
+                          {!isConsumed && (
+                            <TouchableOpacity onPress={() => handleSwapMeal(dayIndex, typeObj.key)} className="w-8 h-8 bg-zinc-200 dark:bg-zinc-700 rounded-full items-center justify-center">
+                              <RefreshCcw size={14} color={isDark ? "#FFF" : "#000"} />
+                            </TouchableOpacity>
+                          )}
 
-                          <TouchableOpacity
-                            onPress={() => handleAddMeal({ ...meal, date: day.date })}
-                            className={`w-8 h-8 rounded-full items-center justify-center ${isConsumed ? 'bg-[#39FF14]' : 'bg-black dark:bg-white'}`}
-                          >
-                            {isConsumed ? <CheckCircle size={14} color="#000" /> : <Plus size={14} color={isDark ? "#000" : "#FFF"} />}
-                          </TouchableOpacity>
+                          {isConsumed ? (
+                            <TouchableOpacity
+                              onPress={() => handleRemoveMeal({ ...meal, date: day.date })}
+                              className="w-8 h-8 rounded-full items-center justify-center bg-red-500"
+                            >
+                              <Trash2 size={14} color="#FFF" />
+                            </TouchableOpacity>
+                          ) : (
+                            <TouchableOpacity
+                              onPress={() => handleAddMeal({ ...meal, date: day.date })}
+                              className="w-8 h-8 rounded-full items-center justify-center bg-black dark:bg-white"
+                            >
+                              <Plus size={14} color={isDark ? "#000" : "#FFF"} />
+                            </TouchableOpacity>
+                          )}
                         </View>
+
                       </View>
                     );
                   })}

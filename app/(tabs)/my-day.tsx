@@ -3,7 +3,8 @@ import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, Activ
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
-import { ChevronLeft, CheckCircle, Trophy } from 'lucide-react-native';
+import { ChevronLeft, CheckCircle, Trophy, Plus, Trash2, RefreshCcw } from 'lucide-react-native';
+import { useMenuStore } from '../../lib/store';
 import CircularProgress from '../../components/CircularProgress';
 import DailyReportModal from '../../components/DailyReportModal';
 import { supabase } from '../../lib/supabase';
@@ -28,6 +29,9 @@ export default function MyDayScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+
+
+  const { weeklyMenu, setWeeklyMenu, consumedMeals, addConsumedMeal, removeConsumedMeal } = useMenuStore();
 
   const [mode, setMode] = useState<'guided' | 'free'>('guided');
   const [isLoading, setIsLoading] = useState(true);
@@ -174,7 +178,58 @@ export default function MyDayScreen() {
     };
   }, []);
 
+
+  const handleRegenerateMenu = async (profileData: any) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('is_recipe', true);
+      if (!recipes || recipes.length === 0) return null;
+
+      const daysOfWeekFr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+      const newMenu = [];
+      const targetCalories = profileData.daily_calorie_goal || 2000;
+
+      for (let i = 0; i < 7; i++) {
+         const pDej = recipes[Math.floor(Math.random() * recipes.length)];
+         const dej = recipes[Math.floor(Math.random() * recipes.length)];
+         const col = recipes[Math.floor(Math.random() * recipes.length)];
+         const din = recipes[Math.floor(Math.random() * recipes.length)];
+
+         const scale = (recipe: any, target: number) => {
+            const ratio = target / (recipe.calories || 1);
+            return {
+               ...recipe,
+               calories: Math.round(recipe.calories * ratio),
+               p: Math.round(recipe.proteines * ratio),
+               c: Math.round(recipe.glucides * ratio),
+               f: Math.round(recipe.lipides * ratio),
+            };
+         };
+
+         newMenu.push({
+            date: new Date(new Date().getTime() + i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            dayName: daysOfWeekFr[i],
+            petitDejeuner: scale(pDej, targetCalories * 0.25),
+            dejeuner: scale(dej, targetCalories * 0.35),
+            collation: scale(col, targetCalories * 0.10),
+            diner: scale(din, targetCalories * 0.30)
+         });
+      }
+
+      await supabase.from('nutrition_profiles').update({ weekly_menu: newMenu }).eq('client_id', session.user.id);
+      setWeeklyMenu(newMenu);
+      return newMenu;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  };
+
+
   const fetchMyDayData = async () => {
+
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -189,6 +244,8 @@ export default function MyDayScreen() {
         .eq('client_id', userId)
         .maybeSingle();
 
+      let currentWeeklyMenu = weeklyMenu;
+
       if (nutritionData) {
         setProfile({
           calories_goal: nutritionData.daily_calorie_goal || 1500,
@@ -198,9 +255,47 @@ export default function MyDayScreen() {
           diagnostic_data: nutritionData.diagnostic_data || null,
           jongoma_xp: nutritionData.jongoma_xp || 0,
         });
+
+        if (nutritionData.weekly_menu && nutritionData.weekly_menu.length > 0) {
+          setWeeklyMenu(nutritionData.weekly_menu);
+          currentWeeklyMenu = nutritionData.weekly_menu;
+        } else {
+          currentWeeklyMenu = await handleRegenerateMenu(nutritionData) || [];
+        }
       }
 
-      // Fetch day logs
+      // Fetch Boutique Onyx products
+      const { data: prodData } = await supabase
+        .from('nutrition_products')
+        .select('*')
+        .limit(3);
+      if (prodData) {
+        setProducts(prodData);
+      }
+
+      // Sync meals with store structure (weeklyMenu)
+      let todayMeals = [];
+      if (currentWeeklyMenu && currentWeeklyMenu.length > 0) {
+        let dayMenu = currentWeeklyMenu.find((m: any) => m.date === todayDateString);
+
+        // Fallback: If not found by date, assume index 0 or todayDayIndex (depends on how it was generated)
+        if (!dayMenu) {
+           const todayDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; // 0 is Monday
+           dayMenu = currentWeeklyMenu[0]?.date ? currentWeeklyMenu[0] : currentWeeklyMenu[todayDayIndex];
+        }
+
+        if (dayMenu) {
+          todayMeals = [
+            { ...dayMenu.petitDejeuner, type: 'PETIT-DÉJEUNER', mealKey: 'petitDejeuner', date: dayMenu.date },
+            { ...dayMenu.dejeuner, type: 'DÉJEUNER', mealKey: 'dejeuner', date: dayMenu.date },
+            { ...dayMenu.collation, type: 'COLLATION', mealKey: 'collation', date: dayMenu.date },
+            { ...dayMenu.diner, type: 'DÎNER', mealKey: 'diner', date: dayMenu.date }
+          ].filter(m => m && (m.name || m.nom)); // only keep valid ones
+        }
+      }
+
+      setMeals(todayMeals as any);
+
       const { data: todayLog } = await supabase
         .from('nutrition_daily_logs')
         .select('*')
@@ -218,44 +313,12 @@ export default function MyDayScreen() {
         });
       }
 
-      // Fetch Boutique Onyx products
-      const { data: prodData } = await supabase
-        .from('nutrition_products')
-        .select('*')
-        .limit(3);
-      if (prodData) {
-        setProducts(prodData);
-      }
-
-      // Sync meals with PWA structure (weekly_menu)
-      let todayMeals = [];
-      if (profileData && profileData.weekly_menu) {
-        const todayDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; // 0 is Monday in PWA logic usually
-        const dayMenu = profileData.weekly_menu[todayDayIndex] || profileData.weekly_menu[0];
-        if (dayMenu) {
-          todayMeals = [
-            { ...dayMenu.petitDejeuner, type: 'PETIT-DÉJEUNER', logged: false, img: dayMenu.petitDejeuner?.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' },
-            { ...dayMenu.dejeuner, type: 'DÉJEUNER', logged: false, img: dayMenu.dejeuner?.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg' },
-            { ...dayMenu.diner, type: 'DÎNER', logged: false, img: dayMenu.diner?.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' }
-          ].filter(m => m && m.name); // only keep valid ones
-        }
-      }
-
-      if (todayMeals.length > 0) {
-        setMeals(todayMeals);
-      } else {
-        // Fallback
-        setMeals([
-          { id: '1', type: 'PETIT-DÉJEUNER', name: 'Bouillie de mil', calories: 250, p: 8, c: 45, f: 5, img: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' },
-          { id: '2', type: 'DÉJEUNER', name: 'Fonio aux Crevettes & Poivrons', calories: 480, p: 58, c: 0, f: 25, img: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg' },
-        ]);
-      }
-
     } catch (e) {
       console.error(e);
     } finally {
       setIsLoading(false);
     }
+
   };
 
   const handleUpdateWater = async (glasses: number) => {
@@ -300,8 +363,9 @@ export default function MyDayScreen() {
     setTimeout(() => setCoachBubble({ visible: false, message: '' }), 4000);
   };
 
+
   const handleRemoveMeal = async (meal: any) => {
-    // Logic to reverse the logged meal
+    removeConsumedMeal(meal.id, meal.date);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -317,13 +381,12 @@ export default function MyDayScreen() {
 
       if (existingLog) {
         const updatedCalories = Math.max(0, (existingLog.calories_consumed || 0) - (meal.calories || 0));
-        const updatedProtein = Math.max(0, (existingLog.protein_consumed || 0) - (meal.p || 0));
-        const updatedCarbs = Math.max(0, (existingLog.carbs_consumed || 0) - (meal.c || 0));
-        const updatedFats = Math.max(0, (existingLog.fats_consumed || 0) - (meal.f || 0));
+        const updatedProtein = Math.max(0, (existingLog.protein_consumed || 0) - (meal.p || meal.proteines || meal.protein || 0));
+        const updatedCarbs = Math.max(0, (existingLog.carbs_consumed || 0) - (meal.c || meal.glucides || meal.carbs || 0));
+        const updatedFats = Math.max(0, (existingLog.fats_consumed || 0) - (meal.f || meal.lipides || meal.fats || 0));
 
         await supabase
           .from('nutrition_daily_logs')
-
           .update({
             calories_consumed: updatedCalories,
             protein_consumed: updatedProtein,
@@ -332,7 +395,6 @@ export default function MyDayScreen() {
           })
           .eq('id', existingLog.id);
 
-
         setDailyStats((prev: any) => ({
           ...prev,
           calories_consumed: updatedCalories,
@@ -340,13 +402,12 @@ export default function MyDayScreen() {
           carbs_consumed: updatedCarbs,
           fats_consumed: updatedFats
         }));
-
-        setMeals(prev => prev.map(m => m.id === meal.id ? { ...m, logged: false } : m));
       }
     } catch (e) {
       console.error("Error removing meal:", e);
     }
   };
+
 
     const handleFoodSearch = async () => {
     if (!foodSearchQuery) return;
@@ -375,7 +436,9 @@ export default function MyDayScreen() {
     }
   };
 
+
   const handleLogMeal = async (meal: any) => {
+    addConsumedMeal(meal);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -390,14 +453,13 @@ export default function MyDayScreen() {
         .maybeSingle();
 
       const updatedCalories = (existingLog?.calories_consumed || 0) + (meal.calories || 0);
-      const updatedProtein = (existingLog?.protein_consumed || 0) + (meal.p || 0);
-      const updatedCarbs = (existingLog?.carbs_consumed || 0) + (meal.c || 0);
-      const updatedFats = (existingLog?.fats_consumed || 0) + (meal.f || 0);
+      const updatedProtein = (existingLog?.protein_consumed || 0) + (meal.p || meal.proteines || meal.protein || 0);
+      const updatedCarbs = (existingLog?.carbs_consumed || 0) + (meal.c || meal.glucides || meal.carbs || 0);
+      const updatedFats = (existingLog?.fats_consumed || 0) + (meal.f || meal.lipides || meal.fats || 0);
 
       if (existingLog) {
         await supabase
           .from('nutrition_daily_logs')
-
           .update({
             calories_consumed: updatedCalories,
             protein_consumed: updatedProtein,
@@ -418,7 +480,6 @@ export default function MyDayScreen() {
           });
       }
 
-
       setDailyStats((prev: any) => ({
         ...prev,
         calories_consumed: updatedCalories,
@@ -427,13 +488,64 @@ export default function MyDayScreen() {
         fats_consumed: updatedFats
       }));
 
-      setMeals(prev => prev.map(m => m.id === meal.id ? { ...m, logged: true } : m));
       triggerCoachBubble("Super choix ! Repas validé, tu es sur la bonne voie !");
-
     } catch (e) {
       console.error("Error logging meal:", e);
     }
   };
+
+
+
+  const handleSwapMeal = async (mealKey: string) => {
+    try {
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('is_recipe', true).limit(20);
+      if (recipes && recipes.length > 0) {
+        const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
+
+        const todayDateString = new Date().toISOString().split('T')[0];
+        let todayDayIndex = weeklyMenu.findIndex((m: any) => m.date === todayDateString);
+        if (todayDayIndex === -1) {
+           todayDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+        }
+
+        const dayMenu = { ...weeklyMenu[todayDayIndex] };
+        const oldMeal = dayMenu[mealKey];
+
+        const ratio = (oldMeal?.calories || randomRecipe.calories) / (randomRecipe.calories || 1);
+
+        const newMeal = {
+          ...randomRecipe,
+          calories: Math.round(randomRecipe.calories * ratio),
+          p: Math.round(randomRecipe.proteines * ratio),
+          c: Math.round(randomRecipe.glucides * ratio),
+          f: Math.round(randomRecipe.lipides * ratio)
+        };
+
+        dayMenu[mealKey] = newMeal;
+
+        const newWeeklyMenu = [...weeklyMenu];
+        newWeeklyMenu[todayDayIndex] = dayMenu;
+        setWeeklyMenu(newWeeklyMenu);
+
+        // Update meals state to reflect immediately in UI
+        const todayMeals = [
+          { ...dayMenu.petitDejeuner, type: 'PETIT-DÉJEUNER', mealKey: 'petitDejeuner', date: dayMenu.date },
+          { ...dayMenu.dejeuner, type: 'DÉJEUNER', mealKey: 'dejeuner', date: dayMenu.date },
+          { ...dayMenu.collation, type: 'COLLATION', mealKey: 'collation', date: dayMenu.date },
+          { ...dayMenu.diner, type: 'DÎNER', mealKey: 'diner', date: dayMenu.date }
+        ].filter(m => m && (m.name || m.nom));
+        setMeals(todayMeals as any);
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+           await supabase.from('nutrition_profiles').update({ weekly_menu: newWeeklyMenu }).eq('client_id', session.user.id);
+        }
+      }
+    } catch (e) {
+      console.error("Erreur Swap:", e);
+    }
+  };
+
 
   const caloriesProgress = profile.calories_goal > 0 ? (dailyStats.calories_consumed / profile.calories_goal) : 0;
 
@@ -602,28 +714,49 @@ export default function MyDayScreen() {
         {/* 3. FLUX DES REPAS DU JOUR */}
         <View className="mb-6">
             <Text className="text-black dark:text-white text-lg font-bold mb-4 font-poppins-bold">Repas du jour</Text>
-            {mode === 'guided' && meals.map(meal => (
+
+            {mode === 'guided' && meals.map(meal => {
+              const isConsumed = consumedMeals.some(m => m.id === meal.id && m.date === meal.date);
+
+              return (
               <View key={meal.id} className="rounded-2xl overflow-hidden mb-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                <Image source={{ uri: meal.img }} className="w-full h-32 opacity-90" />
+                <Image source={{ uri: meal.img || meal.image_url || 'https://via.placeholder.com/150' }} className="w-full h-32 opacity-90" />
                 <View className="p-4">
                   <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-1 font-poppins-bold">{meal.type}</Text>
-                  <Text className="text-black dark:text-white text-base font-bold mb-2 font-poppins-bold">{meal.name}</Text>
+                  <Text className="text-black dark:text-white text-base font-bold mb-2 font-poppins-bold">{meal.name || meal.nom}</Text>
                   <View className="flex-row items-center justify-between mt-2">
                     <Text className="text-gray-500 dark:text-gray-400 text-xs font-medium font-poppins-medium">
-                      {meal.calories} kcal • {meal.p}g • {meal.c}g • {meal.f}g
+                      {meal.calories || 0} kcal • {meal.p || meal.proteines || meal.protein || 0}g P • {meal.c || meal.glucides || meal.carbs || 0}g G • {meal.f || meal.lipides || meal.fats || 0}g L
                     </Text>
 
-                    <TouchableOpacity
-                      onPress={() => handleLogMeal(meal)}
-                      activeOpacity={0.7}
-                      className="bg-[#39FF14] px-4 py-2 rounded-xl"
-                    >
-                      <Text className="text-black text-xs font-bold font-poppins-bold">+ AJOUTER MON REPAS</Text>
-                    </TouchableOpacity>
+                    <View className="flex-row items-center gap-2">
+                      {!isConsumed && (
+                        <TouchableOpacity onPress={() => handleSwapMeal(meal.mealKey)} className="w-8 h-8 bg-zinc-200 dark:bg-zinc-700 rounded-full items-center justify-center">
+                          <RefreshCcw size={14} color={isDark ? "#FFF" : "#000"} />
+                        </TouchableOpacity>
+                      )}
+
+                      {isConsumed ? (
+                        <TouchableOpacity
+                          onPress={() => handleRemoveMeal(meal)}
+                          className="w-8 h-8 rounded-full items-center justify-center bg-red-500"
+                        >
+                          <Trash2 size={14} color="#FFF" />
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity
+                          onPress={() => handleLogMeal(meal)}
+                          className="w-8 h-8 rounded-full items-center justify-center bg-black dark:bg-white"
+                        >
+                          <Plus size={14} color={isDark ? "#000" : "#FFF"} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   </View>
                 </View>
               </View>
-            ))}
+            )})}
+
 
 
             {mode === 'free' && (

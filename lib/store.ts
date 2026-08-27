@@ -55,6 +55,7 @@ interface MenuStore {
   setDailyMacros: (macros: any) => void;
 
   addConsumedMeal: (meal: any) => void;
+  removeConsumedMeal: (mealId: string, mealDate: string) => void;
   updateWeeklyMenuDay: (dayIndex: number, newDayMenu: any) => void;
 }
 
@@ -71,12 +72,28 @@ export const useMenuStore = create<MenuStore>((set) => ({
     consumedMeals: [...state.consumedMeals, meal],
     dailyMacros: {
       calories: state.dailyMacros.calories + (meal.calories || 0),
-      protein: state.dailyMacros.protein + (meal.p || 0),
-      carbs: state.dailyMacros.carbs + (meal.c || 0),
-      fats: state.dailyMacros.fats + (meal.f || 0),
+      protein: state.dailyMacros.protein + (meal.p || meal.proteines || meal.protein || 0),
+      carbs: state.dailyMacros.carbs + (meal.c || meal.glucides || meal.carbs || 0),
+      fats: state.dailyMacros.fats + (meal.f || meal.lipides || meal.fats || 0),
       water: state.dailyMacros.water
     }
   })),
+
+  removeConsumedMeal: (mealId, mealDate) => set((state) => {
+    const mealToRemove = state.consumedMeals.find(m => m.id === mealId && m.date === mealDate);
+    if (!mealToRemove) return state;
+
+    return {
+      consumedMeals: state.consumedMeals.filter(m => !(m.id === mealId && m.date === mealDate)),
+      dailyMacros: {
+        calories: Math.max(0, state.dailyMacros.calories - (mealToRemove.calories || 0)),
+        protein: Math.max(0, state.dailyMacros.protein - (mealToRemove.p || mealToRemove.proteines || mealToRemove.protein || 0)),
+        carbs: Math.max(0, state.dailyMacros.carbs - (mealToRemove.c || mealToRemove.glucides || mealToRemove.carbs || 0)),
+        fats: Math.max(0, state.dailyMacros.fats - (mealToRemove.f || mealToRemove.lipides || mealToRemove.fats || 0)),
+        water: state.dailyMacros.water
+      }
+    };
+  }),
 
   updateWeeklyMenuDay: (dayIndex, newDayMenu) => set((state) => {
     const newWeekly = [...state.weeklyMenu];
