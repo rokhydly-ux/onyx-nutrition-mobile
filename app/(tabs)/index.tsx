@@ -14,6 +14,7 @@ import {
 } from 'lucide-react-native';
 import CircularProgress from '../../components/CircularProgress';
 import GlobalHeader from '../../components/GlobalHeader';
+import { useMenuStore } from '../../lib/store';
 
 // --- Types ---
 type DailyLog = {
@@ -116,6 +117,7 @@ export default function HomeScreen() {
     fats_goal: 50
   });
 
+  const { dailyMacros, setDailyMacros } = useMenuStore();
   const [dailyStats, setDailyStats] = useState<DailyStats>({
     steps: 0,
     sleep_hours: 0,
@@ -275,6 +277,14 @@ export default function HomeScreen() {
           fats_consumed: todayLog?.fats_consumed || 0,
         }));
 
+        setDailyMacros({
+          calories: todayLog?.calories_consumed || 0,
+          protein: todayLog?.protein_consumed || 0,
+          carbs: todayLog?.carbs_consumed || 0,
+          fats: todayLog?.fats_consumed || 0,
+          water: todayLog?.water_glasses || 0
+        });
+
         // Optionnel : Meals list could be extracted from a sub-table or 'meals' property in todayLog.
         // We set empty list or handle from another place if needed. Currently keeping it as is or fallback to empty:
         setMeals([]);
@@ -313,7 +323,7 @@ export default function HomeScreen() {
     );
   }
 
-  const caloriesProgress = profile.calories_goal > 0 ? (dailyStats.calories_consumed / profile.calories_goal) : 0;
+  const caloriesProgress = profile.calories_goal > 0 ? (dailyMacros.calories / profile.calories_goal) : 0;
 
   return (
     <View className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
@@ -482,7 +492,7 @@ export default function HomeScreen() {
               >
                 <View className="items-center justify-center">
                   <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                    {Math.round(dailyStats.calories_consumed)}
+                    {Math.round(dailyMacros.calories)}
                   </Text>
                   <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
                     / {profile.calories_goal} KCAL
@@ -492,9 +502,9 @@ export default function HomeScreen() {
             </View>
 
             <View className="flex-1 justify-center">
-              <ProgressBar label="Protein" current={dailyStats.protein_consumed} max={profile.protein_goal} color="#3B82F6" />
-              <ProgressBar label="Carbs" current={dailyStats.carbs_consumed} max={profile.carbs_goal} color="#EAB308" />
-              <ProgressBar label="Fats" current={dailyStats.fats_consumed} max={profile.fats_goal} color="#EF4444" />
+              <ProgressBar label="Protein" current={dailyMacros.protein} max={profile.protein_goal} color="#3B82F6" />
+              <ProgressBar label="Carbs" current={dailyMacros.carbs} max={profile.carbs_goal} color="#EAB308" />
+              <ProgressBar label="Fats" current={dailyMacros.fats} max={profile.fats_goal} color="#EF4444" />
             </View>
           </View>
 
