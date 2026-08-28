@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Modal } from 'react-native';
+import { BlurView } from 'expo-blur';
 import GroceryListModal from '../../components/GroceryListModal';
 import { supabase } from '../../lib/supabase';
 import { useMenuStore } from '../../lib/store';
@@ -284,21 +285,28 @@ export default function MenuScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           {(() => {
             if (!weeklyMenu || weeklyMenu.length === 0) return null;
-            const currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-            const sortedMenu = [
-              ...weeklyMenu.slice(currentDayIndex).map((d, i) => ({ ...d, originalIndex: currentDayIndex + i })),
-              ...weeklyMenu.slice(0, currentDayIndex).map((d, i) => ({ ...d, originalIndex: i }))
-            ];
 
 
-            return sortedMenu.map((day: any, renderIndex: number) => {
+
+
+            return weeklyMenu.map((day: any, renderIndex: number) => {
               const isToday = renderIndex === 0;
               const isTomorrow = renderIndex === 1;
               const isFuture = renderIndex > 1;
-              const dayIndex = day.originalIndex;
+              const dayIndex = renderIndex;
               const isExpanded = expandedDays[renderIndex] || false;
 
+              // Format date
+              let dateLabel = "JOUR " + (renderIndex + 1);
+              try {
+                  const d = new Date(day.date);
+                  const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+                  const months = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+                  dateLabel = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+              } catch(e) {}
+
               const mealTypes = [
+
                 { key: 'petitDejeuner', label: 'Petit-déjeuner' },
                 { key: 'dejeuner', label: 'Déjeuner' },
                 { key: 'collation', label: 'Collation' },
@@ -317,7 +325,7 @@ export default function MenuScreen() {
                   >
                     <View className="flex-row items-center gap-3">
                       <Text className={`text-lg font-black uppercase ${isToday ? 'text-black dark:text-white' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_900Black' }}>
-                        {isToday ? "AUJOURD'HUI" : day.dayName || `JOUR ${dayIndex + 1}`}
+                        {isToday ? "AUJOURD'HUI" : isTomorrow ? "DEMAIN" : dateLabel}
                       </Text>
                       {isToday && (
                         <View className="bg-[#39FF14]/20 px-2 py-1 rounded-md">
@@ -339,14 +347,8 @@ export default function MenuScreen() {
 
                   {isExpanded && (
                     <View className="p-4 pt-0 gap-3">
-                      {isFuture ? (
-                         <View className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 items-center justify-center">
-                           <Text className="text-4xl mb-4">⏳</Text>
-                           <Text className="text-black dark:text-white font-bold text-center mb-2" style={{ fontFamily: 'Poppins_700Bold' }}>Patience !</Text>
-                           <Text className="text-gray-500 text-center text-sm" style={{ fontFamily: 'Poppins_400Regular' }}>Chaque chose en son temps. Concentre-toi sur tes objectifs d'aujourd'hui. Savais-tu que bien s'hydrater booste ton métabolisme ?</Text>
-                         </View>
-                      ) : (
-                        mealTypes.map((typeObj) => {
+                      <View style={{ position: 'relative', overflow: 'hidden' }} className="rounded-2xl gap-3">
+                        {mealTypes.map((typeObj) => {
                           const meal = day[typeObj.key];
                           if (!meal) return null;
 
@@ -389,8 +391,18 @@ export default function MenuScreen() {
                               </View>
                             </View>
                           );
-                        })
-                      )}
+                        })}
+
+                        {isFuture && (
+                          <BlurView intensity={20} tint={isDark ? "dark" : "light"} className="absolute inset-0 z-10 items-center justify-center p-6 bg-white/20 dark:bg-black/40">
+                             <Text className="text-4xl mb-4">⏳</Text>
+                             <Text className="text-black dark:text-white font-bold text-center text-lg mb-2" style={{ fontFamily: 'Poppins_700Bold' }}>Patience !</Text>
+                             <Text className="text-black dark:text-gray-300 text-center text-sm font-bold" style={{ fontFamily: 'Poppins_400Regular' }}>
+                               {["⏳ Ton corps se transforme un jour à la fois.", "✨ L'algorithme prépare tes plats, reste focus !", "💧 N'oublie pas de t'hydrater aujourd'hui !", "🔥 Reste constant(e), les résultats arrivent.", "🍏 La discipline d'aujourd'hui est ta victoire de demain.", "💪 Chaque repas compte, sois patient(e)."][renderIndex % 6]}
+                             </Text>
+                          </BlurView>
+                        )}
+                      </View>
                     </View>
                   )}
                 </View>
