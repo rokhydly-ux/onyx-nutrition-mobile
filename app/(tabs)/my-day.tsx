@@ -31,7 +31,7 @@ export default function MyDayScreen() {
   const isDark = colorScheme === 'dark';
 
 
-  const { weeklyMenu, setWeeklyMenu, consumedMeals, addConsumedMeal, removeConsumedMeal } = useMenuStore();
+  const { weeklyMenu, setWeeklyMenu, consumedMeals, addConsumedMeal, removeConsumedMeal, dailyMacros } = useMenuStore();
 
   const [mode, setMode] = useState<'guided' | 'free'>('guided');
   const [isLoading, setIsLoading] = useState(true);
@@ -303,6 +303,7 @@ export default function MyDayScreen() {
         .eq('log_date', todayDateString)
         .maybeSingle();
 
+
       if (todayLog) {
         setDailyStats({
           calories_consumed: todayLog.calories_consumed || 0,
@@ -311,7 +312,17 @@ export default function MyDayScreen() {
           fats_consumed: todayLog.fats_consumed || 0,
           water_glasses: todayLog.water_glasses || 0,
         });
+
+        // Sync with global store so index.tsx matches!
+        useMenuStore.getState().setDailyMacros({
+           calories: todayLog.calories_consumed || 0,
+           protein: todayLog.protein_consumed || 0,
+           carbs: todayLog.carbs_consumed || 0,
+           fats: todayLog.fats_consumed || 0,
+           water: todayLog.water_glasses || 0,
+        });
       }
+
 
     } catch (e) {
       console.error(e);
@@ -364,8 +375,31 @@ export default function MyDayScreen() {
   };
 
 
+
+
   const handleRemoveMeal = async (meal: any) => {
-    removeConsumedMeal(meal.id, meal.date);
+    const todayDateString = new Date().toISOString().split('T')[0];
+    removeConsumedMeal(meal.id, todayDateString);
+
+    // Optimistic UI update for My Day gauges
+    setDailyStats(prev => ({
+       ...prev,
+       calories_consumed: Math.max(0, prev.calories_consumed - (meal.calories || 0)),
+       protein_consumed: Math.max(0, prev.protein_consumed - (meal.p || meal.proteines || meal.protein || 0)),
+       carbs_consumed: Math.max(0, prev.carbs_consumed - (meal.c || meal.glucides || meal.carbs || 0)),
+       fats_consumed: Math.max(0, prev.fats_consumed - (meal.f || meal.lipides || meal.fats || 0))
+    }));
+
+
+    // Optimistic UI update for My Day gauges
+    setDailyStats(prev => ({
+       ...prev,
+       calories_consumed: Math.max(0, prev.calories_consumed - (meal.calories || 0)),
+       protein_consumed: Math.max(0, prev.protein_consumed - (meal.p || meal.proteines || meal.protein || 0)),
+       carbs_consumed: Math.max(0, prev.carbs_consumed - (meal.c || meal.glucides || meal.carbs || 0)),
+       fats_consumed: Math.max(0, prev.fats_consumed - (meal.f || meal.lipides || meal.fats || 0))
+    }));
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -437,8 +471,19 @@ export default function MyDayScreen() {
   };
 
 
+
   const handleLogMeal = async (meal: any) => {
-    addConsumedMeal(meal);
+    addConsumedMeal({ ...meal, date: new Date().toISOString().split('T')[0] });
+
+    // Optimistic UI update for My Day gauges
+    setDailyStats(prev => ({
+       ...prev,
+       calories_consumed: prev.calories_consumed + (meal.calories || 0),
+       protein_consumed: prev.protein_consumed + (meal.p || meal.proteines || meal.protein || 0),
+       carbs_consumed: prev.carbs_consumed + (meal.c || meal.glucides || meal.carbs || 0),
+       fats_consumed: prev.fats_consumed + (meal.f || meal.lipides || meal.fats || 0)
+    }));
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -547,7 +592,7 @@ export default function MyDayScreen() {
   };
 
 
-  const caloriesProgress = profile.calories_goal > 0 ? (dailyStats.calories_consumed / profile.calories_goal) : 0;
+  const caloriesProgress = profile.calories_goal > 0 ? (dailyMacros.calories / profile.calories_goal) : 0;
 
   if (isLoading) {
     return (
@@ -697,7 +742,7 @@ export default function MyDayScreen() {
                 backgroundColor={isDark ? 'rgba(255,255,255,0.1)' : '#E5E7EB'}
               >
                 <View className="items-center justify-center">
-                  <Text className="text-black dark:text-white text-4xl font-black font-poppins">{Math.round(dailyStats.calories_consumed)}</Text>
+                  <Text className="text-black dark:text-white text-4xl font-black font-poppins">{Math.round(dailyMacros.calories)}</Text>
                   <Text className="text-gray-400 text-xs font-bold uppercase mt-1">/ {profile.calories_goal} KCAL</Text>
                 </View>
               </CircularProgress>
@@ -705,9 +750,9 @@ export default function MyDayScreen() {
 
 
           <View className="w-full">
-            <MacroBar label="Protéines" current={dailyStats.protein_consumed} max={profile.protein_goal} color="#3B82F6" />
-            <MacroBar label="Glucides" current={dailyStats.carbs_consumed} max={profile.carbs_goal} color="#EAB308" />
-            <MacroBar label="Lipides" current={dailyStats.fats_consumed} max={profile.fats_goal} color="#EF4444" />
+            <MacroBar label="Protéines" current={dailyMacros.protein} max={profile.protein_goal} color="#3B82F6" />
+            <MacroBar label="Glucides" current={dailyMacros.carbs} max={profile.carbs_goal} color="#EAB308" />
+            <MacroBar label="Lipides" current={dailyMacros.fats} max={profile.fats_goal} color="#EF4444" />
           </View>
         </View>
 
