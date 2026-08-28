@@ -274,7 +274,7 @@ export default function MenuScreen() {
     <View className="flex-1 bg-zinc-50 dark:bg-zinc-950 pt-4">
       <SafeAreaView className="flex-1 px-4 pb-20" edges={['top']}>
 
-        {/* Header Sama Menu */}
+        {/* Header Sama Menu - Updated UI */}
         <View className="flex-row justify-between items-center mb-6">
           <Text className="text-black dark:text-white text-3xl font-black uppercase tracking-tighter" style={{ fontFamily: 'Poppins_900Black' }}>SAMA MENU</Text>
           <View className="flex-row items-center gap-3">
