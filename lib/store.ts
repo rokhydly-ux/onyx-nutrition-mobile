@@ -46,6 +46,8 @@ export const useShopStore = create<ShopStore>((set) => ({
 
 // --- Menu Store --- //
 interface MenuStore {
+  showGroceryList: boolean;
+  setShowGroceryList: (show: boolean) => void;
   weeklyMenu: any[];
   consumedMeals: any[];
   dailyMacros: { calories: number; protein: number; carbs: number; fats: number; water: number };
@@ -61,6 +63,8 @@ interface MenuStore {
 
 export const useMenuStore = create<MenuStore>((set) => ({
   weeklyMenu: [],
+  showGroceryList: false,
+  setShowGroceryList: (show) => set({ showGroceryList: show }),
   consumedMeals: [],
   dailyMacros: { calories: 0, protein: 0, carbs: 0, fats: 0, water: 0 },
 

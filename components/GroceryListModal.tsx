@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, FileText, ShoppingCart } from 'lucide-react-native';
-import { useMenuStore } from '../store/useMenuStore';
+import { useMenuStore } from '../lib/store';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -13,40 +13,46 @@ interface GroceryItem {
 }
 
 export default function GroceryListModal() {
-  const { showGroceryList, setShowGroceryList, weeklyGeneratedMenu } = useMenuStore();
+  const { showGroceryList, setShowGroceryList, weeklyMenu } = useMenuStore();
   const [isExporting, setIsExporting] = useState(false);
+
 
   const { groupedIngredients, totalPrice } = useMemo(() => {
     let priceSum = 0;
     const ingMap: Record<string, GroceryItem> = {};
 
-    weeklyGeneratedMenu.forEach(day => {
-      day.meals.forEach(meal => {
-        meal.ingredients.forEach(ing => {
-          const name = ing.name?.toLowerCase().trim() || 'Ingrédient inconnu';
-          const rawPrice = ing.price_cfa || 0;
-          const ratio = ing.scaledRatio || 1;
-          const itemPrice = typeof rawPrice === 'number' ? rawPrice * ratio : 0;
+    (weeklyMenu || []).forEach((day: any) => {
+      ['petitDejeuner', 'dejeuner', 'collation', 'diner'].forEach(mealType => {
+        const meal = day[mealType];
+        if (meal && !meal.isEmpty && Array.isArray(meal.ingredients)) {
+          meal.ingredients.forEach((ing: any) => {
+            const name = ing.name?.toLowerCase().trim() || ing.nom?.toLowerCase().trim() || 'ingrédient inconnu';
+            const rawPrice = ing.price_cfa || ing.prix_cfa || 0;
+            const ratio = meal.calories ? (meal.calories / (meal.original_calories || meal.calories || 1)) : 1;
+            const itemPrice = typeof rawPrice === 'number' ? rawPrice * ratio : 0;
 
-          priceSum += itemPrice;
+            priceSum += itemPrice;
 
-          if (!ingMap[name]) {
-            ingMap[name] = {
-              name: ing.name,
-              quantityStr: String(ing.quantite),
-              totalPriceCfa: itemPrice
-            };
-          } else {
-             ingMap[name].totalPriceCfa += itemPrice;
-             if (!isNaN(Number(ingMap[name].quantityStr)) && !isNaN(Number(ing.quantite))) {
-                 ingMap[name].quantityStr = String(Number(ingMap[name].quantityStr) + Number(ing.quantite));
-             } else {
-                 if (!ingMap[name].quantityStr.includes(String(ing.quantite))) {
-                    ingMap[name].quantityStr += ` + ${ing.quantite}`;
-                 }
-             }
-          }
-        });
+            const qty = ing.quantite || ing.quantity || 1;
+
+            if (!ingMap[name]) {
+              ingMap[name] = {
+                name: name,
+                quantityStr: String(qty),
+                totalPriceCfa: itemPrice
+              };
+            } else {
+               ingMap[name].totalPriceCfa += itemPrice;
+               if (!isNaN(Number(ingMap[name].quantityStr)) && !isNaN(Number(qty))) {
+                   ingMap[name].quantityStr = String(Number(ingMap[name].quantityStr) + Number(qty));
+               } else {
+                   if (!ingMap[name].quantityStr.includes(String(qty))) {
+                      ingMap[name].quantityStr += ` + ${qty}`;
+                   }
+               }
+            }
+          });
+        }
       });
     });
 
@@ -54,7 +60,8 @@ export default function GroceryListModal() {
       groupedIngredients: Object.values(ingMap).sort((a, b) => a.name.localeCompare(b.name)),
       totalPrice: Math.round(priceSum)
     };
-  }, [weeklyGeneratedMenu]);
+  }, [weeklyMenu]);
+
 
   const generateAndSharePDF = async () => {
     setIsExporting(true);
@@ -69,10 +76,13 @@ export default function GroceryListModal() {
 
       const html = `
         <html>
+
           <head>
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
             <style>
               body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #111827; }
+              .header { text-align: center; margin-bottom: 20px; }
+              .logo { width: 150px; height: auto; margin-bottom: 10px; }
               h1 { color: #111827; font-size: 24px; text-align: center; margin-bottom: 5px; }
               p { text-align: center; color: #6B7280; margin-top: 0; margin-bottom: 30px; }
               table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
@@ -83,8 +93,12 @@ export default function GroceryListModal() {
             </style>
           </head>
           <body>
-            <h1>Ma Liste de Courses</h1>
-            <p>Générée avec Sama Menu (Onyx Nutrition)</p>
+            <div class="header">
+              <img src="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781224243/logo_dore_um5fsr.png" alt="Onyx Nutrition Logo" class="logo" />
+              <h1>Ma Liste de Courses</h1>
+              <p>Générée avec Sama Menu (Onyx Nutrition)</p>
+            </div>
+
 
             <table>
               <thead>

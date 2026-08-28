@@ -134,8 +134,7 @@ export const useMenuData = () => {
     try {
       setGenerating(true);
       const { data: recipes, error } = await supabase
-        .from('nutrition_recipes')
-        .select('*');
+        .from('nutrition_recipes').select('*').eq('type', 'recipe');
 
       if (error || !recipes || recipes.length === 0) return;
 
@@ -188,8 +187,7 @@ export const useMenuData = () => {
     if (!profile) return;
     try {
       const { data: recipes, error } = await supabase
-        .from('nutrition_recipes')
-        .select('*');
+        .from('nutrition_recipes').select('*').eq('type', 'recipe');
 
       if (error || !recipes) return;
 
