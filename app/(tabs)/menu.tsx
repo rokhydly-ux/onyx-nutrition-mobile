@@ -35,9 +35,25 @@ export default function MenuScreen() {
         .eq('client_id', session.user.id)
         .maybeSingle();
 
+
       if (data && data.weekly_menu && data.weekly_menu.length > 0) {
-        setWeeklyMenu(data.weekly_menu); // Store original order
+        // Migration: If user has old format (meals array instead of petitDejeuner keys), convert it!
+        const migratedMenu = data.weekly_menu.map((d: any) => {
+           if (d.meals && Array.isArray(d.meals)) {
+               return {
+                  date: d.date,
+                  dayName: d.dayName || "Jour",
+                  petitDejeuner: d.meals.find((m: any) => m.type.includes('Petit')) || d.meals[0],
+                  dejeuner: d.meals.find((m: any) => m.type.includes('Déjeuner') || m.type.includes('dejeuner')) || d.meals[1],
+                  collation: d.meals.find((m: any) => m.type.includes('Collation')) || d.meals[2],
+                  diner: d.meals.find((m: any) => m.type.includes('Dîner') || m.type.includes('diner')) || d.meals[3],
+               };
+           }
+           return d;
+        });
+        setWeeklyMenu(migratedMenu); // Store original order
       } else {
+
         setTimeout(() => handleRegenerateMenu(), 0);
       }
     } catch (error) {
@@ -198,12 +214,18 @@ export default function MenuScreen() {
       if (!profileData) return;
 
       // Basic regeneration logic based on budget/allergies
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('type', 'recipe');
-      if (!recipes || recipes.length === 0) return;
 
-      const daysOfWeekFr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+      // Basic regeneration logic based on budget/allergies
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('type', 'recipe');
+      if (!recipes || recipes.length === 0) {
+         console.warn("Sama Menu: No recipes found with type='recipe'");
+         setIsLoading(false);
+         return;
+      }
+
       const newMenu = [];
-      const targetCalories = profileData.daily_calorie_goal || 2000;
+      const targetCalories = profileData?.daily_calorie_goal || 2000;
+
       // Budget/allergy filter could be applied here if data was present on recipes
       // For now, randomly pick and scale
       for (let i = 0; i < 7; i++) {
@@ -296,14 +318,15 @@ export default function MenuScreen() {
               const dayIndex = renderIndex;
               const isExpanded = expandedDays[renderIndex] || false;
 
-              // Format date
-              let dateLabel = "JOUR " + (renderIndex + 1);
-              try {
-                  const d = new Date(day.date);
-                  const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-                  const months = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-                  dateLabel = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
-              } catch(e) {}
+              // Format date properly
+              const getDayTitle = (index: number) => {
+                if (index === 0) return "AUJOURD'HUI";
+                if (index === 1) return "DEMAIN";
+                const date = new Date();
+                date.setDate(date.getDate() + index);
+                return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+              };
+              const dateLabel = getDayTitle(renderIndex);
 
               const mealTypes = [
 
@@ -325,7 +348,7 @@ export default function MenuScreen() {
                   >
                     <View className="flex-row items-center gap-3">
                       <Text className={`text-lg font-black uppercase ${isToday ? 'text-black dark:text-white' : 'text-gray-500'}`} style={{ fontFamily: 'Poppins_900Black' }}>
-                        {isToday ? "AUJOURD'HUI" : isTomorrow ? "DEMAIN" : dateLabel}
+                        {dateLabel}
                       </Text>
                       {isToday && (
                         <View className="bg-[#39FF14]/20 px-2 py-1 rounded-md">
@@ -347,10 +370,16 @@ export default function MenuScreen() {
 
                   {isExpanded && (
                     <View className="p-4 pt-0 gap-3">
+
                       <View style={{ position: 'relative', overflow: 'hidden' }} className="rounded-2xl gap-3">
-                        {mealTypes.map((typeObj) => {
+                        {mealTypes.filter(t => day[t.key] && (day[t.key].name || day[t.key].nom)).length === 0 ? (
+                           <View className="p-6 items-center justify-center">
+                             <ActivityIndicator size="small" color="#39FF14" className="mb-2" />
+                             <Text className="text-gray-500 font-bold" style={{ fontFamily: 'Poppins_400Regular' }}>Génération du menu en cours...</Text>
+                           </View>
+                        ) : mealTypes.map((typeObj) => {
                           const meal = day[typeObj.key];
-                          if (!meal) return null;
+                          if (!meal || (!meal.name && !meal.nom)) return null;
 
                           const isConsumed = consumedMeals.some(m => m.id === meal.id && m.date === day.date);
 
