@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, Image, TouchableOpacity, ScrollView, StyleSheet , Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
 import GroceryListModal from '../../components/GroceryListModal';
 import { supabase } from '../../lib/supabase';

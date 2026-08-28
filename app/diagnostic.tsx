@@ -8,9 +8,9 @@ import { fr } from 'date-fns/locale';
 import { supabase } from '../lib/supabase';
 import { BlurView } from 'expo-blur';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { useColorScheme } from 'nativewind';
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedView = Animated.View;
-import { useColorScheme } from 'nativewind';
 
 const { width } = Dimensions.get('window');
 
@@ -690,7 +690,12 @@ export default function DiagnosticScreen() {
 
   const calculateDailyCalories = (data: DiagData) => {
     // Mifflin-St Jeor Equation
-    let bmr = (10 * parseFloat(data.currentWeight)) + (6.25 * parseFloat(data.height)) - (5 * parseInt(data.age));
+    let w = parseFloat(data.currentWeight);
+    let h = parseFloat(data.height);
+    let a = parseInt(data.age);
+    console.log('Variables pour BMR:', { weight: w, height: h, age: a, data });
+    if (isNaN(w) || isNaN(h) || isNaN(a)) return NaN;
+    let bmr = (10 * w) + (6.25 * h) - (5 * a);
     bmr = data.gender === 'Homme' ? bmr + 5 : bmr - 161;
 
     let multiplier = 1.2; // Sédentaire
@@ -715,6 +720,11 @@ export default function DiagnosticScreen() {
       setIsSubmitting(true);
       try {
         const calories = calculateDailyCalories(data);
+        if (isNaN(calories)) {
+          alert("Veuillez remplir tous les champs avec des valeurs numériques valides.");
+          setIsSubmitting(false);
+          return;
+        }
 
         // Update client data (if necessary, though we don't have new phone/name from step 11)
         // Since we skip step 11, firstName/phone are blank if they didn't fill it earlier.
@@ -771,6 +781,13 @@ export default function DiagnosticScreen() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+
+    const calories = calculateDailyCalories(data);
+    if (isNaN(calories)) {
+      alert("Veuillez remplir tous les champs avec des valeurs numériques valides.");
+      setIsSubmitting(false);
+      return;
+    }
 
     const backendProcess = async () => {
       try {
@@ -831,8 +848,6 @@ export default function DiagnosticScreen() {
           phone: cleanPhone,
           created_at: new Date().toISOString()
         }], { onConflict: 'id' });
-
-        const calories = calculateDailyCalories(data);
 
         // ÉTAPE C : Remontée commerciale dans la table LEADS
         const { error: leadsError } = await supabase

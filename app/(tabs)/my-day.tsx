@@ -125,50 +125,54 @@ export default function MyDayScreen() {
       const userId = session.user.id;
       const todayDateString = new Date().toISOString().split('T')[0];
 
-      channel = supabase.channel('daily_logs_sync')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'nutrition_daily_logs',
-            filter: `client_id=eq.${userId}`,
-          },
-          (payload) => {
-            const newLog = payload.new as any;
-            if (newLog && newLog.log_date === todayDateString) {
-              setDailyStats((prev: any) => ({
-                ...prev,
-                calories_consumed: newLog.calories_consumed || 0,
-                protein_consumed: newLog.protein_consumed || 0,
-                carbs_consumed: newLog.carbs_consumed || 0,
-                fats_consumed: newLog.fats_consumed || 0,
-                water_glasses: newLog.water_glasses || 0,
-              }));
-              // Also update XP in profile if needed?
-              // The XP might be in nutrition_profiles, so we should listen to that as well!
-            }
+      // Use a unique channel name to prevent "already subscribed" errors on re-mounts if cleanups are delayed
+      const channelName = `daily_logs_sync_${Date.now()}`;
+
+      channel = supabase.channel(channelName);
+
+      channel.on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'nutrition_daily_logs',
+          filter: `client_id=eq.${userId}`,
+        },
+        (payload: any) => {
+          const newLog = payload.new as any;
+          if (newLog && newLog.log_date === todayDateString) {
+            setDailyStats((prev: any) => ({
+              ...prev,
+              calories_consumed: newLog.calories_consumed || 0,
+              protein_consumed: newLog.protein_consumed || 0,
+              carbs_consumed: newLog.carbs_consumed || 0,
+              fats_consumed: newLog.fats_consumed || 0,
+              water_glasses: newLog.water_glasses || 0,
+            }));
           }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'nutrition_profiles',
-            filter: `client_id=eq.${userId}`,
-          },
-          (payload) => {
-            const newProfile = payload.new as any;
-            if (newProfile) {
-               setProfile((prev: any) => ({
-                 ...prev,
-                 jongoma_xp: newProfile.jongoma_xp || 0
-               }));
-            }
+        }
+      );
+
+      channel.on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'nutrition_profiles',
+          filter: `client_id=eq.${userId}`,
+        },
+        (payload: any) => {
+          const newProfile = payload.new as any;
+          if (newProfile) {
+             setProfile((prev: any) => ({
+               ...prev,
+               jongoma_xp: newProfile.jongoma_xp || 0
+             }));
           }
-        )
-        .subscribe();
+        }
+      );
+
+      channel.subscribe();
     };
 
     setupRealtime();

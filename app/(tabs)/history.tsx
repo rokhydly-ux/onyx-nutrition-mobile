@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions , Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { Lock, ChevronLeft } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
-import { Image, Alert } from 'react-native';
 import GlobalHeader from '../../components/GlobalHeader';
 import DailyReportModal from '../../components/DailyReportModal';
 import * as Print from 'expo-print';

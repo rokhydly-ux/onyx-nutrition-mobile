@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState , useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, FileText, ShoppingCart } from 'lucide-react-native';
 import { useMenuStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
-import { useEffect } from 'react';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
