@@ -3,6 +3,8 @@ import { View, Text, Modal, TouchableOpacity, ScrollView, ActivityIndicator } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, FileText, ShoppingCart } from 'lucide-react-native';
 import { useMenuStore } from '../lib/store';
+import { supabase } from '../lib/supabase';
+import { useEffect } from 'react';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -12,9 +14,29 @@ interface GroceryItem {
   totalPriceCfa: number;
 }
 
+
 export default function GroceryListModal() {
   const { showGroceryList, setShowGroceryList, weeklyMenu } = useMenuStore();
   const [isExporting, setIsExporting] = useState(false);
+  const [portionMultiplier, setPortionMultiplier] = useState(1);
+
+  // Fetch profile to set initial portionMultiplier if family mode is enabled
+  useEffect(() => {
+     if (showGroceryList) {
+       supabase.auth.getSession().then(({ data }) => {
+         if (data?.session) {
+           supabase.from('nutrition_profiles').select('diagnostic_data').eq('client_id', data.session.user.id).maybeSingle()
+             .then(({ data: profileData }) => {
+                if (profileData?.diagnostic_data?.eats_with_family) {
+                   setPortionMultiplier(4);
+                } else {
+                   setPortionMultiplier(1);
+                }
+             });
+         }
+       });
+     }
+  }, [showGroceryList]);
 
 
   const { groupedIngredients, totalPrice } = useMemo(() => {
@@ -29,11 +51,11 @@ export default function GroceryListModal() {
             const name = ing.name?.toLowerCase().trim() || ing.nom?.toLowerCase().trim() || 'ingrédient inconnu';
             const rawPrice = ing.price_cfa || ing.prix_cfa || 0;
             const ratio = meal.calories ? (meal.calories / (meal.original_calories || meal.calories || 1)) : 1;
-            const itemPrice = typeof rawPrice === 'number' ? rawPrice * ratio : 0;
+            const itemPrice = (typeof rawPrice === 'number' ? rawPrice * ratio : 0) * portionMultiplier;
 
             priceSum += itemPrice;
 
-            const qty = ing.quantite || ing.quantity || 1;
+            const qty = (ing.quantite || ing.quantity || 1) * portionMultiplier;
 
             if (!ingMap[name]) {
               ingMap[name] = {
@@ -60,7 +82,8 @@ export default function GroceryListModal() {
       groupedIngredients: Object.values(ingMap).sort((a, b) => a.name.localeCompare(b.name)),
       totalPrice: Math.round(priceSum)
     };
-  }, [weeklyMenu]);
+  }, [weeklyMenu, portionMultiplier]);
+
 
 
   const generateAndSharePDF = async () => {
@@ -153,7 +176,15 @@ export default function GroceryListModal() {
           </View>
         ) : (
           <>
+
+            <View className="flex-row items-center justify-center my-4">
+               <TouchableOpacity onPress={() => setPortionMultiplier(Math.max(1, portionMultiplier - 1))} className="w-10 h-10 bg-zinc-200 rounded-full items-center justify-center"><Text className="text-xl font-bold">-</Text></TouchableOpacity>
+               <Text className="mx-4 text-lg font-bold font-poppins-bold">{portionMultiplier} personne{portionMultiplier > 1 ? 's' : ''}</Text>
+               <TouchableOpacity onPress={() => setPortionMultiplier(portionMultiplier + 1)} className="w-10 h-10 bg-zinc-200 rounded-full items-center justify-center"><Text className="text-xl font-bold">+</Text></TouchableOpacity>
+            </View>
+
             <ScrollView className="flex-1 px-6">
+
               <View className="mt-4 space-y-4">
                 {groupedIngredients.map((item, idx) => (
                   <View key={idx} className="flex-row justify-between items-center py-3 border-b border-gray-50 mb-3">
