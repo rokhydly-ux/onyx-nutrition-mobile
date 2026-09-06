@@ -260,7 +260,7 @@ export default function BlogArticleScreen() {
           </View>
 
           {/* Article Content Body */}
-          <Animated.View className="px-5 py-4 mt-2" style={{ opacity: fadeAnim }}>
+          <Animated.View className="py-4 mt-2" style={{ opacity: fadeAnim, paddingHorizontal: 20 }}>
             {article.content ? (
               <Text className="text-gray-700 dark:text-gray-300 text-base leading-relaxed" style={{ fontFamily: 'Poppins_400Regular' }}>
                 {article.content}
