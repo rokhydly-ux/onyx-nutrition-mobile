@@ -54,9 +54,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@types/node": "^26.4.1",
     "@types/react": "~19.1.0",
-    "@types/react-native": "^0.72.8",
     "babel-preset-expo": "^54.0.11",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~10.0.0",

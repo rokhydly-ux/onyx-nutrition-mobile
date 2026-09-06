@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { ArrowLeft, Target, Activity, Check } from 'lucide-react-native';
-import { BlurView } from 'expo-blur';
 import { useColorScheme } from 'nativewind';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import Svg, { Path, Defs, LinearGradient, Stop, Circle, Line as SvgLine } from 'react-native-svg';
@@ -36,9 +35,11 @@ export default function WeightScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  useEffect(() => {
-    fetchWeightData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchWeightData();
+    }, [])
+  );
 
   const fetchWeightData = async () => {
     try {
@@ -315,6 +316,51 @@ export default function WeightScreen() {
 
           {/* Chart */}
           {renderChart()}
+
+          {/* History Section */}
+          {weightLogs.length > 0 && (
+            <View className="mt-8 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm">
+               <Text className="text-black dark:text-white font-bold mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>Historique</Text>
+               {[...weightLogs].reverse().map((log, index, arr) => {
+                 const prevLog = arr[index + 1]; // Previous chronologically is next in reversed array
+                 let diff = 0;
+                 let diffText = "";
+                 let colorClass = "text-gray-400";
+
+                 if (prevLog) {
+                   diff = log.weight - prevLog.weight;
+                   if (diff > 0) {
+                     diffText = `+${diff.toFixed(1)} kg`;
+                     colorClass = "text-red-500";
+                   } else if (diff < 0) {
+                     diffText = `${diff.toFixed(1)} kg`;
+                     colorClass = "text-green-500";
+                   } else {
+                     diffText = "=";
+                     colorClass = "text-gray-400";
+                   }
+                 }
+
+                 return (
+                   <View key={log.log_date} className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-white/5 last:border-0">
+                     <Text className="text-black dark:text-white text-sm" style={{ fontFamily: 'Poppins_400Regular' }}>
+                       {new Date(log.log_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                     </Text>
+                     <View className="flex-row items-center">
+                       <Text className="text-black dark:text-white font-bold mr-3" style={{ fontFamily: 'Poppins_700Bold' }}>
+                         {log.weight.toFixed(1)} kg
+                       </Text>
+                       {prevLog && (
+                         <Text className={`text-xs font-bold w-12 text-right ${colorClass}`} style={{ fontFamily: 'Poppins_700Bold' }}>
+                           {diffText}
+                         </Text>
+                       )}
+                     </View>
+                   </View>
+                 );
+               })}
+            </View>
+          )}
 
           {/* Input Section */}
           <View className="mt-8 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm mb-10">
