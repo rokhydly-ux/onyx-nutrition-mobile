@@ -10,6 +10,7 @@ import {
   Heart,
   ArrowUpRight,
   Coffee,
+  Utensils
 } from 'lucide-react-native';
 import CircularProgress from '../../components/CircularProgress';
 import GlobalHeader from '../../components/GlobalHeader';
@@ -69,25 +70,15 @@ const WeightIcon = ({ color }: { color: string }) => (
   </View>
 );
 
-const ActivityIcon = ({ color }: { color: string }) => (
-  <View className={`w-6 h-6 rounded-md items-center justify-center bg-gray-100 dark:bg-white/10`}>
-    <View className="flex-row items-end h-3 space-x-[2px]">
-      <View style={{ backgroundColor: color }} className="w-[3px] h-[6px] rounded-t-sm" />
-      <View style={{ backgroundColor: color }} className="w-[3px] h-[10px] rounded-t-sm" />
-      <View style={{ backgroundColor: color }} className="w-[3px] h-[8px] rounded-t-sm" />
-    </View>
-  </View>
-);
-
-const SleepIcon = ({ color }: { color: string }) => (
-  <View className={`w-6 h-6 rounded-md items-center justify-center bg-gray-100 dark:bg-white/10`}>
-    <Text style={{ color, fontSize: 12 }}>🌙</Text>
-  </View>
-);
-
 const HydrationIcon = ({ color }: { color: string }) => (
   <View className={`w-6 h-6 rounded-md items-center justify-center bg-gray-100 dark:bg-white/10`}>
     <Droplets size={12} color={color} />
+  </View>
+);
+
+const RecipeIcon = ({ color }: { color: string }) => (
+  <View className={`w-6 h-6 rounded-md items-center justify-center bg-gray-100 dark:bg-white/10`}>
+    <Utensils size={12} color={color} />
   </View>
 );
 
@@ -397,42 +388,25 @@ export default function HomeScreen() {
             </ImageBackground>
           </TouchableOpacity>
 
-          {/* Activity */}
-          <TouchableOpacity activeOpacity={0.8} className="flex-1 bg-white dark:bg-[#1A1A1A] p-3 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>ACTIVITY</Text>
-              <ActivityIcon color={isDark ? '#FFF' : '#6366F1'} />
-            </View>
-            <View className="flex-row items-end mb-1">
-              <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                {dailyStats.steps}
-              </Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1 ml-1">pas</Text>
-            </View>
-            <View className="flex-row space-x-1 items-end h-4 mt-auto">
-               <View className="w-1.5 h-full bg-[#39FF14] rounded-sm" />
-               <View className="w-1.5 h-3/4 bg-[#39FF14] rounded-sm" />
-               <View className="w-1.5 h-1/2 bg-[#39FF14] rounded-sm" />
-               <View className="w-1.5 h-full bg-[#39FF14] rounded-sm" />
-               <View className="w-1.5 h-1/4 bg-[#39FF14] rounded-sm" />
-               <View className="w-1.5 h-full bg-gray-200 dark:bg-gray-700 rounded-sm" />
-            </View>
-          </TouchableOpacity>
-
-          {/* Somme */}
-          <TouchableOpacity activeOpacity={0.8} className="flex-1 bg-white dark:bg-[#1A1A1A] p-3 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>SOMME</Text>
-              <SleepIcon color={isDark ? '#FFF' : '#6366F1'} />
-            </View>
-            <Text className="text-black dark:text-white text-sm font-bold leading-tight" style={{ fontFamily: 'Poppins_700Bold' }}>
-              {dailyStats.sleep_hours}h
-            </Text>
-            {dailyStats.sleep_hours === 0 && dailyStats.water_glasses === 0 && dailyStats.steps === 0 ? (
-              <Text className="text-gray-400 text-[8px] leading-tight mt-1">Enregistrez votre humeur du jour</Text>
-            ) : (
-              <Text className="text-gray-400 text-[10px]">Aujourd&apos;hui</Text>
-            )}
+          {/* Recettes & Menus */}
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/menu')} className="flex-1 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black">
+            <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.6 }}>
+              <View className="absolute inset-0 bg-black/40" />
+              <View className="flex-1 justify-between relative z-10">
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="text-white text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>RECETTES & MENUS</Text>
+                  <RecipeIcon color="#39FF14" />
+                </View>
+                <View>
+                  <Text className="text-white text-sm font-bold mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    Sama Menu
+                  </Text>
+                  <Text className="text-gray-300 text-[10px]">
+                    Planifiez vos repas locaux
+                  </Text>
+                </View>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
 
           {/* Hydration */}

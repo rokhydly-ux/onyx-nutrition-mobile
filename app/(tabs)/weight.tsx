@@ -66,7 +66,7 @@ export default function WeightScreen() {
         let logs: WeightLog[] = [];
         try {
           if (data.weight_logs) {
-            logs = Array.isArray(data.weight_logs) ? data.weight_logs : JSON.parse(data.weight_logs);
+            logs = typeof data.weight_logs === 'string' ? JSON.parse(data.weight_logs) : data.weight_logs;
           }
         } catch (parseError) {
           console.error('Error parsing weight_logs JSON', parseError);
