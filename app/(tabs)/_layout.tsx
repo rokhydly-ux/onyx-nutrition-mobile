@@ -115,7 +115,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="blog"
+        name="blog/index"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="blog/[id]"
         options={{
           href: null,
         }}

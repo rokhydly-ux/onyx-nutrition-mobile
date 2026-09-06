@@ -660,7 +660,7 @@ export default function HomeScreen() {
           {/* Blog Card */}
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => router.push('/(tabs)/blog')}
+            onPress={() => router.push(latestArticle ? `/(tabs)/blog/${latestArticle.id}` as any : '/(tabs)/blog' as any)}
             className="flex-1 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black"
           >
             <ImageBackground
