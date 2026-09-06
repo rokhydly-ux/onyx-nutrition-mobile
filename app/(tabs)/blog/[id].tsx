@@ -162,8 +162,8 @@ export default function BlogArticleScreen() {
       <View className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
 
         {/* Fixed Glassmorphism Back Button */}
-        <SafeAreaView className="absolute top-0 left-0 right-0 z-20" edges={['top']}>
-           <View className="px-5 pt-2 flex-row justify-between items-center">
+        <SafeAreaView className="absolute top-0 left-0 right-0 z-20 pointer-events-none" edges={['top']}>
+           <View className="px-5 pt-2 flex-row justify-between items-center pointer-events-auto">
               <TouchableOpacity onPress={() => router.push('/(tabs)/blog' as any)} className="overflow-hidden rounded-full">
                 <BlurView
                   intensity={80}
@@ -193,12 +193,12 @@ export default function BlogArticleScreen() {
           {/* Parallax Hero Image */}
           <Animated.View style={{
             width: '100%',
-            height: 350,
+            height: 250,
             transform: [
               {
                 translateY: scrollY.interpolate({
-                  inputRange: [-350, 0, 350],
-                  outputRange: [-175, 0, 175], // Move at half speed for parallax
+                  inputRange: [-250, 0, 250],
+                  outputRange: [-125, 0, 125], // Move at half speed for parallax
                   extrapolate: 'clamp',
                 }),
               },
@@ -209,23 +209,24 @@ export default function BlogArticleScreen() {
               style={{ width: '100%', height: '100%', justifyContent: 'flex-end' }}
             >
               {/* Gradient Overlay */}
-              <View className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-
-              <View className="p-5 pb-8">
-                <View className="self-start bg-[#39FF14] px-3 py-1 rounded-full mb-3">
-                  <Text className="text-black text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
-                    {article.category || 'Conseils'}
-                  </Text>
-                </View>
-                <Text className="text-white text-3xl font-bold leading-tight" style={{ fontFamily: 'Poppins_700Bold' }}>
-                  {article.title}
-                </Text>
-              </View>
+              <View className="absolute inset-0 bg-black/30" />
             </ImageBackground>
           </Animated.View>
 
+          {/* Title and Category (Moved outside image to prevent overlap) */}
+          <View className="px-5 pt-6 pb-2 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+            <View className="self-start bg-[#39FF14] px-3 py-1 rounded-full mb-3">
+              <Text className="text-black text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
+                {article.category || 'Conseils'}
+              </Text>
+            </View>
+            <Text className="text-black dark:text-white text-2xl font-bold leading-tight mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>
+              {article.title}
+            </Text>
+          </View>
+
           {/* Meta Data Bar */}
-          <View className="px-5 -mt-4">
+          <View className="px-5">
              <View className="bg-white dark:bg-[#151515] p-4 rounded-3xl flex-row justify-between items-center border border-gray-200 dark:border-white/10 shadow-sm">
                 <View className="flex-row items-center">
                    <View className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 items-center justify-center mr-2 border border-gray-300 dark:border-gray-700 overflow-hidden">
@@ -259,7 +260,7 @@ export default function BlogArticleScreen() {
           </View>
 
           {/* Article Content Body */}
-          <Animated.View className="p-5 mt-4" style={{ opacity: fadeAnim }}>
+          <Animated.View className="px-5 py-4 mt-2" style={{ opacity: fadeAnim }}>
             {article.content ? (
               <Text className="text-gray-700 dark:text-gray-300 text-base leading-relaxed" style={{ fontFamily: 'Poppins_400Regular' }}>
                 {article.content}
@@ -272,7 +273,7 @@ export default function BlogArticleScreen() {
 
                 <View className="pl-4 border-l-4 border-[#39FF14] py-2">
                   <Text className="text-black dark:text-white text-lg font-bold italic" style={{ fontFamily: 'Poppins_700Bold' }}>
-                    "La nutrition n'est pas une punition, c'est une célébration de votre corps."
+                    &quot;La nutrition n&apos;est pas une punition, c&apos;est une célébration de votre corps.&quot;
                   </Text>
                 </View>
 
@@ -360,7 +361,7 @@ export default function BlogArticleScreen() {
           )}
 
           {/* Bottom Padding for Fixed Input */}
-          <View className="h-20" />
+          <View className="h-32" />
 
         </Animated.ScrollView>
 
