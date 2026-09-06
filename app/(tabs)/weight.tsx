@@ -63,7 +63,15 @@ export default function WeightScreen() {
         setHeight(diag.height || null);
 
         // Parse weight_logs from the independent column
-        const logs = data.weight_logs ? (Array.isArray(data.weight_logs) ? data.weight_logs : JSON.parse(data.weight_logs)) : [];
+        let logs: WeightLog[] = [];
+        try {
+          if (data.weight_logs) {
+            logs = Array.isArray(data.weight_logs) ? data.weight_logs : JSON.parse(data.weight_logs);
+          }
+        } catch (parseError) {
+          console.error('Error parsing weight_logs JSON', parseError);
+          logs = [];
+        }
         setWeightLogs(logs);
       }
     } catch (e) {
@@ -74,6 +82,8 @@ export default function WeightScreen() {
   };
 
   const handleSaveWeight = async () => {
+    if (!newWeight.trim() || saving) return;
+
     const weightVal = parseFloat(newWeight.replace(',', '.'));
     if (isNaN(weightVal) || !profileId) return;
 
@@ -151,7 +161,7 @@ export default function WeightScreen() {
       return (
         <View className="h-40 items-center justify-center bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10 mt-4">
            <Activity size={24} color={isDark ? '#555' : '#CCC'} />
-           <Text className="text-gray-400 text-xs mt-2 text-center px-4">Plus de données sont nécessaires pour afficher l'évolution.</Text>
+           <Text className="text-gray-400 text-xs mt-2 text-center px-4">Plus de données sont nécessaires pour afficher l&apos;évolution.</Text>
         </View>
       );
     }
@@ -325,7 +335,6 @@ export default function WeightScreen() {
                </View>
 
                <TouchableOpacity
-                 disabled={!newWeight.trim() || saving}
                  onPress={handleSaveWeight}
                  className={`h-14 px-6 rounded-2xl items-center justify-center flex-row ${newWeight.trim() ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.3)]' : 'bg-gray-200 dark:bg-gray-800'}`}
                >

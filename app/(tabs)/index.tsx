@@ -648,7 +648,7 @@ export default function HomeScreen() {
 
                 <View className="bg-white rounded-xl py-2 items-center justify-center mt-2">
                   <Text className="text-black text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
-                    Lire l'article
+                    Lire l&apos;article
                   </Text>
                 </View>
               </View>
