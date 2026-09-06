@@ -108,6 +108,18 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="fitness"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="blog"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
     </View>
   );
