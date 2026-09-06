@@ -54,6 +54,14 @@ type DailyStats = {
   fats_consumed: number;
 };
 
+type MarketingArticle = {
+  id: string;
+  title: string;
+  category: string;
+  image_url: string;
+  created_at: string;
+};
+
 // --- Dummy components / Icons for visual match ---
 const WeightIcon = ({ color }: { color: string }) => (
   <View className={`w-6 h-6 rounded-md items-center justify-center bg-gray-100 dark:bg-white/10`}>
@@ -129,6 +137,7 @@ export default function HomeScreen() {
 
   const [meals, setMeals] = useState<DailyLog[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [latestArticle, setLatestArticle] = useState<MarketingArticle | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -302,6 +311,20 @@ export default function HomeScreen() {
          console.error("RLS Error reading community_posts :", postError);
       } else if (postData) {
         setPosts(postData as any);
+      }
+
+      // Fetch Latest Marketing Article
+      const { data: articleData, error: articleError } = await supabase
+        .from('marketing_articles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (articleError) {
+        console.error("Error reading marketing_articles :", articleError);
+      } else if (articleData) {
+        setLatestArticle(articleData as MarketingArticle);
       }
 
     } catch (e) {
@@ -599,6 +622,73 @@ export default function HomeScreen() {
               </View>
             )}
           </View>
+        </View>
+
+        {/* Fitness & Blog Grid */}
+        <View className="flex-row space-x-3 mb-10">
+          {/* Fitness Card */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.push('/(tabs)/fitness')}
+            className="flex-1 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black"
+          >
+            <ImageBackground
+              source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1788700600/Athletic_woman_posing_in_sportswear_2K_202609061316_gxndgv.jpg' }}
+              style={{ flex: 1, minHeight: 180 }}
+              imageStyle={{ opacity: 0.6 }}
+            >
+              <View className="absolute inset-0 bg-black/50" />
+              <View className="flex-1 p-4 justify-between">
+                <View>
+                  <Text className="text-white text-sm font-bold uppercase mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    ESPACE FITNESS
+                  </Text>
+                  <Text className="text-gray-300 text-[10px]" style={{ fontFamily: 'Poppins_400Regular' }}>
+                    Programme sportif sur-mesure (5 jours)
+                  </Text>
+                </View>
+
+                <View className="bg-black/40 border border-green-500 rounded-xl py-2 items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)] mt-2">
+                  <Text className="text-green-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    Lancer ma semaine
+                  </Text>
+                </View>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
+
+          {/* Blog Card */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.push('/(tabs)/blog')}
+            className="flex-1 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black"
+          >
+            <ImageBackground
+              source={{ uri: latestArticle?.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' }}
+              style={{ flex: 1, minHeight: 180 }}
+              imageStyle={{ opacity: 0.6 }}
+            >
+              <View className="absolute inset-0 bg-black/60" />
+              <View className="flex-1 p-4 justify-between">
+                <View>
+                  <View className="self-start bg-white/20 px-2 py-1 rounded-md mb-2">
+                     <Text className="text-white text-[9px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
+                       {latestArticle?.category || 'Conseils'}
+                     </Text>
+                  </View>
+                  <Text className="text-white text-sm font-bold leading-tight" numberOfLines={3} style={{ fontFamily: 'Poppins_700Bold' }}>
+                    {latestArticle?.title || 'Chargement des conseils...'}
+                  </Text>
+                </View>
+
+                <View className="bg-white rounded-xl py-2 items-center justify-center mt-2">
+                  <Text className="text-black text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    Lire l'article
+                  </Text>
+                </View>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
         </View>
 
       </ScrollView>
