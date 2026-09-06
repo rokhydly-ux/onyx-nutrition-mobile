@@ -382,7 +382,7 @@ export default function HomeScreen() {
         <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(tabs)/my-day')} className="flex-row justify-between mb-6 space-x-2">
           {/* Poids */}
 
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/profile')} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/weight' as any)} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
             <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783280413/Woman_standing_on_scale_smiling_202607051938_e6h39p.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.25 }}>
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>POIDS</Text>
@@ -551,81 +551,46 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Bottom 2 Cards Grid */}
-        <View className="flex-row space-x-3 mb-10">
-          {/* Sama Menu du Jour */}
-          <View className="flex-1 bg-white dark:bg-[#151515] rounded-3xl p-4 border border-gray-200 dark:border-white/10 shadow-sm">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>SAMA MENU DU JOUR</Text>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/menu')}>
-                <Text className="text-[#39FF14] text-[10px] font-bold uppercase">Voir la semaine</Text>
-              </TouchableOpacity>
+        {/* Sama Menu du Jour (Pleine Largeur) */}
+        <View className="w-full bg-white dark:bg-[#151515] rounded-3xl p-5 mb-6 border border-gray-200 dark:border-white/10 shadow-sm">
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>SAMA MENU DU JOUR</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/menu')}>
+              <Text className="text-[#39FF14] text-[10px] font-bold uppercase">Voir la semaine</Text>
+            </TouchableOpacity>
+          </View>
+
+          {meals.length > 0 ? meals.map((meal, index) => {
+             const imageUri = index % 2 === 0
+               ? 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg'
+               : 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg';
+
+             return (
+               <TouchableOpacity
+                 key={meal.id}
+                 activeOpacity={0.8}
+                 onPress={() => console.log('Open recipe', meal.id)}
+                 className="flex-row items-center mb-4">
+                 <Image
+                   source={{ uri: imageUri }}
+                   className="w-14 h-14 rounded-xl mr-4"
+                   resizeMode="cover"
+                 />
+                 <View className="flex-1">
+                   <Text className="text-gray-400 text-[10px] uppercase font-bold mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>{meal.meal_type} • {meal.time}</Text>
+                   <Text className="text-black dark:text-white text-sm font-bold" numberOfLines={1} style={{ fontFamily: 'Poppins_700Bold' }}>{meal.name}</Text>
+                 </View>
+               </TouchableOpacity>
+             );
+          }) : (
+            <View className="py-4 items-center">
+              <Text className="text-gray-400 text-xs text-center">Aucun repas logué aujourd&apos;hui.</Text>
             </View>
-
-            {meals.length > 0 ? meals.map((meal, index) => {
-               // Assign default images alternatively for demo purposes based on index or meal type
-
-               const imageUri = index % 2 === 0
-                 ? 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg'
-                 : 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg';
-
-               return (
-                 <TouchableOpacity
-                   key={meal.id}
-                   activeOpacity={0.8}
-                   onPress={() => console.log('Open recipe', meal.id)}
-                   className="flex-row items-center mb-3">
-                   <Image
-                     source={{ uri: imageUri }}
-                     className="w-10 h-10 rounded-lg mr-3"
-                     resizeMode="cover"
-                   />
-                   <View className="flex-1">
-                     <Text className="text-gray-400 text-[9px] uppercase font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{meal.meal_type} • {meal.time}</Text>
-                     <Text className="text-black dark:text-white text-xs font-bold" numberOfLines={1}>{meal.name}</Text>
-                   </View>
-                 </TouchableOpacity>
-               );
-            }) : (
-              <View className="py-4 items-center">
-                <Text className="text-gray-400 text-xs text-center">Aucun repas logué aujourd&apos;hui.</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Communauté */}
-          <View className="flex-1 bg-white dark:bg-[#151515] rounded-3xl p-4 border border-gray-200 dark:border-white/10 shadow-sm">
-            <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>COMMUNAUTÉ</Text>
-
-            {posts.length > 0 ? posts.map((post) => (
-               <View key={post.id} className="mb-3">
-                 <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center">
-                      <View className="w-6 h-6 bg-blue-200 rounded-full items-center justify-center mr-2 overflow-hidden">
-                        {post.author_avatar ? (
-                          <Image source={{uri: post.author_avatar}} className="w-full h-full" />
-                        ) : (
-                          <Text className="text-blue-600 text-[10px] font-bold">{post.author_name?.substring(0,2) || 'An'}</Text>
-                        )}
-                      </View>
-                      <Text className="text-black dark:text-white text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{post.author_name}</Text>
-                    </View>
-                    <MoreHorizontal size={14} color={isDark ? '#A3A3A3' : '#6B7280'} />
-                  </View>
-                  <Text className="text-gray-600 dark:text-gray-300 text-[10px] leading-tight mb-2" numberOfLines={2} style={{ fontFamily: 'Poppins_400Regular' }}>
-                    {post.content}
-                  </Text>
-               </View>
-            )) : (
-              <View className="py-4 items-center">
-                <Text className="text-gray-400 text-xs text-center">Rien de nouveau dans la communauté.</Text>
-              </View>
-            )}
-          </View>
+          )}
         </View>
 
-        {/* Fitness & Blog Grid */}
-        <View className="flex-row space-x-3 mb-10">
+        {/* Fitness & Blog Grid (Côte à Côte) */}
+        <View className="flex-row space-x-3 mb-6">
           {/* Fitness Card */}
           <TouchableOpacity
             activeOpacity={0.8}
@@ -660,7 +625,7 @@ export default function HomeScreen() {
           {/* Blog Card */}
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => router.push(latestArticle ? `/(tabs)/blog/${latestArticle.id}` as any : '/(tabs)/blog' as any)}
+            onPress={() => router.push(latestArticle ? `/(tabs)/blog/${latestArticle.id}` as any : '/(tabs)/blog/index' as any)}
             className="flex-1 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black"
           >
             <ImageBackground
@@ -689,6 +654,36 @@ export default function HomeScreen() {
               </View>
             </ImageBackground>
           </TouchableOpacity>
+        </View>
+
+        {/* Communauté (Pleine Largeur) */}
+        <View className="w-full bg-white dark:bg-[#151515] rounded-3xl p-5 mb-10 border border-gray-200 dark:border-white/10 shadow-sm">
+          <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>COMMUNAUTÉ</Text>
+
+          {posts.length > 0 ? posts.map((post) => (
+             <View key={post.id} className="mb-4">
+               <View className="flex-row items-center justify-between mb-2">
+                  <View className="flex-row items-center">
+                    <View className="w-8 h-8 bg-blue-200 rounded-full items-center justify-center mr-3 overflow-hidden">
+                      {post.author_avatar ? (
+                        <Image source={{uri: post.author_avatar}} className="w-full h-full" />
+                      ) : (
+                        <Text className="text-blue-600 text-xs font-bold">{post.author_name?.substring(0,2) || 'An'}</Text>
+                      )}
+                    </View>
+                    <Text className="text-black dark:text-white text-sm font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{post.author_name}</Text>
+                  </View>
+                  <MoreHorizontal size={16} color={isDark ? '#A3A3A3' : '#6B7280'} />
+                </View>
+                <Text className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-2" numberOfLines={3} style={{ fontFamily: 'Poppins_400Regular' }}>
+                  {post.content}
+                </Text>
+             </View>
+          )) : (
+            <View className="py-4 items-center">
+              <Text className="text-gray-400 text-xs text-center">Rien de nouveau dans la communauté.</Text>
+            </View>
+          )}
         </View>
 
       </ScrollView>

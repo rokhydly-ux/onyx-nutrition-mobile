@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, ImageBackground, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, ImageBackground, TextInput, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
@@ -16,6 +16,7 @@ type MarketingArticle = {
   read_time?: string;
   view_count?: number;
   content?: string;
+  author_name?: string;
 };
 
 type Comment = {
@@ -33,6 +34,8 @@ export default function BlogArticleScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const [article, setArticle] = useState<MarketingArticle | null>(null);
   const [similarArticles, setSimilarArticles] = useState<MarketingArticle[]>([]);
@@ -68,6 +71,13 @@ export default function BlogArticleScreen() {
 
       if (articleError) throw articleError;
       setArticle(articleData);
+
+      // Start Fade-in animation
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
 
       // Increment view count (if view_count column exists - using a raw RPC or just updating directly if RLS allows)
       // For this demo, we assume we just read the view_count, but ideally, you call an RPC `increment_view_count(article_id)`
@@ -169,37 +179,66 @@ export default function BlogArticleScreen() {
            </View>
         </SafeAreaView>
 
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <Animated.ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
+          scrollEventThrottle={16}
+        >
 
-          {/* Hero Image */}
-          <ImageBackground
-            source={{ uri: article.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' }}
-            style={{ width: '100%', height: 350, justifyContent: 'flex-end' }}
-          >
-            {/* Gradient Overlay */}
-            <View className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+          {/* Parallax Hero Image */}
+          <Animated.View style={{
+            width: '100%',
+            height: 350,
+            transform: [
+              {
+                translateY: scrollY.interpolate({
+                  inputRange: [-350, 0, 350],
+                  outputRange: [-175, 0, 175], // Move at half speed for parallax
+                  extrapolate: 'clamp',
+                }),
+              },
+            ],
+          }}>
+            <ImageBackground
+              source={{ uri: article.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781222471/Bouillie_de_mil_r2zihq.jpg' }}
+              style={{ width: '100%', height: '100%', justifyContent: 'flex-end' }}
+            >
+              {/* Gradient Overlay */}
+              <View className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-            <View className="p-5 pb-8">
-              <View className="self-start bg-[#39FF14] px-3 py-1 rounded-full mb-3">
-                <Text className="text-black text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
-                  {article.category || 'Conseils'}
+              <View className="p-5 pb-8">
+                <View className="self-start bg-[#39FF14] px-3 py-1 rounded-full mb-3">
+                  <Text className="text-black text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    {article.category || 'Conseils'}
+                  </Text>
+                </View>
+                <Text className="text-white text-3xl font-bold leading-tight" style={{ fontFamily: 'Poppins_700Bold' }}>
+                  {article.title}
                 </Text>
               </View>
-              <Text className="text-white text-3xl font-bold leading-tight" style={{ fontFamily: 'Poppins_700Bold' }}>
-                {article.title}
-              </Text>
-            </View>
-          </ImageBackground>
+            </ImageBackground>
+          </Animated.View>
 
           {/* Meta Data Bar */}
           <View className="px-5 -mt-4">
              <View className="bg-white dark:bg-[#151515] p-4 rounded-3xl flex-row justify-between items-center border border-gray-200 dark:border-white/10 shadow-sm">
                 <View className="flex-row items-center">
-                   <View className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 items-center justify-center mr-2 border border-gray-300 dark:border-gray-700">
-                     <Text className="text-gray-500 dark:text-gray-400 text-xs font-bold">ED</Text>
+                   <View className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 items-center justify-center mr-2 border border-gray-300 dark:border-gray-700 overflow-hidden">
+                     {article.author_name ? (
+                        <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase">{article.author_name.substring(0, 2)}</Text>
+                     ) : (
+                        <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase">ED</Text>
+                     )}
                    </View>
                    <View>
-                     <Text className="text-black dark:text-white text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>La Rédaction</Text>
+                     <Text className="text-black dark:text-white text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                       {article.author_name || 'La Rédaction'}
+                     </Text>
                      <Text className="text-gray-400 text-[10px]" style={{ fontFamily: 'Poppins_400Regular' }}>
                         {new Date(article.created_at).toLocaleDateString('fr-FR')}
                      </Text>
@@ -220,7 +259,7 @@ export default function BlogArticleScreen() {
           </View>
 
           {/* Article Content Body */}
-          <View className="p-5 mt-4">
+          <Animated.View className="p-5 mt-4" style={{ opacity: fadeAnim }}>
             {article.content ? (
               <Text className="text-gray-700 dark:text-gray-300 text-base leading-relaxed" style={{ fontFamily: 'Poppins_400Regular' }}>
                 {article.content}
@@ -242,7 +281,7 @@ export default function BlogArticleScreen() {
                 </Text>
               </View>
             )}
-          </View>
+          </Animated.View>
 
           <View className="h-px bg-gray-200 dark:bg-white/10 mx-5 my-6" />
 
@@ -320,10 +359,13 @@ export default function BlogArticleScreen() {
             </View>
           )}
 
-        </ScrollView>
+          {/* Bottom Padding for Fixed Input */}
+          <View className="h-20" />
+
+        </Animated.ScrollView>
 
         {/* Comment Input Fixed at Bottom */}
-        <View className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#111] px-5 py-4 border-t border-gray-200 dark:border-white/10 shadow-lg">
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }} className="bg-white dark:bg-[#111] px-5 py-4 pb-6 border-t border-gray-200 dark:border-white/10 shadow-lg z-50">
            {userId ? (
              <View className="flex-row items-center space-x-2">
                <View className="flex-1 bg-gray-100 dark:bg-white/10 rounded-full px-4 py-2 border border-transparent focus:border-[#39FF14]">
