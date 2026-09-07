@@ -41,6 +41,57 @@ export default function WeightScreen() {
     }, [])
   );
 
+  React.useEffect(() => {
+    let channel: any;
+
+    const setupRealtime = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      const channelName = `weight_sync_${Date.now()}`;
+      channel = supabase.channel(channelName);
+
+      channel.on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'nutrition_profiles',
+          filter: `client_id=eq.${session.user.id}`,
+        },
+        (payload: any) => {
+          const newProfile = payload.new as any;
+          if (newProfile) {
+            const diag = newProfile.diagnostic_data || {};
+            setDiagnosticData(diag);
+            setCurrentWeight(diag.currentWeight || null);
+            setTargetWeight(diag.targetWeight || null);
+            setHeight(diag.height || null);
+
+            let logs: WeightLog[] = [];
+            try {
+              if (newProfile.weight_logs) {
+                logs = typeof newProfile.weight_logs === 'string'
+                  ? JSON.parse(newProfile.weight_logs)
+                  : newProfile.weight_logs;
+              }
+            } catch (e) {
+              console.error('Error parsing weight_logs in Realtime', e);
+            }
+            setWeightLogs(logs);
+          }
+        }
+      );
+      channel.subscribe();
+    };
+
+    setupRealtime();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, []);
+
   const fetchWeightData = async () => {
     try {
       setLoading(true);
