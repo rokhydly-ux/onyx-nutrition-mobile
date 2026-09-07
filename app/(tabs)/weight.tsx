@@ -441,7 +441,7 @@ export default function WeightScreen() {
                    <>
                      <Check size={20} color={newWeight.trim() ? '#000' : (isDark ? '#555' : '#9CA3AF')} />
                      <Text className={`font-bold ml-2 ${newWeight.trim() ? 'text-black' : (isDark ? 'text-gray-500' : 'text-gray-400')}`} style={{ fontFamily: 'Poppins_700Bold' }}>
-                       Enregistrer
+                       Appliquer
                      </Text>
                    </>
                  )}
