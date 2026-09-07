@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, ImageBackground, TextInput, KeyboardAvoidingView, Platform, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, ImageBackground, TextInput, KeyboardAvoidingView, Platform, Animated, useWindowDimensions } from 'react-native';
+import RenderHtml from 'react-native-render-html';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
@@ -36,6 +37,7 @@ export default function BlogArticleScreen() {
   const isDark = colorScheme === 'dark';
   const scrollY = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { width } = useWindowDimensions();
 
   const [article, setArticle] = useState<MarketingArticle | null>(null);
   const [similarArticles, setSimilarArticles] = useState<MarketingArticle[]>([]);
@@ -235,7 +237,7 @@ export default function BlogArticleScreen() {
                      {article.author_name ? (
                         <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase">{article.author_name.substring(0, 2)}</Text>
                      ) : (
-                        <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase">ED</Text>
+                        <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase">LR</Text>
                      )}
                    </View>
                    <View>
@@ -251,11 +253,11 @@ export default function BlogArticleScreen() {
                 <View className="flex-row items-center space-x-3">
                    <View className="flex-row items-center">
                      <Clock size={12} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                     <Text className="text-gray-500 dark:text-gray-400 text-[10px] ml-1 font-bold">{article.read_time || '3 min'}</Text>
+                     <Text className="text-gray-500 dark:text-gray-400 text-[10px] ml-1 font-bold">{article.read_time || '3'} min</Text>
                    </View>
                    <View className="flex-row items-center">
                      <Eye size={12} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                     <Text className="text-gray-500 dark:text-gray-400 text-[10px] ml-1 font-bold">{article.view_count || 120}</Text>
+                     <Text className="text-gray-500 dark:text-gray-400 text-[10px] ml-1 font-bold">{article.view_count || 0}</Text>
                    </View>
                 </View>
              </View>
@@ -264,9 +266,33 @@ export default function BlogArticleScreen() {
           {/* Article Content Body */}
           <Animated.View className="py-4 mt-2" style={{ opacity: fadeAnim, paddingHorizontal: 20 }}>
             {article.content ? (
-              <Text className="text-gray-700 dark:text-gray-300 text-base leading-relaxed" style={{ fontFamily: 'Poppins_400Regular' }}>
-                {article.content}
-              </Text>
+              <RenderHtml
+                contentWidth={width - 40}
+                source={{ html: article.content }}
+                tagsStyles={{
+                  body: {
+                    color: isDark ? '#D1D5DB' : '#374151',
+                    fontFamily: 'Poppins_400Regular',
+                    fontSize: 16,
+                    lineHeight: 24,
+                  },
+                  p: {
+                    color: isDark ? '#D1D5DB' : '#374151',
+                    fontFamily: 'Poppins_400Regular',
+                    fontSize: 16,
+                    lineHeight: 24,
+                    marginBottom: 10,
+                  },
+                  span: {
+                    color: isDark ? '#D1D5DB' : '#374151',
+                    fontFamily: 'Poppins_400Regular',
+                  },
+                  h1: { fontFamily: 'Poppins_700Bold', color: isDark ? '#FFF' : '#000' },
+                  h2: { fontFamily: 'Poppins_700Bold', color: isDark ? '#FFF' : '#000' },
+                  h3: { fontFamily: 'Poppins_700Bold', color: isDark ? '#FFF' : '#000' },
+                  strong: { fontFamily: 'Poppins_700Bold' },
+                }}
+              />
             ) : (
               <View className="space-y-6">
                 <Text className="text-gray-700 dark:text-gray-300 text-base leading-relaxed" style={{ fontFamily: 'Poppins_400Regular' }}>
