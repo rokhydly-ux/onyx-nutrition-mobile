@@ -157,7 +157,8 @@ export default function BlogArticleScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
 
@@ -181,6 +182,7 @@ export default function BlogArticleScreen() {
 
         <Animated.ScrollView
           className="flex-1"
+          contentContainerStyle={{ paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           onScroll={Animated.event(
