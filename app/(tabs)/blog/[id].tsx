@@ -389,43 +389,49 @@ export default function BlogArticleScreen() {
           )}
 
           {/* Bottom Padding for Fixed Input */}
-          <View className="h-32" />
+          <View className="h-40" />
 
         </Animated.ScrollView>
 
         {/* Comment Input Fixed at Bottom */}
-        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }} className="bg-white dark:bg-[#111] px-5 py-4 pb-6 border-t border-gray-200 dark:border-white/10 shadow-lg z-50">
-           {userId ? (
-             <View className="flex-row items-center space-x-2">
-               <View className="flex-1 bg-gray-100 dark:bg-white/10 rounded-full px-4 py-2 border border-transparent focus:border-[#39FF14]">
-                 <TextInput
-                   className="text-black dark:text-white h-8"
-                   placeholder="Ajouter un commentaire..."
-                   placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
-                   value={newComment}
-                   onChangeText={setNewComment}
-                   multiline={false}
-                   style={{ fontFamily: 'Poppins_400Regular' }}
-                 />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+          className="absolute bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10 shadow-lg"
+        >
+          <View className="px-5 py-4 pb-8">
+             {userId ? (
+               <View className="flex-row items-center space-x-2">
+                 <View className="flex-1 bg-gray-100 dark:bg-white/10 rounded-full px-4 py-2 border border-transparent focus:border-[#39FF14]">
+                   <TextInput
+                     className="text-black dark:text-white h-8"
+                     placeholder="Ajouter un commentaire..."
+                     placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
+                     value={newComment}
+                     onChangeText={setNewComment}
+                     multiline={false}
+                     style={{ fontFamily: 'Poppins_400Regular' }}
+                   />
+                 </View>
+                 <TouchableOpacity
+                   disabled={!newComment.trim() || submittingComment}
+                   onPress={handlePostComment}
+                   className={`w-10 h-10 rounded-full items-center justify-center ${newComment.trim() ? 'bg-[#39FF14]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                 >
+                   {submittingComment ? (
+                     <ActivityIndicator size="small" color="#000" />
+                   ) : (
+                     <Send size={16} color={newComment.trim() ? '#000' : (isDark ? '#555' : '#FFF')} style={{ marginLeft: 2 }} />
+                   )}
+                 </TouchableOpacity>
                </View>
-               <TouchableOpacity
-                 disabled={!newComment.trim() || submittingComment}
-                 onPress={handlePostComment}
-                 className={`w-10 h-10 rounded-full items-center justify-center ${newComment.trim() ? 'bg-[#39FF14]' : 'bg-gray-300 dark:bg-gray-700'}`}
-               >
-                 {submittingComment ? (
-                   <ActivityIndicator size="small" color="#000" />
-                 ) : (
-                   <Send size={16} color={newComment.trim() ? '#000' : (isDark ? '#555' : '#FFF')} style={{ marginLeft: 2 }} />
-                 )}
-               </TouchableOpacity>
-             </View>
-           ) : (
-             <View className="items-center">
-                <Text className="text-gray-500 dark:text-gray-400 text-xs">Connectez-vous pour commenter.</Text>
-             </View>
-           )}
-        </View>
+             ) : (
+               <View className="items-center">
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs">Connectez-vous pour commenter.</Text>
+               </View>
+             )}
+          </View>
+        </KeyboardAvoidingView>
 
       </View>
     </KeyboardAvoidingView>
