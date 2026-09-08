@@ -35,6 +35,24 @@ export default function WeightScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  const handleNumpadPress = (val: string) => {
+    if (val === 'C') {
+      setNewWeight('');
+      return;
+    }
+    if (val === '.') {
+      if (newWeight.includes('.')) return;
+      if (newWeight === '') {
+        setNewWeight('0.');
+        return;
+      }
+    }
+
+    if (newWeight.length < 5) {
+       setNewWeight(prev => prev + val);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchWeightData();
@@ -240,8 +258,14 @@ export default function WeightScreen() {
     }
 
     return (
-      <View className="mt-6 bg-white dark:bg-[#151515] p-4 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm relative h-[220px]">
-        <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>Évolution</Text>
+      <View className="bg-white dark:bg-[#151515] p-4 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm relative h-[220px] shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+        <View className="flex-row justify-between items-center mb-4">
+           <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>Évolution</Text>
+           <View className="flex-row items-end">
+             <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{currentWeight || '--'}</Text>
+             <Text className="text-gray-400 font-bold ml-1 text-xs mb-1">kg</Text>
+           </View>
+        </View>
 
         <Svg width={chartWidth} height={chartHeight} style={{ overflow: 'visible' }}>
           <Defs>
@@ -297,7 +321,7 @@ export default function WeightScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+      <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A] relative" edges={['top']}>
         {showConfetti && (
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }} pointerEvents="none">
              <ConfettiCannon count={100} origin={{x: width/2, y: -20}} fallSpeed={2500} fadeOut />
@@ -309,64 +333,62 @@ export default function WeightScreen() {
           </View>
         )}
 
-        {/* Header */}
-        <View className="flex-row items-center px-5 py-4 border-b border-gray-200 dark:border-white/10">
-          <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 bg-gray-100 dark:bg-white/5 rounded-full">
-            <ArrowLeft size={20} color={isDark ? '#FFF' : '#000'} />
-          </TouchableOpacity>
-          <Text className="text-black dark:text-white font-bold text-lg ml-3" style={{ fontFamily: 'Poppins_700Bold' }}>
-            Suivi de Poids
-          </Text>
+        {/* HEADER VERT FIXE EN ARRIÈRE-PLAN */}
+        <View className="absolute top-0 left-0 right-0 h-[280px] bg-[#39FF14] z-0 pt-12 px-5">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity onPress={() => router.back()} className="p-2 bg-black/10 rounded-full">
+              <ArrowLeft size={20} color="#000" />
+            </TouchableOpacity>
+            <Text className="text-black font-bold text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>
+              Suivi de Poids
+            </Text>
+            <View className="w-10" />
+          </View>
         </View>
 
-        <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          className="flex-1 z-10 mt-[100px] bg-[#FAFAFA] dark:bg-[#0A0A0A]"
+          style={{ borderTopLeftRadius: 32, borderTopRightRadius: 32 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="p-5">
 
-          {/* Main Stats Row */}
-          <View className="flex-row space-x-3 mb-6">
-            <View className="flex-1 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm relative overflow-hidden">
-               {/* Decorative background circle */}
-               <View className="absolute -right-6 -bottom-6 w-20 h-20 bg-[#39FF14]/10 rounded-full blur-xl" />
-               <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>POIDS ACTUEL</Text>
-               <View className="flex-row items-end">
-                 <Text className="text-black dark:text-white text-3xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                   {currentWeight || '--'}
-                 </Text>
-                 <Text className="text-gray-400 font-bold mb-1 ml-1">kg</Text>
-               </View>
-            </View>
-
-            <View className="flex-1 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm relative overflow-hidden">
-               <View className="absolute -right-6 -top-6 w-20 h-20 bg-blue-500/10 rounded-full blur-xl" />
-               <View className="flex-row justify-between items-start mb-1">
-                 <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>OBJECTIF</Text>
-                 <Target size={14} color={isDark ? '#9CA3AF' : '#6B7280'} />
-               </View>
-               <View className="flex-row items-end">
-                 <Text className="text-black dark:text-white text-3xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                   {targetWeight || '--'}
-                 </Text>
-                 <Text className="text-gray-400 font-bold mb-1 ml-1">kg</Text>
-               </View>
-            </View>
-          </View>
-
-          {/* BMI Card */}
-          {bmi ? (
-            <View className="bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm flex-row items-center justify-between mb-2">
-              <View>
-                <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>INDICE DE MASSE CORPORELLE</Text>
-                <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{bmi}</Text>
+            {/* Main Stats Row - Target BMI */}
+            <View className="flex-row space-x-3 mb-6">
+              <View className="flex-1 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm relative overflow-hidden">
+                 <View className="absolute -right-6 -top-6 w-20 h-20 bg-blue-500/10 rounded-full blur-xl" />
+                 <View className="flex-row justify-between items-start mb-1">
+                   <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>OBJECTIF</Text>
+                   <Target size={14} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                 </View>
+                 <View className="flex-row items-end">
+                   <Text className="text-black dark:text-white text-3xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                     {targetWeight || '--'}
+                   </Text>
+                   <Text className="text-gray-400 font-bold mb-1 ml-1">kg</Text>
+                 </View>
               </View>
-              <View className="px-3 py-1.5 rounded-full" style={{ backgroundColor: bmiStatus?.color + '20' }}>
-                <Text style={{ color: bmiStatus?.color, fontFamily: 'Poppins_700Bold', fontSize: 10, textTransform: 'uppercase' }}>
-                  {bmiStatus?.label}
-                </Text>
-              </View>
-            </View>
-          ) : null}
 
-          {/* Chart */}
-          {renderChart()}
+              {bmi ? (
+                <View className="flex-1 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm relative overflow-hidden justify-between">
+                  <View>
+                    <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>IMC</Text>
+                    <Text className="text-black dark:text-white text-2xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{bmi}</Text>
+                  </View>
+                  <View className="px-3 py-1.5 rounded-full self-start" style={{ backgroundColor: bmiStatus?.color + '20' }}>
+                    <Text style={{ color: bmiStatus?.color, fontFamily: 'Poppins_700Bold', fontSize: 10, textTransform: 'uppercase' }}>
+                      {bmiStatus?.label}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <View className="flex-1 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm" />
+              )}
+            </View>
+
+            {/* Chart */}
+            {renderChart()}
 
           {/* History Section */}
           {weightLogs.length > 0 && (
@@ -413,43 +435,66 @@ export default function WeightScreen() {
             </View>
           )}
 
-          {/* Input Section */}
-          <View className="mt-8 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm mb-10">
-             <Text className="text-black dark:text-white font-bold mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>Nouvelle Pesée</Text>
+            {/* La Carte Superaliment (Statique) */}
+            <View className="mt-6 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-[#39FF14]/50 shadow-[0_0_15px_rgba(57,255,20,0.1)] flex-row items-center justify-between">
+              <View className="flex-1 mr-4">
+                <Text className="text-black dark:text-white font-bold text-lg mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>
+                  Le Soumbala (Nététou)
+                </Text>
+                <Text className="text-gray-500 dark:text-gray-400 text-xs" style={{ fontFamily: 'Poppins_400Regular' }}>
+                  Un super-aliment local exceptionnel, riche en protéines pour booster vos plats sains.
+                </Text>
+              </View>
+              <TouchableOpacity className="bg-[#39FF14] px-4 py-2 rounded-full">
+                <Text className="text-black text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                  Découvrir
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-             <View className="flex-row items-center space-x-3">
-               <View className="flex-1 bg-gray-50 dark:bg-[#0A0A0A] rounded-2xl border border-gray-200 dark:border-white/10 px-4 h-14 flex-row items-center">
-                 <TextInput
-                   className="flex-1 text-black dark:text-white text-lg font-bold"
-                   placeholder="Ex: 75.5"
-                   placeholderTextColor={isDark ? '#555' : '#999'}
-                   keyboardType="decimal-pad"
-                   value={newWeight}
-                   onChangeText={setNewWeight}
-                   style={{ fontFamily: 'Poppins_700Bold' }}
-                 />
-                 <Text className="text-gray-400 font-bold">kg</Text>
+            {/* Input Section - Custom Numpad */}
+            <View className="mt-8 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm mb-10">
+               <Text className="text-black dark:text-white font-bold mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>Nouvelle Pesée</Text>
+
+               {/* L'Affichage (ReadOnly) */}
+               <View className="flex-row items-center space-x-3 mb-6">
+                 <View className="flex-1 bg-gray-50 dark:bg-[#0A0A0A] rounded-2xl border border-gray-200 dark:border-white/10 px-4 h-16 flex-row items-center justify-center">
+                   <Text className="text-black dark:text-white text-3xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                     {newWeight || '0.0'}
+                   </Text>
+                   <Text className="text-gray-400 font-bold ml-2 mt-2">kg</Text>
+                 </View>
+
+                 {/* Grand bouton + vert */}
+                 <TouchableOpacity
+                   onPress={handleSaveWeight}
+                   disabled={!newWeight.trim() || saving}
+                   className={`w-16 h-16 rounded-2xl items-center justify-center ${newWeight.trim() ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.3)]' : 'bg-gray-200 dark:bg-gray-800'}`}
+                 >
+                   {saving ? (
+                     <ActivityIndicator size="small" color="#000" />
+                   ) : (
+                     <Text className="text-black text-3xl font-bold" style={{ marginTop: -4 }}>+</Text>
+                   )}
+                 </TouchableOpacity>
                </View>
 
-               <TouchableOpacity
-                 onPress={handleSaveWeight}
-                 className={`h-14 px-6 rounded-2xl items-center justify-center flex-row ${newWeight.trim() ? 'bg-[#39FF14] shadow-[0_0_15px_rgba(57,255,20,0.3)]' : 'bg-gray-200 dark:bg-gray-800'}`}
-               >
-                 {saving ? (
-                   <ActivityIndicator size="small" color="#000" />
-                 ) : (
-                   <>
-                     <Check size={20} color={newWeight.trim() ? '#000' : (isDark ? '#555' : '#9CA3AF')} />
-                     <Text className={`font-bold ml-2 ${newWeight.trim() ? 'text-black' : (isDark ? 'text-gray-500' : 'text-gray-400')}`} style={{ fontFamily: 'Poppins_700Bold' }}>
-                       Appliquer
-                     </Text>
-                   </>
-                 )}
-               </TouchableOpacity>
-             </View>
-          </View>
+               {/* Le Clavier (Numpad) */}
+               <View className="flex-row flex-wrap justify-between">
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'C'].map((key) => (
+                     <TouchableOpacity
+                       key={key}
+                       onPress={() => handleNumpadPress(key)}
+                       className="w-[30%] aspect-[2/1] bg-gray-50 dark:bg-[#0A0A0A] mb-3 rounded-2xl items-center justify-center border border-gray-100 dark:border-white/5 active:bg-gray-200 dark:active:bg-[#222]"
+                     >
+                        <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{key}</Text>
+                     </TouchableOpacity>
+                  ))}
+               </View>
+            </View>
 
-          <View className="h-10" />
+            <View className="h-10" />
+          </View>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>
