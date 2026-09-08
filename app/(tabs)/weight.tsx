@@ -13,6 +13,27 @@ type WeightLog = {
   weight: number;
 };
 
+const SUPERFOODS = [
+  {
+    id: 1,
+    title: "Le Soumbala (Nététou)",
+    description: "Un super-aliment local exceptionnel, riche en protéines.",
+    productId: "prod_soumbala_123"
+  },
+  {
+    id: 2,
+    title: "Le Fruit du Baobab (Bouye)",
+    description: "Une explosion de vitamine C et de calcium pour votre énergie.",
+    productId: "prod_bouye_456"
+  },
+  {
+    id: 3,
+    title: "Le Fonio",
+    description: "La céréale miracle, sans gluten et à index glycémique bas.",
+    productId: "prod_fonio_789"
+  }
+];
+
 export default function WeightScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
@@ -35,21 +56,18 @@ export default function WeightScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const handleNumpadPress = (val: string) => {
-    if (val === 'C') {
-      setNewWeight('');
-      return;
-    }
-    if (val === '.') {
-      if (newWeight.includes('.')) return;
-      if (newWeight === '') {
-        setNewWeight('0.');
-        return;
-      }
-    }
+  const [randomSuperfood, setRandomSuperfood] = useState(SUPERFOODS[0]);
 
-    if (newWeight.length < 5) {
-       setNewWeight(prev => prev + val);
+  React.useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * SUPERFOODS.length);
+    setRandomSuperfood(SUPERFOODS[randomIndex]);
+  }, []);
+
+  const handleQuickAdjust = (amount: number) => {
+    const baseWeight = parseFloat(newWeight) || currentWeight || 0;
+    const newValue = (baseWeight + amount).toFixed(1);
+    if (parseFloat(newValue) >= 0) {
+      setNewWeight(newValue.toString());
     }
   };
 
@@ -435,37 +453,50 @@ export default function WeightScreen() {
             </View>
           )}
 
-            {/* La Carte Superaliment (Statique) */}
+            {/* La Carte Superaliment (Dynamique) */}
             <View className="mt-6 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-[#39FF14]/50 shadow-[0_0_15px_rgba(57,255,20,0.1)] flex-row items-center justify-between">
               <View className="flex-1 mr-4">
                 <Text className="text-black dark:text-white font-bold text-lg mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>
-                  Le Soumbala (Nététou)
+                  {randomSuperfood.title}
                 </Text>
                 <Text className="text-gray-500 dark:text-gray-400 text-xs" style={{ fontFamily: 'Poppins_400Regular' }}>
-                  Un super-aliment local exceptionnel, riche en protéines pour booster vos plats sains.
+                  {randomSuperfood.description}
                 </Text>
               </View>
-              <TouchableOpacity className="bg-[#39FF14] px-4 py-2 rounded-full">
+              <TouchableOpacity
+                className="bg-[#39FF14] px-4 py-2 rounded-full"
+                onPress={() => router.push(`/product/${randomSuperfood.productId}` as any)}
+              >
                 <Text className="text-black text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
                   Découvrir
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Input Section - Custom Numpad */}
+            {/* Input Section - Saisie & Ruban Interactif */}
             <View className="mt-8 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm mb-10">
                <Text className="text-black dark:text-white font-bold mb-4" style={{ fontFamily: 'Poppins_700Bold' }}>Nouvelle Pesée</Text>
 
-               {/* L'Affichage (ReadOnly) */}
+               {/* L'Input Natif Verrouillé (N'accepte que des chiffres/points) */}
                <View className="flex-row items-center space-x-3 mb-6">
                  <View className="flex-1 bg-gray-50 dark:bg-[#0A0A0A] rounded-2xl border border-gray-200 dark:border-white/10 px-4 h-16 flex-row items-center justify-center">
-                   <Text className="text-black dark:text-white text-3xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                     {newWeight || '0.0'}
-                   </Text>
-                   <Text className="text-gray-400 font-bold ml-2 mt-2">kg</Text>
+                   <TextInput
+                     className="flex-1 text-center text-black dark:text-white text-3xl font-bold"
+                     keyboardType="decimal-pad"
+                     inputMode="decimal"
+                     value={newWeight}
+                     onChangeText={(text) => {
+                       const sanitizedText = text.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                       setNewWeight(sanitizedText);
+                     }}
+                     placeholder="0.0"
+                     placeholderTextColor="#999"
+                     style={{ fontFamily: 'Poppins_700Bold' }}
+                   />
+                   <Text className="text-gray-400 font-bold ml-2">kg</Text>
                  </View>
 
-                 {/* Grand bouton + vert */}
+                 {/* Grand bouton + vert pour sauvegarder */}
                  <TouchableOpacity
                    onPress={handleSaveWeight}
                    disabled={!newWeight.trim() || saving}
@@ -479,18 +510,30 @@ export default function WeightScreen() {
                  </TouchableOpacity>
                </View>
 
-               {/* Le Clavier (Numpad) */}
-               <View className="flex-row flex-wrap justify-between">
-                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'C'].map((key) => (
-                     <TouchableOpacity
-                       key={key}
-                       onPress={() => handleNumpadPress(key)}
-                       className="w-[30%] aspect-[2/1] bg-gray-50 dark:bg-[#0A0A0A] mb-3 rounded-2xl items-center justify-center border border-gray-100 dark:border-white/5 active:bg-gray-200 dark:active:bg-[#222]"
-                     >
-                        <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>{key}</Text>
-                     </TouchableOpacity>
-                  ))}
-               </View>
+               {/* Le Ruban Interactif (Boutons Rapides) */}
+               <ScrollView
+                 horizontal
+                 showsHorizontalScrollIndicator={false}
+                 className="flex-row"
+                 contentContainerStyle={{ paddingRight: 20 }}
+               >
+                 {[
+                   { label: '-1 kg', value: -1 },
+                   { label: '-0.5 kg', value: -0.5 },
+                   { label: '+0.5 kg', value: 0.5 },
+                   { label: '+1 kg', value: 1 }
+                 ].map((btn, idx) => (
+                   <TouchableOpacity
+                     key={idx}
+                     onPress={() => handleQuickAdjust(btn.value)}
+                     className="bg-gray-100 dark:bg-white/5 px-4 py-2 rounded-full mr-3 border border-gray-200 dark:border-white/10 active:bg-[#39FF14]/20"
+                   >
+                     <Text className="text-black dark:text-white font-bold text-sm" style={{ fontFamily: 'Poppins_700Bold' }}>
+                       {btn.label}
+                     </Text>
+                   </TouchableOpacity>
+                 ))}
+               </ScrollView>
             </View>
 
             <View className="h-10" />
