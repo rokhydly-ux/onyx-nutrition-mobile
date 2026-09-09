@@ -394,11 +394,7 @@ export default function BlogArticleScreen() {
         </Animated.ScrollView>
 
         {/* Comment Input Fixed at Bottom */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-          className="absolute bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10 shadow-lg"
-        >
+        <View className="absolute bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10 shadow-lg">
           <View className="px-5 py-4 pb-8">
              {userId ? (
                <View className="flex-row items-center space-x-2">
@@ -431,7 +427,7 @@ export default function BlogArticleScreen() {
                </View>
              )}
           </View>
-        </KeyboardAvoidingView>
+        </View>
 
       </View>
     </KeyboardAvoidingView>
