@@ -13,27 +13,6 @@ type WeightLog = {
   weight: number;
 };
 
-const SUPERFOODS = [
-  {
-    id: 1,
-    title: "Le Soumbala (Nététou)",
-    description: "Un super-aliment local exceptionnel, riche en protéines.",
-    productId: "prod_soumbala_123"
-  },
-  {
-    id: 2,
-    title: "Le Fruit du Baobab (Bouye)",
-    description: "Une explosion de vitamine C et de calcium pour votre énergie.",
-    productId: "prod_bouye_456"
-  },
-  {
-    id: 3,
-    title: "Le Fonio",
-    description: "La céréale miracle, sans gluten et à index glycémique bas.",
-    productId: "prod_fonio_789"
-  }
-];
-
 export default function WeightScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
@@ -56,11 +35,28 @@ export default function WeightScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const [randomSuperfood, setRandomSuperfood] = useState(SUPERFOODS[0]);
+  const [randomSuperfood, setRandomSuperfood] = useState<any>(null);
+
+  const fetchRandomSuperfood = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('nutrition_products')
+        .select('id, nom, description_courte')
+        .limit(10);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const randomIndex = Math.floor(Math.random() * data.length);
+        setRandomSuperfood(data[randomIndex]);
+      }
+    } catch (err) {
+      console.error('Error fetching random superfood', err);
+    }
+  };
 
   React.useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * SUPERFOODS.length);
-    setRandomSuperfood(SUPERFOODS[randomIndex]);
+    fetchRandomSuperfood();
   }, []);
 
   const handleQuickAdjust = (amount: number) => {
@@ -454,24 +450,26 @@ export default function WeightScreen() {
           )}
 
             {/* La Carte Superaliment (Dynamique) */}
-            <View className="mt-6 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-[#39FF14]/50 shadow-[0_0_15px_rgba(57,255,20,0.1)] flex-row items-center justify-between">
-              <View className="flex-1 mr-4">
-                <Text className="text-black dark:text-white font-bold text-lg mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>
-                  {randomSuperfood.title}
-                </Text>
-                <Text className="text-gray-500 dark:text-gray-400 text-xs" style={{ fontFamily: 'Poppins_400Regular' }}>
-                  {randomSuperfood.description}
-                </Text>
+            {randomSuperfood && (
+              <View className="mt-6 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-[#39FF14]/50 shadow-[0_0_15px_rgba(57,255,20,0.1)] flex-row items-center justify-between">
+                <View className="flex-1 mr-4">
+                  <Text className="text-black dark:text-white font-bold text-lg mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    {randomSuperfood.nom}
+                  </Text>
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs" style={{ fontFamily: 'Poppins_400Regular' }} numberOfLines={2}>
+                    {randomSuperfood.description_courte || 'Un super-aliment pour booster votre forme.'}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  className="bg-[#39FF14] px-4 py-2 rounded-full"
+                  onPress={() => router.push(`/product/${randomSuperfood.id}` as any)}
+                >
+                  <Text className="text-black text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    Découvrir
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                className="bg-[#39FF14] px-4 py-2 rounded-full"
-                onPress={() => router.push(`/product/${randomSuperfood.productId}` as any)}
-              >
-                <Text className="text-black text-xs font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                  Découvrir
-                </Text>
-              </TouchableOpacity>
-            </View>
+            )}
 
             {/* Input Section - Saisie & Ruban Interactif */}
             <View className="mt-8 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm mb-10">
