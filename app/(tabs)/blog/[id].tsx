@@ -388,13 +388,10 @@ export default function BlogArticleScreen() {
             </View>
           )}
 
-          {/* Bottom Padding for Fixed Input */}
-          <View className="h-40" />
-
         </Animated.ScrollView>
 
-        {/* Comment Input Fixed at Bottom */}
-        <View className="absolute bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10 shadow-lg">
+        {/* Comment Input in Document Flow (Pushed by KeyboardAvoidingView) */}
+        <View className="bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10 z-50">
           <View className="px-5 py-4 pb-8">
              {userId ? (
                <View className="flex-row items-center space-x-2">
@@ -422,7 +419,7 @@ export default function BlogArticleScreen() {
                  </TouchableOpacity>
                </View>
              ) : (
-               <View className="items-center">
+               <View className="items-center py-2">
                   <Text className="text-gray-500 dark:text-gray-400 text-xs">Connectez-vous pour commenter.</Text>
                </View>
              )}
