@@ -127,55 +127,68 @@ export default function ProductDetailScreen() {
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="p-6">
-          <Image source={{ uri: selectedProduct.image_url || selectedProduct.gallery?.[0] || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg' }} className="w-full h-48 resize-contain mb-6" />
+          <View className="relative w-full h-64 bg-gray-100 dark:bg-zinc-900 rounded-xl overflow-hidden mb-6">
+              {/* ICÔNE PANIER FLOTTANTE */}
+              <View className="absolute top-4 right-4 z-50">
+                  <TouchableOpacity onPress={() => router.push('/(tabs)/shop')} className="relative">
+                      <Image
+                          source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1786883944/panierreact_glnlwm.png" }}
+                          className={`w-12 h-12 shadow-md ${shopCart.length > 0 ? 'opacity-90' : 'opacity-100'}`}
+                      />
+                      {shopCart.length > 0 && (
+                          <View className="absolute -top-1 -right-1 bg-red-500 w-5 h-5 flex items-center justify-center rounded-full">
+                              <Text className="text-white text-xs font-bold">{cartCount}</Text>
+                          </View>
+                      )}
+                  </TouchableOpacity>
+              </View>
+
+              {/* PHOTO DU PRODUIT */}
+              <Image
+                  source={{ uri: selectedProduct.image_url || selectedProduct.gallery?.[0] || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg' }}
+                  className="w-full h-full"
+                  resizeMode="contain"
+              />
+          </View>
+
           <Text className="text-black dark:text-white text-2xl mb-1" style={{ fontFamily: "Poppins_900Black" }}>{selectedProduct.nom || selectedProduct.name}</Text>
           {selectedProduct.description_courte && <Text className="text-gray-400 mb-2 italic">{selectedProduct.description_courte}</Text>}
           {(selectedProduct.description) && <Text className="text-black dark:text-white mb-4 leading-relaxed" style={{ fontFamily: 'Poppins_400Regular' }}>{selectedProduct.description}</Text>}
-          <View className="flex-row items-center mb-6">
-            <Text className="text-[#39FF14] text-2xl font-black mr-3">{Number(selectedProduct?.prix_standard || selectedProduct?.prix || selectedProduct?.price || 0).toLocaleString('fr-FR')} FCFA</Text>
-            {selectedProduct.prix_premium && <Text className="text-black dark:text-white font-bold text-sm bg-yellow-400 px-2 py-1 rounded-lg">Premium: {Number(selectedProduct.prix_premium).toLocaleString('fr-FR')} FCFA</Text>}
+
+          {/* SECTION PRIX ET BADGE */}
+          <View className="flex-col mb-6">
+              <View className="flex-row items-end gap-3 mb-2 flex-wrap">
+                  <Text className="text-3xl font-black text-[#39FF14]">
+                    {Number(selectedProduct?.prix_standard || selectedProduct?.prix || selectedProduct?.price || 0).toLocaleString('fr-FR')} FCFA
+                  </Text>
+                  {/* BADGE PREMIUM */}
+                  <View className="bg-[#FFD700] px-3 py-1 rounded-md mb-1">
+                      <Text className="text-black font-bold text-sm">
+                        Premium: {Number(selectedProduct.prix_premium || (selectedProduct.prix_standard || selectedProduct.prix || selectedProduct.price) * 0.8).toLocaleString('fr-FR')} FCFA
+                      </Text>
+                  </View>
+              </View>
           </View>
 
-          <View className="flex-row items-center justify-between mb-8 space-x-2">
-            {(() => {
-              const cartItem = shopCart.find(i => i.id === selectedProduct.id);
-              if (cartItem) {
-                return (
-                  <View className="flex-1 flex-row items-center justify-between bg-zinc-100 dark:bg-zinc-800 py-3 px-6 rounded-2xl mr-2">
-                    <TouchableOpacity onPress={() => cartItem.quantity > 1 ? updateQuantity(selectedProduct.id, cartItem.quantity - 1) : removeFromCart(selectedProduct.id)} className="p-2">
-                      <Text className="text-black dark:text-white text-3xl font-bold">-</Text>
-                    </TouchableOpacity>
-                    <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{cartItem.quantity}</Text>
-                    <TouchableOpacity onPress={() => updateQuantity(selectedProduct.id, cartItem.quantity + 1)} className="p-2">
-                      <Text className="text-black dark:text-white text-3xl font-bold">+</Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              }
-              return (
-                <TouchableOpacity
-                  activeOpacity={0.8}
+          {/* SECTION BOUTONS D'ACTION */}
+          <View className="flex-row gap-3 mb-8">
+              <TouchableOpacity
                   onPress={() => {
                     addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
                     setToastMessage("Produit ajouté avec succès ✅");
                     setShowToast(true);
                     setTimeout(() => setShowToast(false), 3000);
                   }}
-                  className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
-                >
-                  <Text className="text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
-                </TouchableOpacity>
-              );
-            })()}
-
-            {/* Bouton Partage */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={handleShare}
-              className="bg-zinc-200 dark:bg-zinc-800 px-4 py-4 rounded-2xl items-center justify-center"
-            >
-              <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }}>Partager</Text>
-            </TouchableOpacity>
+                  className="flex-1 bg-[#39FF14] py-4 rounded-xl items-center justify-center active:bg-[#32e612]"
+              >
+                  <Text className="text-black font-black" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                  onPress={handleShare}
+                  className="bg-gray-200 dark:bg-gray-800 px-6 py-4 rounded-xl items-center justify-center active:bg-gray-300 dark:active:bg-gray-700"
+              >
+                  <Text className="text-gray-700 dark:text-white font-bold" style={{ fontFamily: "Poppins_700Bold" }}>Partager</Text>
+              </TouchableOpacity>
           </View>
 
           {similarProducts.length > 0 && (
