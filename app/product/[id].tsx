@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Share, FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Plus } from 'lucide-react-native';
+import { ArrowLeft, ShoppingBag } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { useShopStore } from '../../lib/store';
 import { useColorScheme } from 'nativewind';
@@ -14,16 +14,21 @@ export default function ProductDetailScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const [product, setProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
-  const { addToCart } = useShopStore();
+  const [similarProducts, setSimilarProducts] = useState<any[]>([]);
+
+  const { shopCart, addToCart, removeFromCart, updateQuantity } = useShopStore();
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const cartCount = shopCart.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
     checkPremiumStatus();
     if (id) {
-      fetchProduct();
+      fetchProductAndSimilar();
     }
   }, [id]);
 
@@ -35,7 +40,7 @@ export default function ProductDetailScreen() {
     }
   };
 
-  const fetchProduct = async () => {
+  const fetchProductAndSimilar = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -45,16 +50,22 @@ export default function ProductDetailScreen() {
         .maybeSingle();
 
       if (error) throw error;
-      setProduct(data);
+      setSelectedProduct(data);
 
       if (data) {
-        // Increment views
         try {
           const newViews = (data.views || 0) + 1;
           await supabase.from('nutrition_products').update({ views: newViews }).eq('id', data.id);
-        } catch (e) {
-          console.error("View count update failed", e);
-        }
+        } catch (e) { }
+
+        // Fetch similar products
+        const { data: similar } = await supabase
+          .from('nutrition_products')
+          .select('*')
+          .eq('categorie_nom', data.categorie_nom || '')
+          .neq('id', data.id)
+          .limit(4);
+        if (similar) setSimilarProducts(similar);
       }
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -63,11 +74,15 @@ export default function ProductDetailScreen() {
     }
   };
 
-  const handleAddToCart = () => {
-    if (!product) return;
-    addToCart({ ...product, _isPremiumUser: isPremium });
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2000);
+  const handleShare = async () => {
+    if (!selectedProduct) return;
+    try {
+      await Share.share({
+        message: `Découvre ${selectedProduct.nom || selectedProduct.name} sur Onyx Nutrition !\n\n${selectedProduct.description_courte || ''}\n\nhttps://nutriafro.app/product/${selectedProduct.id}`,
+      });
+    } catch (error: any) {
+      console.error(error.message);
+    }
   };
 
   if (loading) {
@@ -78,7 +93,7 @@ export default function ProductDetailScreen() {
     );
   }
 
-  if (!product) {
+  if (!selectedProduct) {
     return (
       <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A] items-center justify-center">
         <Text className="text-black dark:text-white mb-4">Produit introuvable.</Text>
@@ -89,97 +104,107 @@ export default function ProductDetailScreen() {
     );
   }
 
-  const images = (product.gallery && product.gallery.length > 0)
-    ? product.gallery
-    : [product.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg'];
-
-  const finalPrice = isPremium && product.prix_premium ? product.prix_premium : (product.prix_standard || product.prix || product.price || 0);
-
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A] relative" edges={['top', 'bottom']}>
-      {/* 1. LA BARRE GLOBALE (AVEC LE PANIER) */}
+      {/* 1. LA BARRE GLOBALE */}
       <GlobalHeader />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Inline Back Button (Below Header) */}
-        <View className="px-5 pt-4 pb-2 z-50 relative">
-          <TouchableOpacity onPress={() => router.back()} className="flex-row items-center space-x-2">
-            <ArrowLeft size={20} color={isDark ? "#FFF" : "#000"} />
-            <Text className="text-black dark:text-white font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Retour à la boutique</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Product Image */}
-        <View className="w-full h-80 relative bg-gray-100 dark:bg-[#151515]">
-          <Image source={{ uri: images[0] }} className="w-full h-full" resizeMode="cover" />
-        </View>
-
-        {/* Content */}
-        <View className="px-5 pt-6 pb-24">
-           <View className="flex-row justify-between items-start mb-2">
-             <View className="flex-1 pr-4">
-               <Text className="text-black dark:text-white text-2xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                 {product.nom}
-               </Text>
-               <Text className="text-[#39FF14] font-bold text-sm uppercase tracking-wider mt-1" style={{ fontFamily: 'Poppins_700Bold' }}>
-                 {product.categorie_nom || 'Nutrition'}
-               </Text>
-             </View>
-
-             {/* Pricing */}
-             <View className="items-end">
-               <Text className="text-black dark:text-white text-2xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                 {finalPrice} F
-               </Text>
-               {isPremium && product.prix_premium && (product.prix_standard > product.prix_premium) && (
-                 <Text className="text-gray-400 text-xs line-through" style={{ fontFamily: 'Poppins_400Regular' }}>
-                   {product.prix_standard} F
-                 </Text>
-               )}
-             </View>
-           </View>
-
-           {/* Details */}
-           <View className="mt-6 bg-white dark:bg-[#151515] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm">
-             <Text className="text-black dark:text-white font-bold mb-2 text-lg" style={{ fontFamily: 'Poppins_700Bold' }}>
-               Description
-             </Text>
-             <Text className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm" style={{ fontFamily: 'Poppins_400Regular' }}>
-               {product.description_longue || product.description_courte || "Aucune description disponible pour ce produit."}
-             </Text>
-           </View>
-
-           {/* Nutritional Info (if available, mocked here based on context) */}
-           {product.calories && (
-             <View className="mt-4 flex-row space-x-3">
-               <View className="flex-1 bg-white dark:bg-[#151515] p-4 rounded-3xl items-center border border-gray-200 dark:border-white/10">
-                 <Text className="text-gray-400 text-xs font-bold uppercase mb-1">Calories</Text>
-                 <Text className="text-black dark:text-white font-bold">{product.calories} kcal</Text>
-               </View>
-             </View>
-           )}
-
-        </View>
-      </ScrollView>
-
-      {/* Add to Cart Footer */}
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }} className="bg-white dark:bg-[#111] px-5 py-4 pb-6 border-t border-gray-200 dark:border-white/10 shadow-lg z-50">
-        <TouchableOpacity
-          onPress={handleAddToCart}
-          className="bg-[#39FF14] flex-row items-center justify-center py-4 rounded-2xl w-full shadow-[0_0_15px_rgba(57,255,20,0.3)]"
-        >
-          <Plus size={20} color="#000" />
-          <Text className="text-black text-lg font-bold ml-2" style={{ fontFamily: 'Poppins_700Bold' }}>
-            Ajouter au panier
-          </Text>
+      {/* Cart Navigation Helper (Fixes Dead-End) */}
+      <View className="px-5 py-3 flex-row justify-between items-center border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#151515]">
+        <TouchableOpacity onPress={() => router.back()} className="flex-row items-center space-x-2">
+          <ArrowLeft size={20} color={isDark ? "#FFF" : "#000"} />
+          <Text className="text-black dark:text-white font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Retour</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/shop')} className="relative">
+          <ShoppingBag color={isDark ? "#FFF" : "#000"} size={24} />
+          {cartCount > 0 && (
+            <View className="absolute -top-1 -right-2 bg-red-500 w-4 h-4 rounded-full flex items-center justify-center">
+              <Text className="text-white text-[10px] font-bold">{cartCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="p-6">
+          <Image source={{ uri: selectedProduct.image_url || selectedProduct.gallery?.[0] || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg' }} className="w-full h-48 resize-contain mb-6" />
+          <Text className="text-black dark:text-white text-2xl mb-1" style={{ fontFamily: "Poppins_900Black" }}>{selectedProduct.nom || selectedProduct.name}</Text>
+          {selectedProduct.description_courte && <Text className="text-gray-400 mb-2 italic">{selectedProduct.description_courte}</Text>}
+          {(selectedProduct.description) && <Text className="text-black dark:text-white mb-4 leading-relaxed" style={{ fontFamily: 'Poppins_400Regular' }}>{selectedProduct.description}</Text>}
+          <View className="flex-row items-center mb-6">
+            <Text className="text-[#39FF14] text-2xl font-black mr-3">{Number(selectedProduct?.prix_standard || selectedProduct?.prix || selectedProduct?.price || 0).toLocaleString('fr-FR')} FCFA</Text>
+            {selectedProduct.prix_premium && <Text className="text-black dark:text-white font-bold text-sm bg-yellow-400 px-2 py-1 rounded-lg">Premium: {Number(selectedProduct.prix_premium).toLocaleString('fr-FR')} FCFA</Text>}
+          </View>
+
+          <View className="flex-row items-center justify-between mb-8 space-x-2">
+            {(() => {
+              const cartItem = shopCart.find(i => i.id === selectedProduct.id);
+              if (cartItem) {
+                return (
+                  <View className="flex-1 flex-row items-center justify-between bg-zinc-100 dark:bg-zinc-800 py-3 px-6 rounded-2xl mr-2">
+                    <TouchableOpacity onPress={() => cartItem.quantity > 1 ? updateQuantity(selectedProduct.id, cartItem.quantity - 1) : removeFromCart(selectedProduct.id)} className="p-2">
+                      <Text className="text-black dark:text-white text-3xl font-bold">-</Text>
+                    </TouchableOpacity>
+                    <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: "Poppins_900Black" }}>{cartItem.quantity}</Text>
+                    <TouchableOpacity onPress={() => updateQuantity(selectedProduct.id, cartItem.quantity + 1)} className="p-2">
+                      <Text className="text-black dark:text-white text-3xl font-bold">+</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              }
+              return (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    addToCart({ ...selectedProduct, _isPremiumUser: isPremium });
+                    setToastMessage("Produit ajouté avec succès ✅");
+                    setShowToast(true);
+                    setTimeout(() => setShowToast(false), 3000);
+                  }}
+                  className="bg-[#39FF14] flex-1 py-4 rounded-2xl items-center shadow-lg shadow-[#39FF14]/30 mr-2"
+                >
+                  <Text className="text-black text-lg" style={{ fontFamily: "Poppins_900Black" }}>AJOUTER AU PANIER</Text>
+                </TouchableOpacity>
+              );
+            })()}
+
+            {/* Bouton Partage */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={handleShare}
+              className="bg-zinc-200 dark:bg-zinc-800 px-4 py-4 rounded-2xl items-center justify-center"
+            >
+              <Text className="text-black dark:text-white" style={{ fontFamily: "Poppins_700Bold" }}>Partager</Text>
+            </TouchableOpacity>
+          </View>
+
+          {similarProducts.length > 0 && (
+            <View className="pb-10">
+              <Text className="text-gray-500 dark:text-gray-400 mb-4 uppercase" style={{ fontFamily: "Poppins_700Bold" }}>Souvent acheté ensemble</Text>
+              <FlatList
+                data={similarProducts}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={item => item.id}
+                renderItem={({ item: p }) => (
+                  <TouchableOpacity className="w-24 mr-4" onPress={() => router.replace(`/product/${p.id}` as any)}>
+                    <View className="w-24 h-24 bg-zinc-100 dark:bg-zinc-900 rounded-2xl p-2 mb-2">
+                       <Image source={{ uri: p.image_url || p.gallery?.[0] }} className="w-full h-full resize-contain" />
+                    </View>
+                    <Text className="text-black dark:text-white text-[10px]" style={{ fontFamily: "Poppins_700Bold" }} numberOfLines={2}>{p.nom || p.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
       {/* Toast Notification */}
       {showToast && (
-        <View className="absolute top-14 self-center bg-black/80 px-6 py-3 rounded-full z-50">
+        <View className="absolute top-32 self-center bg-black/80 px-6 py-3 rounded-full z-50">
           <Text className="text-white text-sm font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-            Produit ajouté avec succès ✅
+            {toastMessage}
           </Text>
         </View>
       )}
