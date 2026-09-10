@@ -165,8 +165,8 @@ export default function BlogArticleScreen() {
       <View className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
 
         {/* Fixed Glassmorphism Back Button */}
-        <SafeAreaView className="absolute top-0 left-0 right-0 z-20 pointer-events-none" edges={['top']}>
-           <View className="px-5 pt-2 flex-row justify-between items-center pointer-events-auto">
+        <SafeAreaView className="absolute top-0 left-0 right-0 z-20" edges={['top']} pointerEvents="box-none">
+           <View className="px-5 pt-2 flex-row justify-between items-center" pointerEvents="box-none">
               <TouchableOpacity onPress={() => router.push('/(tabs)/blog' as any)} className="overflow-hidden rounded-full">
                 <BlurView
                   intensity={80}
