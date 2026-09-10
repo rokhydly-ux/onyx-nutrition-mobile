@@ -6,6 +6,7 @@ import { ArrowLeft, Plus } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { useShopStore } from '../../lib/store';
 import { useColorScheme } from 'nativewind';
+import GlobalHeader from '../../components/GlobalHeader';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -96,14 +97,18 @@ export default function ProductDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A] relative" edges={['top', 'bottom']}>
-      {/* Absolute Back Button (Top Left) */}
-      <View className="absolute top-12 left-5 z-50">
-        <TouchableOpacity onPress={() => router.back()} className="p-3 bg-black/40 rounded-full backdrop-blur-md">
-          <ArrowLeft size={20} color="#FFF" />
-        </TouchableOpacity>
-      </View>
+      {/* 1. LA BARRE GLOBALE (AVEC LE PANIER) */}
+      <GlobalHeader />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Inline Back Button (Below Header) */}
+        <View className="px-5 pt-4 pb-2 z-50 relative">
+          <TouchableOpacity onPress={() => router.back()} className="flex-row items-center space-x-2">
+            <ArrowLeft size={20} color={isDark ? "#FFF" : "#000"} />
+            <Text className="text-black dark:text-white font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>Retour à la boutique</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Product Image */}
         <View className="w-full h-80 relative bg-gray-100 dark:bg-[#151515]">
           <Image source={{ uri: images[0] }} className="w-full h-full" resizeMode="cover" />
