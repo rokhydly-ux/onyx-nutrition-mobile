@@ -159,7 +159,7 @@ export default function BlogArticleScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View className="flex-1 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
@@ -184,7 +184,7 @@ export default function BlogArticleScreen() {
 
         <Animated.ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 200 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           onScroll={Animated.event(
@@ -391,13 +391,13 @@ export default function BlogArticleScreen() {
         </Animated.ScrollView>
 
         {/* Comment Input in Document Flow (Pushed by KeyboardAvoidingView) */}
-        <View className="bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10 z-50">
+        <View className="bg-white dark:bg-[#111] border-t border-gray-200 dark:border-white/10 z-50" style={{ elevation: 5 }}>
           <View className="px-5 py-4 pb-8">
              {userId ? (
                <View className="flex-row items-center space-x-2">
-                 <View className="flex-1 bg-gray-100 dark:bg-white/10 rounded-full px-4 py-2 border border-transparent focus:border-[#39FF14]">
+                 <View className="flex-1 bg-gray-100 dark:bg-white/10 rounded-3xl px-4 py-3 border border-transparent focus:border-[#39FF14] justify-center">
                    <TextInput
-                     className="text-black dark:text-white h-8"
+                     className="text-black dark:text-white text-base"
                      placeholder="Ajouter un commentaire..."
                      placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
                      value={newComment}
