@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, ImageBackground, TextInput, KeyboardAvoidingView, Platform, Animated, useWindowDimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, ImageBackground, TextInput, KeyboardAvoidingView, Platform, Animated, Dimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -37,7 +37,7 @@ export default function BlogArticleScreen() {
   const isDark = colorScheme === 'dark';
   const scrollY = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const { width } = useWindowDimensions();
+  const width = Dimensions.get('window').width;
 
   const [article, setArticle] = useState<MarketingArticle | null>(null);
   const [similarArticles, setSimilarArticles] = useState<MarketingArticle[]>([]);
@@ -395,7 +395,7 @@ export default function BlogArticleScreen() {
           <View className="px-5 py-4 pb-8">
              {userId ? (
                <View className="flex-row items-center space-x-2">
-                 <View className="flex-1 bg-gray-100 dark:bg-white/10 rounded-3xl px-4 py-3 border border-transparent focus:border-[#39FF14] justify-center">
+                 <View className="flex-1 bg-gray-100 dark:bg-white/10 rounded-3xl px-4 py-3 border border-transparent justify-center">
                    <TextInput
                      className="text-black dark:text-white text-base"
                      placeholder="Ajouter un commentaire..."
