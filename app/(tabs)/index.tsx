@@ -369,86 +369,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 4 Stat Cards Row */}
-        <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(tabs)/my-day')} className="flex-row justify-between mb-6 space-x-2">
-          {/* Poids */}
-
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/weight' as any)} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
-            <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783280413/Woman_standing_on_scale_smiling_202607051938_e6h39p.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.25 }}>
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>POIDS</Text>
-                <WeightIcon color={isDark ? '#FFF' : '#39FF14'} />
-              </View>
-              <View className="flex-row items-end">
-                <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                  {profile.weight ? profile.weight : '--'}
-                </Text>
-                <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1 ml-1">kg</Text>
-              </View>
-            </ImageBackground>
-          </TouchableOpacity>
-
-          {/* Recettes & Menus */}
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/menu')} className="flex-1 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black">
-            <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.6 }}>
-              <View className="absolute inset-0 bg-black/40" />
-              <View className="flex-1 justify-between relative z-10">
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-white text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>RECETTES & MENUS</Text>
-                  <RecipeIcon color="#39FF14" />
-                </View>
-                <View>
-                  <Text className="text-white text-sm font-bold mb-1" style={{ fontFamily: 'Poppins_700Bold' }}>
-                    Sama Menu
-                  </Text>
-                  <Text className="text-gray-300 text-[10px]">
-                    Planifiez vos repas locaux
-                  </Text>
-                </View>
-              </View>
-            </ImageBackground>
-          </TouchableOpacity>
-
-          {/* Hydration */}
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/my-day')} className="flex-1 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black">
-            <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783099524/Woman_drinking_clear_water_2K_202607031724_wuqqco.jpg' }} style={{ flex: 1 }} imageStyle={{ opacity: 0.7 }}>
-              {/* Linear Gradient Overlay for Readability */}
-              <View className="absolute inset-0 bg-gradient-to-r from-black/90 to-transparent" />
-              <View style={{ padding: 12, flex: 1 }}>
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>HYDRATION</Text>
-                  <HydrationIcon color="#3B82F6" />
-                </View>
-                <View className="flex-row items-end mb-2">
-                  <Text className="text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                    {dailyStats.water_glasses}<Text className="text-gray-400 text-sm">/8</Text>
-                  </Text>
-                  <Text className="text-gray-400 text-[10px] mb-1 ml-1">verres</Text>
-                </View>
-                <View className="flex-row flex-wrap justify-around gap-y-4 pt-3 px-2 mt-auto w-full">
-                  {Array(8).fill(0).map((_, idx) => (
-
-                    <TouchableOpacity
-                      key={idx}
-                      className="w-[20%]"
-                      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-                      onPress={() => handleUpdateWater(idx + 1)}
-                    >
-
-                      <Image
-                        source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675042/2_maewiy.png' }}
-                        style={{ width: 16, height: 22, opacity: (idx + 1) <= dailyStats.water_glasses ? 1 : 0.4 }}
-                        resizeMode="contain"
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </ImageBackground>
-          </TouchableOpacity>
-        </TouchableOpacity>
-
-        {/* Objectif du Jour */}
+        {/* Priority 1: Objectif du Jour (Calories & Macros) */}
         <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(tabs)/my-day')} className="bg-white dark:bg-[#151515] rounded-3xl p-5 mb-6 border border-gray-200 dark:border-white/10 shadow-sm">
           {/* Header & Days */}
           <View className="flex-row justify-between items-center mb-6">
@@ -525,7 +446,7 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Sama Menu du Jour (Pleine Largeur) */}
+        {/* Priority 2: Sama Menu du Jour (Pleine Largeur) */}
         <View className="w-full bg-white dark:bg-[#151515] rounded-3xl p-5 mb-6 border border-gray-200 dark:border-white/10 shadow-sm">
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>SAMA MENU DU JOUR</Text>
@@ -563,7 +484,81 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Fitness & Blog Grid (Côte à Côte) */}
+        {/* Priority 3 & 4: Quick Stats Row (Hydration, Weight, Recipes) */}
+        <View className="flex-row justify-between mb-6 space-x-2">
+          {/* Hydration (Moved up as Priority 3) */}
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/my-day')} className="flex-1 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black h-32">
+            <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783099524/Woman_drinking_clear_water_2K_202607031724_wuqqco.jpg' }} style={{ flex: 1 }} imageStyle={{ opacity: 0.7 }}>
+              <View className="absolute inset-0 bg-gradient-to-r from-black/90 to-transparent" />
+              <View style={{ padding: 12, flex: 1 }}>
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>HYDRATATION</Text>
+                  <HydrationIcon color="#3B82F6" />
+                </View>
+                <View className="flex-row items-end mb-1">
+                  <Text className="text-white text-lg font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    {dailyStats.water_glasses}<Text className="text-gray-400 text-sm">/8</Text>
+                  </Text>
+                  <Text className="text-gray-400 text-[10px] mb-1 ml-1">verres</Text>
+                </View>
+                <View className="flex-row flex-wrap justify-between gap-y-1 pt-1 px-1 mt-auto w-full">
+                  {Array(8).fill(0).map((_, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      className="w-[22%] mb-1"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      onPress={() => handleUpdateWater(idx + 1)}
+                    >
+                      <Image
+                        source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675042/2_maewiy.png' }}
+                        style={{ width: 14, height: 18, opacity: (idx + 1) <= dailyStats.water_glasses ? 1 : 0.3 }}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
+
+          <View className="flex-1 justify-between space-y-2">
+            {/* Poids */}
+            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/weight' as any)} className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
+              <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1783280413/Woman_standing_on_scale_smiling_202607051938_e6h39p.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.25 }}>
+                <View className="flex-row items-center justify-between mb-1">
+                  <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>POIDS</Text>
+                  <WeightIcon color={isDark ? '#FFF' : '#39FF14'} />
+                </View>
+                <View className="flex-row items-end mt-auto">
+                  <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    {profile.weight ? profile.weight : '--'}
+                  </Text>
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1 ml-1">kg</Text>
+                </View>
+              </ImageBackground>
+            </TouchableOpacity>
+
+            {/* Recettes & Menus */}
+            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/menu')} className="flex-1 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black">
+              <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.6 }}>
+                <View className="absolute inset-0 bg-black/40" />
+                <View className="flex-1 justify-between relative z-10">
+                  <View className="flex-row items-center justify-between mb-1">
+                    <Text className="text-white text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>MENUS</Text>
+                    <RecipeIcon color="#39FF14" />
+                  </View>
+                  <View className="mt-auto">
+                    <Text className="text-white text-sm font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                      Sama Menu
+                    </Text>
+                  </View>
+                </View>
+              </ImageBackground>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Priority 5: Fitness & Blog Grid (Côte à Côte) */}
         <View className="flex-row space-x-3 mb-6">
           {/* Fitness Card */}
           <TouchableOpacity

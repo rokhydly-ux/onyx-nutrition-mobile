@@ -106,6 +106,9 @@ export default function WeightScreen() {
                 logs = typeof newProfile.weight_logs === 'string'
                   ? JSON.parse(newProfile.weight_logs)
                   : newProfile.weight_logs;
+
+                // Sort chronologically just in case
+                logs = logs.sort((a, b) => new Date(a.log_date).getTime() - new Date(b.log_date).getTime());
               }
             } catch (e) {
               console.error('Error parsing weight_logs in Realtime', e);
