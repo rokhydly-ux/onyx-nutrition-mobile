@@ -188,7 +188,7 @@ export default function MyDayScreen() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
 
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('type', 'recipe');
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*');
       if (!recipes || recipes.length === 0) return null;
 
       const daysOfWeekFr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
@@ -547,7 +547,7 @@ export default function MyDayScreen() {
 
   const handleSwapMeal = async (mealKey: string) => {
     try {
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('type', 'recipe').limit(20);
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').limit(20);
       if (recipes && recipes.length > 0) {
         const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
 
