@@ -151,7 +151,7 @@ export default function MenuScreen() {
   const handleSwapMeal = async (dayIndex: number, mealType: string) => {
     // Basic scaling logic using nutrition_recipes
     try {
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('type', 'recipe').limit(20);
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').limit(20);
       if (recipes && recipes.length > 0) {
         const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
 
@@ -215,9 +215,9 @@ export default function MenuScreen() {
       // Basic regeneration logic based on budget/allergies
 
       // Basic regeneration logic based on budget/allergies
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').eq('type', 'recipe');
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*');
       if (!recipes || recipes.length === 0) {
-         console.warn("Sama Menu: No recipes found with type='recipe'");
+         console.warn("Sama Menu: No recipes found");
          setIsLoading(false);
          return;
       }
@@ -305,7 +305,13 @@ export default function MenuScreen() {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           {(() => {
-            if (!weeklyMenu || weeklyMenu.length === 0) return null;
+            if (!weeklyMenu || weeklyMenu.length === 0) {
+              return (
+                <View className="flex-1 items-center justify-center p-6 mt-10">
+                  <Text className="text-gray-500 font-bold text-center text-lg" style={{ fontFamily: 'Poppins_400Regular' }}>Votre menu est en cours de préparation...</Text>
+                </View>
+              );
+            }
 
 
 
