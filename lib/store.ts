@@ -105,3 +105,20 @@ export const useMenuStore = create<MenuStore>((set) => ({
     return { weeklyMenu: newWeekly };
   })
 }));
+
+// --- Profile Store --- //
+interface ProfileStore {
+  weight: number | null;
+  target_weight: number | null;
+  height: number | null;
+  daily_calories: number | null;
+  setProfileData: (data: Partial<ProfileStore>) => void;
+}
+
+export const useProfileStore = create<ProfileStore>((set) => ({
+  weight: null,
+  target_weight: null,
+  height: null,
+  daily_calories: null,
+  setProfileData: (data) => set((state) => ({ ...state, ...data })),
+}));

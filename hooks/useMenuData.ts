@@ -138,9 +138,17 @@ export const useMenuData = () => {
 
       if (error || !rawRecipes || rawRecipes.length === 0) return;
 
-      const validRecipes = rawRecipes.filter((r: any) =>
-        (r.name || r.nom) && !(r.name || r.nom).toLowerCase().includes('feuille') && !(r.name || r.nom).toLowerCase().includes('kinkeliba') && !(r.name || r.nom).toLowerCase().includes('cru') && !(r.name || r.nom).toLowerCase().includes('brut') && !(r.name || r.nom).toLowerCase().includes('cuisse de poulet')
-      );
+      const validRecipes = rawRecipes.filter((item: any) => {
+        if (item.type === 'recipe' || item.is_recipe === true) return true;
+        if (item.prep_time > 0 || (item.instructions && item.instructions.length > 0)) return true;
+
+        const name = (item.name || item.nom || '').toLowerCase();
+        if (name.includes('feuille') || name.includes('kinkeliba') || name.includes('cru') || name.includes('brut') || name.includes('cuisse de poulet')) {
+          return false;
+        }
+
+        return !!name;
+      });
       const recipes = validRecipes.length > 0 ? validRecipes : rawRecipes;
 
       const newMenu = generateWeeklyMenu(recipes, profile);
@@ -196,9 +204,17 @@ export const useMenuData = () => {
 
       if (error || !rawRecipes) return;
 
-      const validRecipes = rawRecipes.filter((r: any) =>
-        (r.name || r.nom) && !(r.name || r.nom).toLowerCase().includes('feuille') && !(r.name || r.nom).toLowerCase().includes('kinkeliba') && !(r.name || r.nom).toLowerCase().includes('cru') && !(r.name || r.nom).toLowerCase().includes('brut') && !(r.name || r.nom).toLowerCase().includes('cuisse de poulet')
-      );
+      const validRecipes = rawRecipes.filter((item: any) => {
+        if (item.type === 'recipe' || item.is_recipe === true) return true;
+        if (item.prep_time > 0 || (item.instructions && item.instructions.length > 0)) return true;
+
+        const name = (item.name || item.nom || '').toLowerCase();
+        if (name.includes('feuille') || name.includes('kinkeliba') || name.includes('cru') || name.includes('brut') || name.includes('cuisse de poulet')) {
+          return false;
+        }
+
+        return !!name;
+      });
       const recipes = validRecipes.length > 0 ? validRecipes : rawRecipes;
 
       let updatedMenu = [...weeklyGeneratedMenu];
