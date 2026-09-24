@@ -1,0 +1,10 @@
+--- FoodSearchModal.tsx
++++ FoodSearchModal.tsx
+@@ -37,7 +37,7 @@
+       // 1. Search Supabase nutrition_recipes
+       const { data: dbData, error } = await supabase
+         .from('nutrition_recipes')
+-        .select('*').neq('category', 'ingredient').eq('type', 'recipe')
++        .select('*')
+         .ilike('name', `%${query}%`)
+         .limit(10);

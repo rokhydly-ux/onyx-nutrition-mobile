@@ -148,13 +148,8 @@ export default function MenuScreen() {
   const handleSwapMeal = async (dayIndex: number, mealType: string) => {
     // Basic scaling logic using nutrition_recipes
     try {
-      const { data: rawRecipes } = await supabase.from('nutrition_recipes').select('*');
-      if (rawRecipes && rawRecipes.length > 0) {
-        const validRecipes = rawRecipes.filter(r =>
-          (r.name || r.nom) && !(r.name || r.nom).toLowerCase().includes('feuille') && !(r.name || r.nom).toLowerCase().includes('kinkeliba') && !(r.name || r.nom).toLowerCase().includes('cru') && !(r.name || r.nom).toLowerCase().includes('brut') && !(r.name || r.nom).toLowerCase().includes('cuisse de poulet')
-        );
-        const recipes = validRecipes.length > 0 ? validRecipes : rawRecipes;
-
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe').limit(20);
+      if (recipes && recipes.length > 0) {
         const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
 
         // Use Zustand action
@@ -217,19 +212,14 @@ export default function MenuScreen() {
       // Basic regeneration logic based on budget/allergies
 
       // Basic regeneration logic based on budget/allergies
-      const { data: rawRecipes } = await supabase.from('nutrition_recipes').select('*');
-      console.log('Recettes reçues:', rawRecipes);
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe');
+      console.log('Recettes reçues:', recipes);
 
-      if (!rawRecipes || rawRecipes.length === 0) {
+      if (!recipes || recipes.length === 0) {
          console.warn("Sama Menu: No recipes found");
          setWeeklyMenu([]);
          return;
       }
-
-      const validRecipes = rawRecipes.filter(r =>
-        (r.name || r.nom) && !(r.name || r.nom).toLowerCase().includes('feuille') && !(r.name || r.nom).toLowerCase().includes('kinkeliba') && !(r.name || r.nom).toLowerCase().includes('cru') && !(r.name || r.nom).toLowerCase().includes('brut') && !(r.name || r.nom).toLowerCase().includes('cuisse de poulet')
-      );
-      const recipes = validRecipes.length > 0 ? validRecipes : rawRecipes;
 
       const newMenu = [];
       const targetCalories = profileData?.daily_calorie_goal || 2000;
@@ -399,7 +389,7 @@ export default function MenuScreen() {
 
                           return (
                             <View key={typeObj.key} className={`flex-row items-center p-3 rounded-2xl border ${isTomorrow ? 'bg-zinc-100 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-800 opacity-60' : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-800'}`}>
-                              <Image source={{ uri: meal.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg' }} className="w-12 h-12 rounded-xl mr-3" resizeMode="cover" />
+                              <Image source={{ uri: meal.image_url || 'https://via.placeholder.com/50' }} className="w-12 h-12 rounded-xl mr-3" resizeMode="cover" />
 
                               <View className="flex-1">
                                 <Text className="text-gray-400 text-[10px] font-bold uppercase mb-0.5">{typeObj.label}</Text>

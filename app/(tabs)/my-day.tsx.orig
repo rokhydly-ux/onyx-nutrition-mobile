@@ -194,18 +194,13 @@ export default function MyDayScreen() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
 
-      const { data: rawRecipes } = await supabase.from('nutrition_recipes').select('*');
-      console.log('Recettes reçues:', rawRecipes);
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe');
+      console.log('Recettes reçues:', recipes);
 
-      if (!rawRecipes || rawRecipes.length === 0) {
+      if (!recipes || recipes.length === 0) {
         setWeeklyMenu([]);
         return null;
       }
-
-      const validRecipes = rawRecipes.filter((r: any) =>
-        (r.name || r.nom) && !(r.name || r.nom).toLowerCase().includes('feuille') && !(r.name || r.nom).toLowerCase().includes('kinkeliba') && !(r.name || r.nom).toLowerCase().includes('cru') && !(r.name || r.nom).toLowerCase().includes('brut') && !(r.name || r.nom).toLowerCase().includes('cuisse de poulet')
-      );
-      const recipes = validRecipes.length > 0 ? validRecipes : rawRecipes;
 
       const daysOfWeekFr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
       const newMenu = [];
@@ -479,7 +474,7 @@ export default function MyDayScreen() {
         p: p.nutriments && p.nutriments.proteins_100g ? p.nutriments.proteins_100g : 0,
         c: p.nutriments && p.nutriments.carbohydrates_100g ? p.nutriments.carbohydrates_100g : 0,
         f: p.nutriments && p.nutriments.fat_100g ? p.nutriments.fat_100g : 0,
-        img: p.image_front_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg',
+        img: p.image_front_url || 'https://via.placeholder.com/150',
         type: '100g'
       })).filter((p: any) => p.calories > 0);
 
@@ -564,13 +559,8 @@ export default function MyDayScreen() {
 
   const handleSwapMeal = async (mealKey: string) => {
     try {
-      const { data: rawRecipes } = await supabase.from('nutrition_recipes').select('*');
-      if (rawRecipes && rawRecipes.length > 0) {
-        const validRecipes = rawRecipes.filter((r: any) =>
-          (r.name || r.nom) && !(r.name || r.nom).toLowerCase().includes('feuille') && !(r.name || r.nom).toLowerCase().includes('kinkeliba') && !(r.name || r.nom).toLowerCase().includes('cru') && !(r.name || r.nom).toLowerCase().includes('brut') && !(r.name || r.nom).toLowerCase().includes('cuisse de poulet')
-        );
-        const recipes = validRecipes.length > 0 ? validRecipes : rawRecipes;
-
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe').limit(20);
+      if (recipes && recipes.length > 0) {
         const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
 
         const todayDateString = new Date().toISOString().split('T')[0];
@@ -791,7 +781,7 @@ export default function MyDayScreen() {
 
               return (
               <View key={meal.id} className="rounded-2xl overflow-hidden mb-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                <Image source={{ uri: meal.img || meal.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg' }} className="w-full h-32 opacity-90" />
+                <Image source={{ uri: meal.img || meal.image_url || 'https://via.placeholder.com/150' }} className="w-full h-32 opacity-90" />
                 <View className="p-4">
                   <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-1 font-poppins-bold">{meal.type}</Text>
                   <Text className="text-black dark:text-white text-base font-bold mb-2 font-poppins-bold">{meal.name || meal.nom}</Text>
