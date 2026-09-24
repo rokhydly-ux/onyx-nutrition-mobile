@@ -104,7 +104,7 @@ export const useMenuData = () => {
     }
   }, [setWeeklyMenu, fetchConsumedMeals]);
 
-  const fetchConsumedMeals = useCallback(async (userId: string) => {
+  const fetchConsumedMeals = async (userId: string) => {
     const today = new Date();
     today.setHours(0,0,0,0);
     const startOfMenu = new Date(today);
@@ -127,7 +127,7 @@ export const useMenuData = () => {
         setConsumedMeal(dateStr, log.recipe_id, true);
       });
     }
-  }, [setConsumedMeal]);
+  };
 
   const generateMenu = async () => {
     if (!profile) return;
