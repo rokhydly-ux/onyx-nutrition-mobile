@@ -808,7 +808,7 @@ export default function ShopScreen() {
                            onPress={() => { handleOpenProduct(item); }}
                            className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-xl p-1 mr-3"
                          >
-                           <Image source={{ uri: item.image_url || 'https://via.placeholder.com/150' }} className="w-full h-full resize-contain" />
+                           <Image source={{ uri: item.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg' }} className="w-full h-full resize-contain" />
                          </TouchableOpacity>
                          <TouchableOpacity
                            onPress={() => { handleOpenProduct(item); }}

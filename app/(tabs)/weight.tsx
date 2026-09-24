@@ -61,7 +61,7 @@ export default function WeightScreen() {
 
   const handleQuickAdjust = (amount: number) => {
     const baseWeight = parseFloat(newWeight) || currentWeight || 0;
-    const newValue = (baseWeight + amount).toFixed(1);
+    const newValue = (parseFloat(String(baseWeight)) + parseFloat(String(amount))).toFixed(1);
     if (parseFloat(newValue) >= 0) {
       setNewWeight(newValue.toString());
     }
