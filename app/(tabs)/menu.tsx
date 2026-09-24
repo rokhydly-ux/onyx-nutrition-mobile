@@ -22,9 +22,8 @@ export default function MenuScreen() {
   }, []);
 
   const fetchWeeklyMenu = async () => {
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -52,15 +51,13 @@ export default function MenuScreen() {
         });
         setWeeklyMenu(migratedMenu); // Store original order
       } else {
-
-        setTimeout(() => handleRegenerateMenu(), 0);
+        await handleRegenerateMenu();
       }
     } catch (error) {
       console.error("Erreur Sama Menu:", error);
     } finally {
       setIsLoading(false);
     }
-
   };
 
 
@@ -199,8 +196,8 @@ export default function MenuScreen() {
   };
 
   const handleRegenerateMenu = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -216,9 +213,11 @@ export default function MenuScreen() {
 
       // Basic regeneration logic based on budget/allergies
       const { data: recipes } = await supabase.from('nutrition_recipes').select('*');
+      console.log('Recettes reçues:', recipes);
+
       if (!recipes || recipes.length === 0) {
          console.warn("Sama Menu: No recipes found");
-         setIsLoading(false);
+         setWeeklyMenu([]);
          return;
       }
 

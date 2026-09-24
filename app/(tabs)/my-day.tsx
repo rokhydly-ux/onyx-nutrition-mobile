@@ -184,12 +184,18 @@ export default function MyDayScreen() {
 
 
   const handleRegenerateMenu = async (profileData: any) => {
+    setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
 
       const { data: recipes } = await supabase.from('nutrition_recipes').select('*');
-      if (!recipes || recipes.length === 0) return null;
+      console.log('Recettes reçues:', recipes);
+
+      if (!recipes || recipes.length === 0) {
+        setWeeklyMenu([]);
+        return null;
+      }
 
       const daysOfWeekFr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
       const newMenu = [];
@@ -228,12 +234,13 @@ export default function MyDayScreen() {
     } catch (e) {
       console.error(e);
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
 
   const fetchMyDayData = async () => {
-
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -671,7 +678,7 @@ export default function MyDayScreen() {
                 </View>
               ))}
               {foodSearchResults.length === 0 && foodSearchQuery !== '' && !isSearchingFood && (
-                <Text className="text-gray-500 text-center mt-10">Aucun résultat trouvé pour "{foodSearchQuery}".</Text>
+                <Text className="text-gray-500 text-center mt-10">Aucun résultat trouvé pour &quot;{foodSearchQuery}&quot;</Text>
               )}
             </ScrollView>
           )}
@@ -691,7 +698,7 @@ export default function MyDayScreen() {
         <View className="mb-6">
           <TouchableOpacity onPress={() => router.push('/')} className="flex-row items-center mb-4">
             <ChevronLeft size={20} color={isDark ? '#FFF' : '#000'} />
-            <Text className="text-black dark:text-white text-sm font-medium ml-1">Retour à l'accueil</Text>
+            <Text className="text-black dark:text-white text-sm font-medium ml-1">Retour à l&apos;accueil</Text>
           </TouchableOpacity>
 
           <View className="flex-col">
@@ -841,7 +848,7 @@ export default function MyDayScreen() {
                 <Text className="text-white text-sm font-bold uppercase font-poppins-bold">Hydratation</Text>
                 <Text className="text-white text-lg font-black font-poppins-bold">{dailyStats.water_glasses} <Text className="text-gray-300 text-sm">/ 8 verres</Text></Text>
               </View>
-              <Text className="text-gray-300 text-xs mb-6 font-poppins">L'eau booste votre métabolisme de 30% en 10 min</Text>
+              <Text className="text-gray-300 text-xs mb-6 font-poppins">L&apos;eau booste votre métabolisme de 30% en 10 min</Text>
 
 
               <View className="flex-row flex-wrap justify-between gap-y-4 px-2">
@@ -889,7 +896,7 @@ export default function MyDayScreen() {
             className="bg-[#39FF14] rounded-[2rem] p-6 items-center justify-center mt-4 shadow-lg shadow-[#39FF14]/20 mb-10">
             <Trophy size={32} color="black" className="mb-2" />
             <Text className="text-black text-xl font-black uppercase font-poppins-bold">BILAN DU JOUR</Text>
-            <Text className="text-black/70 text-xs font-bold mt-1 font-poppins-bold">Clôturez pour gagner de l'XP</Text>
+            <Text className="text-black/70 text-xs font-bold mt-1 font-poppins-bold">Clôturez pour gagner de l&apos;XP</Text>
           </TouchableOpacity>
 
 
