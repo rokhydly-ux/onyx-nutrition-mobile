@@ -1,0 +1,70 @@
+--- app/diagnostic.tsx
++++ app/diagnostic.tsx
+@@ -693,7 +693,7 @@
+     let w = parseFloat(data.currentWeight);
+     let h = parseFloat(data.height);
+-    let a = parseInt(data.age);
++    let a = Number(data.age) || 30;
+     console.log('Variables pour BMR:', { weight: w, height: h, age: a, data });
+     if (isNaN(w) || isNaN(h) || isNaN(a)) return NaN;
+     let bmr = (10 * w) + (6.25 * h) - (5 * a);
+--- app/(tabs)/my-day.tsx
++++ app/(tabs)/my-day.tsx
+@@ -147,7 +147,12 @@
+           const newProfile = payload.new as any;
+           if (newProfile) {
+              setProfile((prev: any) => ({
+                ...prev,
+-               jongoma_xp: newProfile.jongoma_xp || 0
++               calories_goal: newProfile.daily_calorie_goal || 1500,
++               protein_goal: newProfile.protein_goal || 80,
++               carbs_goal: newProfile.carbs_goal || 150,
++               fats_goal: newProfile.fats_goal || 50,
++               diagnostic_data: newProfile.diagnostic_data || null,
++               jongoma_xp: newProfile.jongoma_xp || 0,
+              }));
+           }
+@@ -190,7 +195,7 @@
+       const { data: { session } } = await supabase.auth.getSession();
+       if (!session) return null;
+
+-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*');
++      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe');
+       console.log('Recettes reçues:', recipes);
+
+@@ -557,7 +562,7 @@
+   const handleSwapMeal = async (mealKey: string) => {
+     try {
+-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').limit(20);
++      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe').limit(20);
+       if (recipes && recipes.length > 0) {
+         const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
+--- app/(tabs)/menu.tsx
++++ app/(tabs)/menu.tsx
+@@ -149,7 +149,7 @@
+   const handleSwapMeal = async (dayIndex: number, mealType: string) => {
+     // Basic scaling logic using nutrition_recipes
+     try {
+-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').limit(20);
++      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe').limit(20);
+       if (recipes && recipes.length > 0) {
+         const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
+@@ -214,7 +214,7 @@
+       // Basic regeneration logic based on budget/allergies
+
+       // Basic regeneration logic based on budget/allergies
+-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*');
++      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe');
+       console.log('Recettes reçues:', recipes);
+
+       if (!recipes || recipes.length === 0) {
+--- components/FoodSearchModal.tsx
++++ components/FoodSearchModal.tsx
+@@ -37,7 +37,7 @@
+       // 1. Search Supabase nutrition_recipes
+       const { data: recipes } = await supabase
+         .from('nutrition_recipes')
+-        .select('*')
++        .select('*').neq('category', 'ingredient').eq('type', 'recipe')
+         .ilike('name', `%${searchQuery}%`)
+         .limit(5);

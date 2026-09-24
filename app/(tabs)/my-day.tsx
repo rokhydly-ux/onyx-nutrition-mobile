@@ -166,7 +166,12 @@ export default function MyDayScreen() {
           if (newProfile) {
              setProfile((prev: any) => ({
                ...prev,
-               jongoma_xp: newProfile.jongoma_xp || 0
+               calories_goal: newProfile.daily_calorie_goal || prev.calories_goal,
+               protein_goal: newProfile.protein_goal || prev.protein_goal,
+               carbs_goal: newProfile.carbs_goal || prev.carbs_goal,
+               fats_goal: newProfile.fats_goal || prev.fats_goal,
+               diagnostic_data: newProfile.diagnostic_data || prev.diagnostic_data,
+               jongoma_xp: newProfile.jongoma_xp || prev.jongoma_xp,
              }));
           }
         }
@@ -189,7 +194,7 @@ export default function MyDayScreen() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
 
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*');
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe');
       console.log('Recettes reçues:', recipes);
 
       if (!recipes || recipes.length === 0) {
@@ -554,7 +559,7 @@ export default function MyDayScreen() {
 
   const handleSwapMeal = async (mealKey: string) => {
     try {
-      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').limit(20);
+      const { data: recipes } = await supabase.from('nutrition_recipes').select('*').neq('category', 'ingredient').eq('type', 'recipe').limit(20);
       if (recipes && recipes.length > 0) {
         const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
 

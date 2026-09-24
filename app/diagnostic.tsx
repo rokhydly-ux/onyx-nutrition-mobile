@@ -413,7 +413,7 @@ export default function DiagnosticScreen() {
 
       <View className="flex-row items-center mb-4">
         <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675042/2_maewiy.png" }} className="w-6 h-6 mr-2" resizeMode="contain" />
-        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Quelle quantité d'eau consommez-vous ?</Text>
+        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Quelle quantité d&apos;eau consommez-vous ?</Text>
       </View>
       <SelectableCard label="Moins de 1L" value="Moins 1L" selectedValue={data.hydration} onSelect={(v: string) => updateData('hydration', v)} />
       <SelectableCard label="1L à 2L" value="1L-2L" selectedValue={data.hydration} onSelect={(v: string) => updateData('hydration', v)} />
@@ -426,8 +426,8 @@ export default function DiagnosticScreen() {
       <SelectableCard label="Jamais suivi de régime" value="Jamais" selectedValue={data.pastDiets} onSelect={(v: string) => updateData('pastDiets', v)} />
       <SelectableCard label="Régimes passés sans succès" value="Oui" selectedValue={data.pastDiets} onSelect={(v: string) => updateData('pastDiets', v)} />
 
-      <SelectableCard label="Je cuisine avec beaucoup d'huile" value="Beaucoup d'huile" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
-      <SelectableCard label="Huile d'olive / Modéré" value="Modéré" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
+      <SelectableCard label="Je cuisine avec beaucoup d&apos;huile" value="Beaucoup d'huile" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
+      <SelectableCard label="Huile d&apos;olive / Modéré" value="Modéré" selectedValue={data.cookingFats} onSelect={(v: string) => updateData('cookingFats', v)} />
     </ScrollView>
   );
 
@@ -437,7 +437,7 @@ export default function DiagnosticScreen() {
 
       <View className="flex-row items-center mb-4">
         <Image source={{ uri: "https://res.cloudinary.com/dtr2wtoty/image/upload/v1782675091/sauce_gmyero.png" }} className="w-6 h-6 mr-2" resizeMode="contain" />
-        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Quel est l'élément principal de vos repas ?</Text>
+        <Text className="text-gray-500 dark:text-gray-400 font-medium" style={{ fontFamily: 'Poppins_500Medium' }}>Quel est l&apos;élément principal de vos repas ?</Text>
       </View>
       <SelectableCard label="Féculents lourds (Foutou, Igname...)" value="Féculents lourds" selectedValue={data.mainCarb} onSelect={(v: string) => updateData('mainCarb', v)} />
       <SelectableCard label="Riz / Céréales" value="Riz/Céréales" selectedValue={data.mainCarb} onSelect={(v: string) => updateData('mainCarb', v)} />
@@ -502,7 +502,7 @@ export default function DiagnosticScreen() {
         </Animated.View>
 
         <Text className="text-white text-xl text-center font-bold px-6" style={{ fontFamily: 'Poppins_700Bold' }}>
-          Coach Rokhy personnalise votre programme d'action...
+          Coach Rokhy personnalise votre programme d&apos;action...
         </Text>
       </View>
     );
@@ -692,7 +692,7 @@ export default function DiagnosticScreen() {
     // Mifflin-St Jeor Equation
     let w = parseFloat(data.currentWeight);
     let h = parseFloat(data.height);
-    let a = parseInt(data.age);
+    let a = Number(data.age) || 30;
     console.log('Variables pour BMR:', { weight: w, height: h, age: a, data });
     if (isNaN(w) || isNaN(h) || isNaN(a)) return NaN;
     let bmr = (10 * w) + (6.25 * h) - (5 * a);
@@ -817,7 +817,7 @@ export default function DiagnosticScreen() {
               full_name: data.firstName,
               phone: cleanPhone.startsWith('+221') ? cleanPhone : `+221${cleanPhone}`,
               role: 'client',
-              saas: "Nutrition à l'Africaine",
+              saas: "Nutrition à l&apos;Africaine",
               type: 'Client',
               status: 'Compte Créé',
               password_temp: password || defaultPassword
@@ -859,7 +859,7 @@ export default function DiagnosticScreen() {
               source: "Diagnostic Nutrition Landing",
               intent: "A complété son diagnostic",
               status: "Nouveau",
-              saas: "Nutrition à l'Africaine",
+              saas: "Nutrition à l&apos;Africaine",
               message: `Objectif: ${calories} kcal`
             }
           ]);
