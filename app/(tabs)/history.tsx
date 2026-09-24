@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { Lock, ChevronLeft } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
+
 import GlobalHeader from '../../components/GlobalHeader';
 import DailyReportModal from '../../components/DailyReportModal';
 import * as Print from 'expo-print';

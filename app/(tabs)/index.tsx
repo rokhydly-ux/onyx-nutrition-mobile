@@ -14,7 +14,7 @@ import {
 } from 'lucide-react-native';
 import CircularProgress from '../../components/CircularProgress';
 import GlobalHeader from '../../components/GlobalHeader';
-import { useMenuStore } from '../../lib/store';
+import { useMenuStore, useProfileStore } from '../../lib/store';
 
 // --- Types ---
 type DailyLog = {
@@ -98,6 +98,7 @@ const ProgressBar = ({ label, current, max, color }: { label: string, current: n
 };
 
 export default function HomeScreen() {
+  const profileStore = useProfileStore();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const router = useRouter();
@@ -531,7 +532,7 @@ export default function HomeScreen() {
                 </View>
                 <View className="flex-row items-end mt-auto">
                   <Text className="text-black dark:text-white text-xl font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                    {profile.weight ? profile.weight : '--'}
+                    {profileStore.weight || profile?.weight || '--'}
                   </Text>
                   <Text className="text-gray-500 dark:text-gray-400 text-xs mb-1 ml-1">kg</Text>
                 </View>

@@ -17,6 +17,8 @@ import {
   Poppins_900Black,
 } from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
+import { supabase } from '@/lib/supabase';
+import { useMenuStore, useProfileStore } from '@/lib/store';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -55,6 +57,71 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, error]);
+
+  useEffect(() => {
+    let globalChannel: ReturnType<typeof supabase.channel> | null = null;
+
+    const setupRealtime = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+
+      if (!userId) return;
+
+      globalChannel = supabase.channel('custom-all-channel');
+
+      globalChannel
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'nutrition_profiles', filter: `client_id=eq.${userId}` },
+          (payload: any) => {
+            console.log('Profile updated via realtime:', payload);
+            if (payload.new) {
+              const profileStore = useProfileStore.getState();
+              profileStore.setProfileData({
+                weight: payload.new.weight !== undefined ? payload.new.weight : profileStore.weight,
+                target_weight: payload.new.target_weight !== undefined ? payload.new.target_weight : profileStore.target_weight,
+                height: payload.new.height !== undefined ? payload.new.height : profileStore.height,
+                daily_calories: payload.new.daily_calorie_goal !== undefined ? payload.new.daily_calorie_goal : profileStore.daily_calories,
+              });
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'nutrition_daily_logs', filter: `client_id=eq.${userId}` },
+          (payload: any) => {
+            console.log('Daily logs updated via realtime:', payload);
+
+            // Sync water logs to useMenuStore's dailyMacros if they exist
+            if (payload.new && typeof payload.new.water_glasses === 'number') {
+              const currentMacros = useMenuStore.getState().dailyMacros;
+              useMenuStore.getState().setDailyMacros({
+                ...currentMacros,
+                water: payload.new.water_glasses
+              });
+            }
+
+            // Sync consumed calories if present (depends on how logs update calories_consumed)
+            if (payload.new && typeof payload.new.calories_consumed === 'number') {
+              const currentMacros = useMenuStore.getState().dailyMacros;
+              useMenuStore.getState().setDailyMacros({
+                ...currentMacros,
+                calories: payload.new.calories_consumed
+              });
+            }
+          }
+        )
+        .subscribe();
+    };
+
+    setupRealtime();
+
+    return () => {
+      if (globalChannel) {
+        supabase.removeChannel(globalChannel);
+      }
+    };
+  }, []);
 
   if (!fontsLoaded && !error) {
     return null;
