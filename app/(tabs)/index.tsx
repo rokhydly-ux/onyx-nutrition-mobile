@@ -16,6 +16,20 @@ import CircularProgress from '../../components/CircularProgress';
 import GlobalHeader from '../../components/GlobalHeader';
 import { useMenuStore, useProfileStore } from '../../lib/store';
 
+
+const FallbackImageBackground = ({ initialUri, fallbackUri, children, ...props }: any) => {
+  const [uri, setUri] = useState(initialUri);
+  return (
+    <ImageBackground
+      {...props}
+      source={{ uri }}
+      onError={() => setUri(fallbackUri)}
+    >
+      {children}
+    </ImageBackground>
+  );
+};
+
 // --- Types ---
 type DailyLog = {
   id: string;
@@ -540,22 +554,30 @@ export default function HomeScreen() {
             </TouchableOpacity>
 
             {/* Recettes & Menus */}
-            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/menu')} className="flex-1 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black">
-              <ImageBackground source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg' }} style={{ flex: 1, padding: 12 }} imageStyle={{ opacity: 0.6 }}>
-                <View className="absolute inset-0 bg-black/40" />
-                <View className="flex-1 justify-between relative z-10">
-                  <View className="flex-row items-center justify-between mb-1">
-                    <Text className="text-white text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>MENUS</Text>
-                    <RecipeIcon color="#39FF14" />
-                  </View>
-                  <View className="mt-auto">
-                    <Text className="text-white text-sm font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
-                      Sama Menu
-                    </Text>
-                  </View>
+
+          {/* Recettes & Menus */}
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/(tabs)/menu')} className="flex-1 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden bg-black">
+            <FallbackImageBackground
+              initialUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1781221768/Thiebou_dieune_1_hftdhm.jpg"
+              fallbackUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg"
+              style={{ flex: 1, padding: 12 }}
+              imageStyle={{ opacity: 0.6 }}
+            >
+              <View className="absolute inset-0 bg-black/40" />
+              <View className="flex-1 justify-between relative z-10">
+                <View className="flex-row items-center justify-between mb-1">
+                  <Text className="text-white text-[10px] font-bold uppercase" style={{ fontFamily: 'Poppins_700Bold' }}>MENUS</Text>
+                  <RecipeIcon color="#39FF14" />
                 </View>
-              </ImageBackground>
-            </TouchableOpacity>
+                <View className="mt-auto">
+                  <Text className="text-white text-sm font-bold" style={{ fontFamily: 'Poppins_700Bold' }}>
+                    Sama Menu
+                  </Text>
+                </View>
+              </View>
+            </FallbackImageBackground>
+          </TouchableOpacity>
+
           </View>
         </View>
 

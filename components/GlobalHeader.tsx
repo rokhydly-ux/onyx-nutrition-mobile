@@ -103,7 +103,7 @@ export default function GlobalHeader() {
           <Image source={{ uri: avatar }} className="w-12 h-12 rounded-full border-2 border-[#39FF14] mr-3" />
         </TouchableOpacity>
         <View className="flex-col flex-1 justify-center relative">
-           <Image source={{ uri: 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1781535959/A_cute__highly_detailed_3D_202606151505_ytie6s.jpg' }} className="absolute -left-12 -top-1 w-6 h-6 rounded-full border border-white z-10" />
+
            <Text className="text-black dark:text-white text-xl leading-tight" style={{ fontFamily: 'Poppins_900Black' }}>
             {getGreeting()} {clientName && clientName !== "Membre" ? clientName.split(' ')[0] : "Membre"} <Text className="text-lg">⚡</Text>
            </Text>

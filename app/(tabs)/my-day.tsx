@@ -5,6 +5,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
 import { ChevronLeft, CheckCircle, Trophy, Plus, Trash2, RefreshCcw } from 'lucide-react-native';
 import { useMenuStore } from '../../lib/store';
+
+const FallbackImage = ({ initialUri, fallbackUri, ...props }: any) => {
+  const [uri, setUri] = useState(initialUri);
+  return (
+    <Image
+      {...props}
+      source={{ uri }}
+      onError={() => setUri(fallbackUri)}
+    />
+  );
+};
+
 import CircularProgress from '../../components/CircularProgress';
 import DailyReportModal from '../../components/DailyReportModal';
 import { supabase } from '../../lib/supabase';
@@ -791,7 +803,7 @@ export default function MyDayScreen() {
 
               return (
               <View key={meal.id} className="rounded-2xl overflow-hidden mb-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                <Image source={{ uri: meal.img || meal.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg' }} className="w-full h-32 opacity-90" />
+                <FallbackImage initialUri={meal.img || meal.image_url || 'https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg'} fallbackUri="https://res.cloudinary.com/dtr2wtoty/image/upload/v1786107893/Ceramic_plate_with_herbs_on_202608071304_bl72q1.jpg" className="w-full h-32 opacity-90" />
                 <View className="p-4">
                   <Text className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase mb-1 font-poppins-bold">{meal.type}</Text>
                   <Text className="text-black dark:text-white text-base font-bold mb-2 font-poppins-bold">{meal.name || meal.nom}</Text>
